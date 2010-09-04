@@ -1,6 +1,6 @@
 
 
-Provides a defer/when style promise API
+Provides a defer/when style promise API for JavaScript
 
 - usable as a CommonJS module, in Node,
 - usable as a <script> in all web browsers,
@@ -8,10 +8,18 @@ Provides a defer/when style promise API
 - compliant with http://wiki.commonjs.org/wiki/Promises/B
 
 
+For Node:
+
+    $ curl http://npmjs.org/install.sh | sh
+    $ npm install q
+    $ node test.js
+
+
+
 THE HALLOWED API
 
 
-Q.when(value, callback, errback_opt)
+when(value, callback, errback_opt)
 
     Arranges for a callback to be called:
      - with the value as its sole argument
@@ -66,7 +74,7 @@ Q.when(value, callback, errback_opt)
     }
 
 
-Q.defer()
+defer()
 
     Returns a "Deferred" object with a:
 
