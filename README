@@ -1,0 +1,201 @@
+
+
+Provides a defer/when style promise API
+
+- usable as a CommonJS module, in Node,
+- usable as a <script> in all web browsers,
+- inspired by Tyler Close's Waterken ref_send promises, and
+- compliant with http://wiki.commonjs.org/wiki/Promises/B
+
+
+THE HALLOWED API
+
+
+Q.when(value, callback, errback_opt)
+
+    Arranges for a callback to be called:
+     - with the value as its sole argument
+     - in a future turn of the event loop
+     - if and when the value is or becomes a fully resolved
+    Arranges for errback to be called:
+     - with a value respresenting the reason why the object will
+       never be resolved, typically a string.
+     - in a future turn of the event loop
+     - if the value is a promise and
+       - if and when the promise is rejected
+    Returns a promise:
+     - that will resolve to the value returned by either the callback
+       or errback, if either of those functions are called, or
+     - that will be rejected if the value is rejected and no errback
+       is provided, thus forwarding rejections by default.
+
+    The value may be truly _any_ value.
+    
+
+    Guarantees:
+
+     - The callback will not be called before when returns.
+     - The errback will not be called before when returns.
+     - The callback will not be called more than once.
+     - The errback will not be called more than once.
+     - If the callback is called, the errback will never be called.
+     - If the errback is called, the callback will never be called.
+     - If a promise is never resolved, neither the callback or the
+       errback will ever be called.
+
+
+    THIS IS COOL
+
+     - You can set up an entire chain of causes and effects in the
+       duration of a single event and be guaranteed that any
+       invariants in your lexical scope will not...vary.
+     - You can both receive a promise from a sketchy API and return a
+       promise to some other sketchy API and, as long as you trust
+       this module, all of these guarantees are still provided.
+     - You can use when to compose promises in a variety of ways:
+
+
+    INTERSECTION
+
+    function and(a, b) {
+        return when(a, function (a) {
+            return when(b, function (b) {
+                // ...
+            });
+        })
+    }
+
+
+Q.defer()
+
+    Returns a "Deferred" object with a:
+
+     - promise property
+     - resolve(value) function
+     - reject(reason) function
+
+    The promise is suitable for passing as a value to
+    the "when" function.
+
+    Calling resolve with a promise notifies all observers
+    that they must now wait for that promise to resolve.
+
+    Calling resolve with a rejected promise notifies all
+    observers that the promise will never be fully resolved
+    with the rejection reason.  This forwards through the
+    the chain of "when" calls and their returned "promises"
+    until it reaches a "when" call that has an "errback".
+
+    Calling resolve with a fully resolved value notifies
+    all observers that they may proceed with that value
+    in a future turn.  This forwards through the "callback"
+    chain of any pending "when" calls.
+
+    Calling reject with a reason is equivalent to
+    resolving with a rejection.
+
+    In all cases where the resolution of a promise is set,
+    (promise, rejection, value) the resolution is permanent
+    and cannot be reset.  All future observers of the
+    resolution of the promise will be notified of the
+    resolved value, so it is safe to call "when" on 
+    a promise regardless of whether it has been or will
+    be resolved.
+
+
+    THIS IS COOL
+
+    The Deferred separates the promise part from the resolver
+    part. So:
+
+     - You can give the promise to any number of consumers
+       and all of them will observe the resolution independently.
+       Because the capability of observing a promise is separated
+       from the capability of resolving the promise, none of the
+       recipients of the promise have the ability to "trick"
+       other recipients with misinformation.
+
+     - You can give the resolver to any number of producers
+       and whoever resolves the promise first wins.  Furthermore,
+       none of the producers can observe that they lost unless
+       you give them the promise part too.
+
+    
+    UNION
+
+    function or(a, b) {
+        var union = defer();
+        when(a, union.resolve);
+        when(b, union.resolve);
+        return union.promise;
+    }
+
+    
+asap(object, callback, errback_opt)
+
+    This is just like "when", except that it doesn't guarantee the
+    invariance of the variables in your lexical scope for the duration
+    of the call: a callback and errback may be called before "asap"
+    returns.  Instead, it guarantees that the return value of "asap"
+    will be a fully resolved value if possible.
+
+     - If "value" is a promise, returns a promise, and proceeds in
+       a fashion identical to "when", BUT...
+     - If "value" is not a promise, calls "callback" immediately with
+       that value, and returns the value returned by the callback.
+
+       Bear in mind that this may, in turn, be a promise, but it won't
+       be a promise generated by "asap".
+
+
+ref(value)
+
+    If value is a promise, returns the value.
+
+    If value is not a promise, returns a promise that has
+    already been resolved with the given value.
+
+
+reject(reason)
+
+    Returns a promise that has already been rejected
+    with the given reason.
+    
+    This is useful for conditionally forwarding a rejection through an
+    errback.
+
+        when(API.getPromise(), function (value) {
+            return doSomething(value);
+        }, function (reason) {
+            if (API.stillPossible())
+                return API.tryAgain();
+            else
+                return reject(reason);
+        })
+    
+    Unconditionally forwarding a rejection is equivalent to omitting
+    an errback on a when call.
+
+
+isPromise(value)
+
+    Returns whether the given value is a promise.
+
+
+defined(value)
+
+    Accepts a value or a promise for a value.
+
+    Returns a promise that will only resolve to a defined value.
+
+    If the given promise is resolved to "undefined", rejects
+    the returned promise.
+
+enqueue(callback Function)
+
+    Calls "callback" in a future turn.
+
+
+Copyright 2009, 2010 Kristopher Michael Kowal
+MIT License (enclosed)
+

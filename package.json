@@ -1,0 +1,25 @@
+{
+    "name": "q",
+    "description": "defer/when-style promises (CommonJS/Promises/B)",
+    "version": "0.0.0",
+    "homepage": "http://github.com/kriskowal/q/",
+    "author": "Kris Kowal <kris@cixar.com> (http://github.com/kriskowal/)",
+    "main": "q.js",
+    "repository": {
+        "type": "git",
+        "url": "http://github.com/kriskowal/q/"
+    },
+    "bugs": {
+        "mail": "kris@cixar.com",
+        "web": "http://github.com/kriskowal/q/issues"
+    },
+    "engines": {
+        "node": ">=0.2.0"
+    },
+    "licenses": [
+        {
+            "type": "MIT",
+            "url": "http://github.com/isaacs/npm/raw/master/LICENSE"
+        }
+    ]
+}
