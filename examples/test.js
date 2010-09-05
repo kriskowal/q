@@ -1,6 +1,6 @@
 
 var SYS = require("sys");
-var Q = require("q/util");
+var Q = require("q");
 
 var delay = function (delay) {
     var deferred = Q.defer();

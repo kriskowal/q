@@ -12,7 +12,7 @@ For Node:
 
     $ curl http://npmjs.org/install.sh | sh
     $ npm install q
-    $ node test.js
+    $ node examples/test.js
 
 
 
