@@ -19,7 +19,7 @@ For Node:
 THE HALLOWED API
 
 
-when(value, callback, errback_opt)
+when(value, callback_opt, errback_opt)
 
     Arranges for a callback to be called:
      - with the value as its sole argument
@@ -38,6 +38,9 @@ when(value, callback, errback_opt)
        is provided, thus forwarding rejections by default.
 
     The value may be truly _any_ value.
+
+    The callback and errback may be falsy, in which case they will not
+    be called.
     
 
     Guarantees:
@@ -139,7 +142,7 @@ defer()
     }
 
     
-asap(object, callback, errback_opt)
+asap(object, callback_opt, errback_opt)
 
     This is just like "when", except that it doesn't guarantee the
     invariance of the variables in your lexical scope for the duration

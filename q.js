@@ -264,18 +264,21 @@ exports.asap = function (value, resolved, rejected) {
     var deferred = defer();
     var done = false;   // ensure the untrusted promise makes at most a
                         // single call to one of the callbacks
+    var _value;
     ref(value).emit("when", function (value) {
         if (done)
             return;
         done = true;
         deferred.resolve(ref(value).emit("when", resolved, rejected));
+        _value = value;
     }, function (reason) {
         if (done)
             return;
         done = true;
         deferred.resolve(rejected ? rejected(reason) : reject(reason));
+        _value = deferred.promise;
     });
-    return deferred.promise;
+    return done ? _value : deferred.promise;
 };
 
 /**

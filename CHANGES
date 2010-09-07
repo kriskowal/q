@@ -1,0 +1,11 @@
+
+0.0.3
+ - removed q-util
+ - fixed asap so it returns a value if completed
+
+0.0.2
+ - added q-util
+
+0.0.1
+ - initial version
+
