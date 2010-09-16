@@ -38,6 +38,22 @@ if (typeof setTimeout === "function") {
     enqueue = require("./event-loop").enqueue;
 }
 
+var print;
+if (typeof require !== "undefined") {
+    try {
+        print = require("system").print; // CommonJS
+    } catch (exception) {
+        print = require("sys").puts; // Node
+    }
+} else if (typeof console !== "undefined") {
+    print = function (message) {
+        console.log(message);
+    };
+} else {
+    print = function () {}
+}
+exports.debug = false;
+
 /**
  * Performs a task in a future turn of the event loop.
  * @param {Function} task
@@ -261,24 +277,11 @@ exports.when = function (value, resolved, rejected) {
 /**
  */
 exports.asap = function (value, resolved, rejected) {
-    var deferred = defer();
-    var done = false;   // ensure the untrusted promise makes at most a
-                        // single call to one of the callbacks
-    var _value;
-    ref(value).emit("when", function (value) {
-        if (done)
-            return;
-        done = true;
-        deferred.resolve(ref(value).emit("when", resolved, rejected));
-        _value = value;
-    }, function (reason) {
-        if (done)
-            return;
-        done = true;
-        deferred.resolve(rejected ? rejected(reason) : reject(reason));
-        _value = deferred.promise;
-    });
-    return done ? _value : deferred.promise;
+    if (exports.isPromise(value)) {
+        return exports.when(value, resolved, rejected);
+    } else {
+        return resolved(value);
+    }
 };
 
 /**
@@ -332,7 +335,11 @@ exports.defined = function (value) {
 function forward(promise /*, op, resolved, ... */) {
     var args = Array.prototype.slice.call(arguments, 1);
     enqueue(function () {
-        promise.emit.apply(promise, args);
+        try {
+            promise.emit.apply(promise, args);
+        } catch (exception) {
+            print(exception);
+        }
     });
 }
 
@@ -341,6 +348,6 @@ function forward(promise /*, op, resolved, ... */) {
 })(
     typeof exports !== "undefined" ?
     exports :
-    Q = {}
+    this["/q"] = {}
 );
 

@@ -1,4 +1,8 @@
 
+0.1.0
+ - removed asap because it was broken, probably down to the
+   philosophy.
+
 0.0.3
  - removed q-util
  - fixed asap so it returns a value if completed
