@@ -338,7 +338,7 @@ function forward(promise /*, op, resolved, ... */) {
         try {
             promise.emit.apply(promise, args);
         } catch (exception) {
-            print(exception);
+            print(exception.stack || exception);
         }
     });
 }
