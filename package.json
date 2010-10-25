@@ -27,7 +27,8 @@
         "node": ">=0.2.0"
     },
     "dependencies": {
-        "test": ">=0.0.7"
+        "test": ">=0.0.7",
+        "event-queue": ">=0.0.1"
     },
     "directories": {
         "test": "./test"
