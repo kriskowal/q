@@ -2,23 +2,30 @@
 
 var Q = require('q')
 
-function Rejector(expect, assert, done, asserts) {
-  return function rejectionCallback(reason) {
+function Callback(expect, assert, done, asserts) {
+  return function generatedCallback(reason) {
     if (asserts) asserts()
-    assert[expected ? 'pass' : 'fail']('promise rejected: ' + reason)
+    assert[expect ? 'pass' : 'fail']('promise rejected: ' + reason)
     if (done) done()
   }
 }
 
-exports['test chained resolution'] = function(assert, done) {
+exports['test resolution propagates through chain'] = function(assert, done) {
   var nextTurn = false
   ,   resolved = false
   ,   resolution = 'Taram pam param!'
-  ,   reject = Rejector(false, assert, done)
+  ,   reject = Callback(false, assert, done)
   ,   deferred = Q.defer()
   
   Q.when
-  ( Q.when(deferred.promise, function() { resoved = true }, reject)
+  ( Q.when
+    ( deferred.promise
+    , function(value) {
+        resoved = true
+        return value
+      }
+    , reject
+    )
   , function(value) {
       assert.equal(value, resolution, 'value resoved as expected')
       assert.ok(nextTurn, 'callback is called in next turn of event loop')
@@ -31,7 +38,7 @@ exports['test chained resolution'] = function(assert, done) {
   nextTurn = true
 }
 
-exports['test chained rejection'] = function(assert, done) {
+exports['test rejection propagates through chain'] = function(assert, done) {
   var nextTurn = false
   ,   rejected = false
   ,   rejection = 'Oops!'
@@ -42,10 +49,12 @@ exports['test chained rejection'] = function(assert, done) {
     ( deferred.promise
     , function(value) {
          assert.fail('promise must not be resolved: `' + value + '`')
+         return value
       }
     , function(reason) {
         assert.equal(reason, rejection, 'promise rejected as expected')
         rejected = true
+        return reason
       }
     )
   , function(value) {
@@ -62,6 +71,61 @@ exports['test chained rejection'] = function(assert, done) {
 
   deferred.reject(rejection)
   nextTurn = true
+}
+
+exports['test resolution is delegated through chain'] = function(assert, done) {
+  var d1 = Q.defer()
+  ,   d2 = Q.defer()
+  ,   r1 = false
+  ,   v1 = 1
+  ,   v2 = 2
+  ,   reject = Callback(true, assert, done)
+
+  var p3 = Q.when
+  ( d1.promise
+  , function resolved(v) {
+      assert.equal(r1, false, 'promises#1 was not resolved yet')
+      assert.equal(v, v1, 'promise#1 resolved as expected')
+      r1 = true
+      d2.resolve(v2)
+      return d2.promise
+    }
+  , reject
+  )
+
+  Q.when
+  ( p3
+  , function resolved(v) {
+      assert.ok(r1, 'promise#1 is resolved')
+      assert.equal(v, v2, 'promise#2 delegates resolution to promise#3')
+      done()
+    }
+  , reject
+  )
+
+  d1.resolve(v1)
+}
+
+exports['test rejection is delegated through chain'] = function(assert, done) {
+  var d1 = Q.defer()
+  ,   v1 = 1
+  ,   resolve = Callback(true, assert, done)
+
+  var p2 = Q.when
+  ( d1.promise
+  , resolve
+  )
+
+  Q.when
+  ( p2
+  , resolve
+  , function resolved(v) {
+      assert.equal(v, v1, 'promise#1 delegates rejection')
+      done()
+    }
+  )
+
+  d1.resolve(v1)
 }
 
 if (module == require.main) require('test').run(exports)
