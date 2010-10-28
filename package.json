@@ -1,9 +1,13 @@
 {
     "name": "q",
     "description": "defer/when-style promises (CommonJS/Promises/B)",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "homepage": "http://github.com/kriskowal/q/",
     "author": "Kris Kowal <kris@cixar.com> (http://github.com/kriskowal/)",
+    "contributors": [
+        "Kris Kowal <kris@cixar.com> (http://github.com/kriskowal/)",
+        "Irakli Gozalishvili <rfobic@gmail.com> (http://jeditoolkit.com)"
+    ],
     "bugs": {
         "mail": "kris@cixar.com",
         "web": "http://github.com/kriskowal/q/issues"
@@ -21,5 +25,15 @@
     },
     "engines": {
         "node": ">=0.2.0"
+    },
+    "dependencies": {
+        "test": ">=0.0.7",
+        "event-queue": ">=0.0.1"
+    },
+    "directories": {
+        "test": "./test"
+    },
+    "scripts": {
+        "test": "node test/all.js"
     }
 }
