@@ -35,7 +35,7 @@ if (typeof setTimeout === "function") {
         setTimeout(task, 0);
     };
 } else {
-    enqueue = require("./event-loop").enqueue;
+    enqueue = require("event-loop").enqueue;
 }
 
 var print;
