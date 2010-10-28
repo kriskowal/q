@@ -52,7 +52,6 @@ if (typeof require !== "undefined") {
 } else {
     print = function () {}
 }
-exports.debug = false;
 
 /**
  * Performs a task in a future turn of the event loop.
@@ -327,6 +326,15 @@ exports.defined = function (value) {
             return reject("Resolved undefined value: " + value);
         return value;
     });
+};
+
+/**
+ * Throws an error with the given reason.
+ */
+exports.error = function (reason) {
+    if (!(reason instanceof Error))
+        reason = new Error(reason);
+    throw reason;
 };
 
 /*
