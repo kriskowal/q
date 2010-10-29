@@ -1,7 +1,7 @@
 {
     "name": "q",
     "description": "defer/when-style promises (CommonJS/Promises/B)",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "homepage": "http://github.com/kriskowal/q/",
     "author": "Kris Kowal <kris@cixar.com> (http://github.com/kriskowal/)",
     "contributors": [
@@ -18,7 +18,7 @@
             "url": "http://github.com/kriskowal/q/raw/master/LICENSE"
         }
     ],
-    "main": "q.js",
+    "main": "lib/q.js",
     "repository": {
         "type": "git",
         "url": "http://github.com/kriskowal/q.git"
