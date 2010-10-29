@@ -1,4 +1,7 @@
 
+0.1.2
+ - restructured for overlay style package compatibility
+
 0.1.0
  - removed asap because it was broken, probably down to the
    philosophy.
