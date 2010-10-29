@@ -185,6 +185,12 @@ defined(value)
     If the given promise is resolved to "undefined", rejects
     the returned promise.
 
+error(reason)
+
+    Accepts a reason and throws an error.  This is a convenience for
+    when calls where you want to trap the error clause and throw it
+    instead of attempting a recovery or forwarding.
+
 enqueue(callback Function)
 
     Calls "callback" in a future turn.
