@@ -79,17 +79,9 @@ exports['test resolve/reject resoved promise'] = function(assert, done) {
   )
 
   deferred.resolve(resolution)
-
-  assert.throws(function() {
-    deferred.resolve(3)
-  }, 'resoulution of resolved promise throws')
-
- assert.throws(function() {
-    deferred.resolve(resolution)
-  }, 'resolution of resolved promise even with the same value throws')
-  assert.throws(function() {
-    deferred.reject('die!')
-  }, 'rejection of resolved promise throws')
+  // all the following resolve / rejects are ignored
+  deferred.resolve(3)
+  deferred.reject('die!')
 
   nextTurn = true
 }
@@ -112,17 +104,9 @@ exports['test resolve/reject rejected promise'] = function(assert, done) {
     }
   )
   deferred.reject(error)
-
-  assert.throws(function() {
-    deferred.resolve('taram!')
-  }, 'rejection of rejected promise throws')
-
- assert.throws(function() {
-    deferred.reject(error)
-  }, 'rejection of rejected promise even with the same reason throws')
-  assert.throws(function() {
-    deferred.reject('die!')
-  }, 'rejection of rejected promise throws')
+  // all the following resolve / rejects are ignored
+  deferred.resolve('taram!')
+  deferred.reject('die!')
 
   nextTurn = true
 }

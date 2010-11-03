@@ -54,7 +54,7 @@ exports['test rejection propagates through chain'] = function(assert, done) {
     , function(reason) {
         assert.equal(reason, rejection, 'promise rejected as expected')
         rejected = true
-        return reason
+        return Q.reject(reason)
       }
     )
   , function(value) {
@@ -109,7 +109,7 @@ exports['test resolution is delegated through chain'] = function(assert, done) {
 exports['test rejection is delegated through chain'] = function(assert, done) {
   var d1 = Q.defer()
   ,   v1 = 1
-  ,   resolve = Callback(true, assert, done)
+  ,   resolve = Callback(true, assert)
 
   var p2 = Q.when
   ( d1.promise
