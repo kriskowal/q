@@ -24,11 +24,13 @@
         "url": "http://github.com/kriskowal/q.git"
     },
     "engines": {
-        "node": ">=0.2.0"
+        "node": ">=0.2.0",
+        "teleport": ">=0.2.0"
     },
     "dependencies": {
         "test": ">=0.0.7",
-        "event-queue": ">=0.0.1"
+        "event-queue": ">=0.0.1",
+        "system": ">=0.0.2"
     },
     "directories": {
         "test": "./test"
