@@ -1,4 +1,9 @@
 
+0.1.4
+ - added support for Teleport as an engine (gozala)
+ - simplified and updated methods for getting internal
+   print and enqueue functions universally (gozala)
+
 0.1.3
  - fixed erroneous link to the q module in package.json
 
