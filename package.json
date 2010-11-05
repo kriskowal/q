@@ -1,7 +1,7 @@
 {
     "name": "q",
     "description": "defer/when-style promises (CommonJS/Promises/B)",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "homepage": "http://github.com/kriskowal/q/",
     "author": "Kris Kowal <kris@cixar.com> (http://github.com/kriskowal/)",
     "contributors": [
@@ -30,6 +30,14 @@
     "dependencies": {
         "test": ">=0.0.7",
         "event-queue": ">=0.0.1"
+    },
+    "overlay": {
+        "teleport": {
+            "dependencies": {
+                "event-queue": ">=0.0.1",
+                "system": ">=0.0.4"
+            }
+        }
     },
     "directories": {
         "test": "./test"
