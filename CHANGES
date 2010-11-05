@@ -1,4 +1,8 @@
 
+0.1.5
+ - fixed dependency list for Teleport (gozala)
+ - all unit tests now pass (gozala)
+
 0.1.4
  - added support for Teleport as an engine (gozala)
  - simplified and updated methods for getting internal
