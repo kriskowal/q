@@ -1,4 +1,8 @@
 
+0.1.7
+ - shimmed ES5 Object.create in addition to Object.freeze
+   for compatibility on non-ES5 engines (gozala)
+
 0.1.6
  - Q.isResolved added
  - promise.valueOf() now returns the value of resolved
