@@ -1,4 +1,11 @@
 
+0.1.6
+ - Q.isResolved added
+ - promise.valueOf() now returns the value of resolved
+   and near values
+ - asap retried
+ - promises are frozen when possible
+
 0.1.5
  - fixed dependency list for Teleport (gozala)
  - all unit tests now pass (gozala)

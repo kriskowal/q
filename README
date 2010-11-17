@@ -176,6 +176,21 @@ isPromise(value)
     Returns whether the given value is a promise.
 
 
+isResolved(value)
+
+    Returns whether the given value is fully resolved.
+    The given value may be any value, including
+    but not limited to promises returned by defer() and
+    ref().
+
+
+promise.valueOf()
+
+    Promises override their valueOf method such that if the
+    promise is fully resolved, it will return the fully
+    resolved value.
+
+
 defined(value)
 
     Accepts a value or a promise for a value.

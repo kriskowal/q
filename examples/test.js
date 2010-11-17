@@ -1,5 +1,4 @@
 
-var SYS = require("sys");
 var Q = require("q");
 
 var delay = function (delay) {
@@ -12,5 +11,5 @@ var hi = Q.when(delay(1000), function () {
     return "Hello, World!";
 });
 
-Q.when(hi, SYS.puts);
+Q.when(hi, console.log);
 
