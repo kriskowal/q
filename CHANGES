@@ -1,4 +1,7 @@
 
+Next Release
+ - Fixed isResolved(null) and isResolved(undefined) [issue #9]
+
 0.1.7
  - shimmed ES5 Object.create in addition to Object.freeze
    for compatibility on non-ES5 engines (gozala)
