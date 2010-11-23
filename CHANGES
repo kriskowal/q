@@ -1,6 +1,7 @@
 
-Next Release
+0.1.8
  - Fixed isResolved(null) and isResolved(undefined) [issue #9]
+ - Fixed a problem with the Object.create shim
 
 0.1.7
  - shimmed ES5 Object.create in addition to Object.freeze
