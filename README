@@ -181,7 +181,14 @@ isResolved(value)
     Returns whether the given value is fully resolved.
     The given value may be any value, including
     but not limited to promises returned by defer() and
-    ref().
+    ref(). Rejected promises are not considered
+    resolved.
+
+
+isRejected(value)
+
+    Returns whether the given value is a rejected
+    promise.
 
 
 promise.valueOf()
@@ -199,6 +206,7 @@ defined(value)
 
     If the given promise is resolved to "undefined", rejects
     the returned promise.
+
 
 error(reason)
 
