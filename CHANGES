@@ -1,5 +1,5 @@
 
-Next
+0.1.9
  - Added isRejected() for testing whether a value is a rejected
    promise.  isResolved() retains the behavior of stating
    that rejected promises are not resolved.
