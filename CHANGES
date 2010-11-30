@@ -1,4 +1,9 @@
 
+Next
+ - Added isRejected() for testing whether a value is a rejected
+   promise.  isResolved() retains the behavior of stating
+   that rejected promises are not resolved.
+
 0.1.8
  - Fixed isResolved(null) and isResolved(undefined) [issue #9]
  - Fixed a problem with the Object.create shim
