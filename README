@@ -17,7 +17,7 @@ For Node:
 
 The Q Ecosystem:
 
-    q-fs      https://github.com/kriskowal/q-http
+    q-fs      https://github.com/kriskowal/q-fs
               basic file system promises
     q-http    https://github.com/kriskowal/q-http
               http client and server promises
