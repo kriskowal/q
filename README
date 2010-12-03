@@ -15,6 +15,20 @@ For Node:
     $ node examples/test.js
 
 
+The Q Ecosystem:
+
+    q-fs      https://github.com/kriskowal/q-http
+              basic file system promises
+    q-http    https://github.com/kriskowal/q-http
+              http client and server promises
+    q-util    https://github.com/kriskowal/q-util
+              promise control flow and data structures
+    teleport  https://github.com/gozala/teleport
+              browser-side module promises
+    ...
+
+    All available through NPM.
+
 
 THE HALLOWED API
 
