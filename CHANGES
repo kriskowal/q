@@ -1,4 +1,8 @@
 
+Next
+ - Changed promises into a duck-type such that multiple
+   instances of the Q module can exchange promise objects.
+
 0.1.9
  - Added isRejected() for testing whether a value is a rejected
    promise.  isResolved() retains the behavior of stating
