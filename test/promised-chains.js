@@ -119,13 +119,13 @@ exports['test rejection is delegated through chain'] = function(assert, done) {
   Q.when
   ( p2
   , resolve
-  , function resolved(v) {
+  , function rejected(v) {
       assert.equal(v, v1, 'promise#1 delegates rejection')
       done()
     }
   )
 
-  d1.resolve(v1)
+  d1.reject(v1)
 }
 
 if (module == require.main) require('test').run(exports)
