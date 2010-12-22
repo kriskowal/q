@@ -1,4 +1,8 @@
 
+Next
+ - Added a send(value, op, args) method to the public API, for
+   forwarding messages to a value or promise in a future turn.
+
 0.1.9
  - Added isRejected() for testing whether a value is a rejected
    promise.  isResolved() retains the behavior of stating
