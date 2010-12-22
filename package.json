@@ -1,7 +1,7 @@
 {
     "name": "q",
     "description": "defer/when-style promises (CommonJS/Promises/B)",
-    "version": "0.1.9",
+    "version": "0.2.0",
     "homepage": "http://github.com/kriskowal/q/",
     "author": "Kris Kowal <kris@cixar.com> (http://github.com/kriskowal/)",
     "contributors": [

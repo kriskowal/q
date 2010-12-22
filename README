@@ -164,6 +164,16 @@ ref(value)
     already been resolved with the given value.
 
 
+def(value)
+
+    Annotates a value, wrapping it in a promise, such that
+    that it is a local promise object which cannot be
+    serialized and sent to resolve a remote promise.  A
+    def'ed value will respond to the `isDef` message without
+    a rejection so remote promise communication libraries
+    can distinguish it from non-def values.
+
+
 reject(reason)
 
     Returns a promise that has already been rejected
