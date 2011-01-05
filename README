@@ -15,7 +15,145 @@ For Node:
     $ node examples/test.js
 
 
-The Q Ecosystem:
+APPLIED INTRODUCTION
+--------------------
+
+Skipping past what an asynchronous promise is and how to use
+them directly for a moment, compare the usage of this
+library to Tim Caswell's excellent `step` library.
+
+    https://github.com/creationix/step
+
+The `q/util` module, included here, provides a `step`
+function similar to Tim's.  It takes any number of functions
+as arguments and runs them in serial order.  Each function
+returns a promise to complete its step.  When that promise
+is deeply resolved (meaning there are no more unfinished
+jobs in its object graph), the resolution is passed as the
+argument to the next step.
+
+    var Q = require("q/util");
+    var FS = require("q-fs");
+
+    Q.step(
+        function () {
+            return FS.read(__filename);
+            // __filename is NodeJS-specific
+        },
+        function (text) {
+            return text.toUpperCase();
+        },
+        function (text) {
+            console.log(text);
+        }
+    );
+
+In Node, this example reads itself and writes itself out in
+all capitals.  Notice that any value can be treated as an
+already resolved promise, since the second and third steps
+return a string and `undefined` respectively.
+
+You can also perform actions in parallel.  This example
+reads two files at the same time and returns an array of
+promises for the results.  Since the second step has more
+than one argument, the results array gets unpacked into the
+variadic arguments.
+
+    var Q = require("q/util");
+    var FS = require("q-fs");
+
+    Q.step(
+        function () {
+            return [
+                FS.read(__filename),
+                FS.read("/etc/passwd")
+            ];
+        },
+        function (self, passwd) {
+            console.log(__filename + ':', self.length);
+            console.log('/etc/passwd:', passwd.length);
+        }
+    );
+
+The number of tasks performed in each step is not limited.
+You can just as well return an array of promises of
+indefinite length.  This example reads all of the files in
+the same directory as the program and notes the length of
+each.
+
+    var Q = require("q/util");
+    var FS = require("q-fs");
+
+    Q.step(
+        function () {
+            return FS.list(__dirname);
+        },
+        function (fileNames) {
+            return fileNames.map(function (fileName) {
+                return [fileName, FS.read(fileName)];
+            });
+        },
+        function (files) {
+            files.forEach(function (pair) {
+                var fileName = pair[0];
+                var file = pair[1];
+                console.log(fileName, file.length);
+            });
+        }
+    );
+
+All of these examples use the `q-fs` module, which is
+packaged separately.  You can try these programs,
+`step{1,2,3}.js` in the `examples/` directory of this
+package.
+
+When working with promises, exceptions are generally only
+thrown to indicate programmer errors.  Promise-returning
+API`s generally `reject` their promises to indicate that the
+promise will never be resolved/fulfilled.  As such, the
+above programs will terminate when the first step rejects a
+the returned promise, which can happen if there is an error
+while reading or listing a file.  The rejection can be
+observed because the `step` function returns a `promise`
+that will be eventually resolved by the return value of the
+last step.
+
+    var completed = Q.step(...);
+
+We use the `when` method to observe either the resolution or
+the rejection of the promise.
+
+    Q.when(completed, function callback(completion) {
+        // ok
+    }, function errback(reason) {
+        // error
+    });
+
+If a rejection is not explicitly observed, it gets
+implicitly forwarded to the promise returned by `when`.
+
+This is the implementation of `step` in terms of the `when`
+method and the `deep` resolver method.
+
+    function step() {
+        return Array.prototype.reduce.call(
+            arguments,
+            function (value, callback) {
+                return Q.when(deep(value), function (value) {
+                    if (callback.length > 1) {
+                        return callback.apply(undefined, value);
+                    } else {
+                        return callback(value);
+                    }
+                });
+            },
+            undefined
+        );
+    }
+
+
+The Q Ecosystem
+---------------
 
     q-fs      https://github.com/kriskowal/q-fs
               basic file system promises
@@ -23,6 +161,8 @@ The Q Ecosystem:
               http client and server promises
     q-util    https://github.com/kriskowal/q-util
               promise control flow and data structures
+    q-comm    https://github.com/kriskowal/q-comm
+              remote object communication
     teleport  https://github.com/gozala/teleport
               browser-side module promises
     ...
@@ -31,6 +171,7 @@ The Q Ecosystem:
 
 
 THE HALLOWED API
+----------------
 
 
 when(value, callback_opt, errback_opt)
@@ -238,9 +379,124 @@ error(reason)
     when calls where you want to trap the error clause and throw it
     instead of attempting a recovery or forwarding.
 
+
 enqueue(callback Function)
 
     Calls "callback" in a future turn.
+
+
+THE UTIL MODULE
+---------------
+
+The Q utility module exports all of the Q module's API but
+additionally provides the following functions.
+
+    var Q = require("q/util");
+
+
+step(...functions)
+
+    Calls each step function serially, proceeding only when
+    the promise returned by the previous step is deeply
+    resolved (see: `deep`), and passes the resolution of the
+    previous step into the argument or arguments of the
+    subsequent step.
+    
+    If a step accepts more than one argument, the resolution
+    of the previous step is treated as an array and expanded
+    into the step's respective arguments.
+
+    `step` returns a promise for the value eventually
+    returned by the last step.
+
+
+delay(timeout, eventually_opt)
+
+    Returns a promise for the eventual value after `timeout`
+    miliseconds have elapsed.  `eventually` may be omitted,
+    in which case the promise will be resolved to
+    `undefined`.  If `eventually` is a function, progress
+    will be made by calling that function and resolving to
+    the returned value.  Otherwise, `eventually` is treated
+    as a literal value and resolves the returned promise
+    directly.
+
+
+shallow(object)
+
+    Takes any value and returns a promise for the
+    corresponding value after all of its properties have
+    been resolved.  For arrays, this means that the
+    resolution is a new array with the corresponding values
+    for each respective promise of the original array, and
+    for objects, a new object with the corresponding values
+    for each property.
+
+
+deep(object)
+
+    Takes any value and returns a promise for the
+    corresponding value after all of its properties have
+    been deeply resolved.  Any array or object in the
+    transitive properties of the given value will be
+    replaced with a new array or object where all of the
+    owned properties have been replaced with their
+    resolution.
+
+
+reduceLeft(values, callback, basis, this)
+reduceRight(values, callback, basis, this)
+reduce(values, callback, basis, this)
+
+    The reduce methods all have the signature of `reduce` on
+    an ECMAScript 5 `Array`, but handle the cases where a
+    value is a promise and when the return value of the
+    accumulator is a promise.  In these cases, each reducer
+    guarantees that progress will be made in a particular
+    order.
+    
+    `reduceLeft` guarantees that the callback will be called
+    on each value and accumulation from left to right after
+    all previous values and accumulations are fully
+    resolved.
+
+    `reduceRight` works similarly from right to left.
+
+    `reduce` is opportunistic and will attempt to accumulate
+    the resolution of any previous resolutions.  This is
+    useful when the accumulation function is associative.
+
+
+THE QUEUE MODULE
+----------------
+
+The `q/queue` module provides a `Queue` object where
+infinite promises for values can be dequeued before they are
+enqueued.
+
+
+put(value)
+
+    Places a value on the queue, resolving the next gotten
+    promise in order.
+
+get()
+
+    Returns a promise for the next value from the queue.  If
+    more values have been enqueued than dequeued, this value
+    will already be resolved.
+
+close(reason_opt)
+
+    Causes all promises dequeued after all already enqueued
+    values have been depleted will be rejected for the given
+    reason.
+
+closed
+
+    A promise that, when resolved, indicates that all
+    enqueued values from before the call to `close` have
+    been dequeued.
 
 
 Copyright 2009, 2010 Kristopher Michael Kowal

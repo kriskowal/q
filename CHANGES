@@ -1,4 +1,20 @@
 
+Deprecations:
+  - I plan in the next backward-incompatible revision to move
+    the `defined` method from `q` to `q/util`. Accordingly,
+    please begin using the version of `defined` exported from
+    the latter module.
+
+0.2.1
+ - The `resolve` and `reject` methods of `defer` objects now
+   return the resolution promise for convenience.
+ - Added `q/util`, which provides `step`, `delay`, `shallow`,
+   `deep`, and three reduction orders.
+ - Added `q/queue` module for a promise `Queue`.
+ - Added `q-comm` to the list of compatible libraries.
+ - Deprecated `defined` from `q`, with intent to move it to
+   `q/util`.
+
 0.2.0 - BACKWARD INCOMPATIBLE
  - Changed post(ref, name, args) to variadic
    post(ref, name, ...args). BACKWARD INCOMPATIBLE
