@@ -5,7 +5,7 @@ Deprecations:
     please begin using the version of `defined` exported from
     the latter module.
 
-Next Minor Version:
+0.2.2
  - Added boilerplate to `q/queue` and `q/util`.
  - Fixed missing dependency to `q/queue`.
 
