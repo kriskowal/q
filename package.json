@@ -1,7 +1,7 @@
 {
     "name": "q",
     "description": "defer/when-style promises (CommonJS/Promises/B)",
-    "version": "0.1.9",
+    "version": "0.2.1",
     "homepage": "http://github.com/kriskowal/q/",
     "author": "Kris Kowal <kris@cixar.com> (http://github.com/kriskowal/)",
     "contributors": [
@@ -19,6 +19,10 @@
         }
     ],
     "main": "lib/q.js",
+    "modules": {
+        "util": "./lib/q/util.js",
+        "queue": "./lib/q/queue.js"
+    },
     "repository": {
         "type": "git",
         "url": "http://github.com/kriskowal/q.git"

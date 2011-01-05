@@ -1,8 +1,37 @@
 
-Next
+Deprecations:
+  - I plan in the next backward-incompatible revision to move
+    the `defined` method from `q` to `q/util`. Accordingly,
+    please begin using the version of `defined` exported from
+    the latter module.
+
+Next Minor Version:
+ - Added boilerplate to `q/queue` and `q/util`.
+ - Fixed missing dependency to `q/queue`.
+ - Changed promises into a duck-type such that multiple
+   instances of the Q module can exchange promise objects.
+   A promise is now defined as "an object that implements the
+   `promiseSend(op, resolved, ...)` method and `valueOf`".
+
+0.2.1
+ - The `resolve` and `reject` methods of `defer` objects now
+   return the resolution promise for convenience.
+ - Added `q/util`, which provides `step`, `delay`, `shallow`,
+   `deep`, and three reduction orders.
+ - Added `q/queue` module for a promise `Queue`.
+ - Added `q-comm` to the list of compatible libraries.
+ - Deprecated `defined` from `q`, with intent to move it to
+   `q/util`.
+
+0.2.0 - BACKWARD INCOMPATIBLE
  - Changed post(ref, name, args) to variadic
-   post(ref, name, ...args)
- - Added a send(value, op, args) method to the public API, for
+   post(ref, name, ...args). BACKWARD INCOMPATIBLE
+ - Added a def(value) method to annotate an object as being
+   necessarily a local value that cannot be serialized, such
+   that inter-process/worker/vat promise communication
+   libraries will send messages to it, but never send it
+   back.
+ - Added a send(value, op, ...args) method to the public API, for
    forwarding messages to a value or promise in a future turn.
 
 0.1.9
