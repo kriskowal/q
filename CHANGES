@@ -5,6 +5,10 @@ Deprecations:
     please begin using the version of `defined` exported from
     the latter module.
 
+Next Minor Version:
+ - Added boilerplate to `q/queue` and `q/util`.
+ - Fixed missing dependency to `q/queue`.
+
 0.2.1
  - The `resolve` and `reject` methods of `defer` objects now
    return the resolution promise for convenience.
