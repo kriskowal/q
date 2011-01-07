@@ -8,6 +8,8 @@ Deprecations:
 Next release:
  - Exceptions in promises are now captured and returned
    as rejections.
+
+0.2.4
  - Fixed bug in `ref` that prevented `del` messages from
    being received (gozala)
  - Fixed a conflict with FireFox 4; constructor property
