@@ -5,6 +5,9 @@ Deprecations:
     please begin using the version of `defined` exported from
     the latter module.
 
+0.2.3
+ - Added `keys` message to promises and to the promise API.
+
 0.2.2
  - Added boilerplate to `q/queue` and `q/util`.
  - Fixed missing dependency to `q/queue`.
