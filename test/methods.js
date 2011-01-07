@@ -63,8 +63,8 @@ exports['test post resolved'] = function (ASSERT, done) {
     };
 
     Q.when(Q.post(d.promise, 'a', [1]), function (result) {
-        ASSERT.equal(result, 2, 'correct value is returned by post');
-        ASSERT.equal(value._a, 1, 'post invoked function as expected');
+        ASSERT.ok(result === 2, 'correct value is returned by post');
+        ASSERT.ok(value._a === 1, 'post invoked function as expected');
         done();
     }, function (reason) {
         ASSERT.fail(reason);
