@@ -6,6 +6,10 @@ Deprecations:
     the latter module.
 
 Next release:
+ - Changed promises into a duck-type such that multiple
+   instances of the Q module can exchange promise objects.
+   A promise is now defined as "an object that implements the
+   `promiseSend(op, resolved, ...)` method and `valueOf`".
  - Exceptions in promises are now captured and returned
    as rejections.
 
@@ -21,10 +25,6 @@ Next release:
 0.2.2
  - Added boilerplate to `q/queue` and `q/util`.
  - Fixed missing dependency to `q/queue`.
- - Changed promises into a duck-type such that multiple
-   instances of the Q module can exchange promise objects.
-   A promise is now defined as "an object that implements the
-   `promiseSend(op, resolved, ...)` method and `valueOf`".
 
 0.2.1
  - The `resolve` and `reject` methods of `defer` objects now
