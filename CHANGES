@@ -5,6 +5,12 @@ Deprecations:
     please begin using the version of `defined` exported from
     the latter module.
 
+Next release:
+ - Fixed bug in `ref` that prevented `del` messages from
+   being received (gozala)
+ - Fixed a conflict with FireFox 4; constructor property
+   is now read-only.
+
 0.2.3
  - Added `keys` message to promises and to the promise API.
 
