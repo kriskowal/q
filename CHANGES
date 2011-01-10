@@ -5,7 +5,7 @@ Deprecations:
     please begin using the version of `defined` exported from
     the latter module.
 
-Next release:
+0.2.5
  - Changed promises into a duck-type such that multiple
    instances of the Q module can exchange promise objects.
    A promise is now defined as "an object that implements the
