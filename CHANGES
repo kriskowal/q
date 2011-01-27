@@ -7,6 +7,9 @@ Deprecations:
     the latter module.
 
 Next minor release:
+ - Thenables (objects with a "then" method) are accepted
+   and provided, bringing this implementation of Q
+   into conformance with Promises/A, B, and D.
  - Rejections are now also duck-typed. A rejection is a
    promise with a valueOf method that returns a rejection
    descriptor. A rejection descriptor has a
