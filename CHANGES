@@ -1,9 +1,17 @@
+# vim:ts=4:sts=4:sw=4:et:tw=60
 
 Deprecations:
   - I plan in the next backward-incompatible revision to move
     the `defined` method from `q` to `q/util`. Accordingly,
     please begin using the version of `defined` exported from
     the latter module.
+
+Next minor release:
+ - Rejections are now also duck-typed. A rejection is a
+   promise with a valueOf method that returns a rejection
+   descriptor. A rejection descriptor has a
+   "promiseRejection" property equal to "true" and a
+   "reason" property corresponding to the rejection reason.
 
 0.2.5
  - Changed promises into a duck-type such that multiple
