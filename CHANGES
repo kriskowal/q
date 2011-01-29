@@ -1,9 +1,23 @@
+# vim:ts=4:sts=4:sw=4:et:tw=60
 
 Deprecations:
   - I plan in the next backward-incompatible revision to move
     the `defined` method from `q` to `q/util`. Accordingly,
-    please begin using the version of `defined` exported from
-    the latter module.
+    please begin using the version of `defined` exported
+    from the latter module.
+  - the `Promise` constructor, as such, is deprecated in
+    favor of the name `makePromise`, as conceived proper by
+    Mark Miller in a style where TitleCase is reserved for
+    constructors.
+
+Next minor release:
+ - Added `makePromise`, to replace the `Promise` function
+   eventually.
+ - Rejections are now also duck-typed. A rejection is a
+   promise with a valueOf method that returns a rejection
+   descriptor. A rejection descriptor has a
+   "promiseRejected" property equal to "true" and a
+   "reason" property corresponding to the rejection reason.
 
 0.2.5
  - Changed promises into a duck-type such that multiple
