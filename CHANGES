@@ -10,7 +10,7 @@ Deprecations:
     Mark Miller in a style where TitleCase is reserved for
     constructors.
 
-Next minor release:
+0.2.6
  - Thenables (objects with a "then" method) are accepted
    and provided, bringing this implementation of Q
    into conformance with Promises/A, B, and D.
