@@ -10,6 +10,11 @@ Deprecations:
     Mark Miller in a style where TitleCase is reserved for
     constructors.
 
+Next minor release
+ - Exceptions thrown in the callbacks of a `when` call
+   are now consumed, warned, and transformed into
+   rejections of the promise returned by `when`.
+
 0.2.7
  - Fixed a minor bug in thenable assimilation, regressed
    because of the change in the forwarding protocol.
