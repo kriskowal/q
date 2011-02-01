@@ -18,6 +18,12 @@ Next minor release:
    descriptor. A rejection descriptor has a
    "promiseRejected" property equal to "true" and a
    "reason" property corresponding to the rejection reason.
+ - Altered the `makePromise` API such that the `fallback`
+   method no longer receives a superfluous `resolved` method
+   after the `operator`.  The fallback method is responsible
+   only for returning a resolution.  This breaks an
+   undocumented API, so third-party API's depending on the
+   previous undocumented behavior may break.
 
 0.2.5
  - Changed promises into a duck-type such that multiple
