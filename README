@@ -5,7 +5,10 @@ Provides a defer/when style promise API for JavaScript
 - usable as a CommonJS module, in Node,
 - usable as a <script> in all web browsers,
 - inspired by Tyler Close's Waterken ref_send promises, and
-- compliant with http://wiki.commonjs.org/wiki/Promises/B
+- compliant with
+   - http://wiki.commonjs.org/wiki/Promises/A
+   - http://wiki.commonjs.org/wiki/Promises/B
+   - http://wiki.commonjs.org/wiki/Promises/D
 
 
 For Node:
