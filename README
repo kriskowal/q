@@ -299,7 +299,7 @@ defer()
     
 ref(value)
 
-    If value is a promise, returns the value.
+    If value is a promise, returns the promise.
 
     If value is not a promise, returns a promise that has
     already been resolved with the given value.
@@ -309,10 +309,11 @@ def(value)
 
     Annotates a value, wrapping it in a promise, such that
     that it is a local promise object which cannot be
-    serialized and sent to resolve a remote promise.  A
-    def'ed value will respond to the `isDef` message without
-    a rejection so remote promise communication libraries
-    can distinguish it from non-def values.
+    serialized and sent to resolve a remote promise.
+
+    A def'ed value will respond to the `isDef` message
+    without a rejection so remote promise communication
+    libraries can distinguish it from non-def values.
 
 
 reject(reason)
@@ -320,8 +321,8 @@ reject(reason)
     Returns a promise that has already been rejected
     with the given reason.
     
-    This is useful for conditionally forwarding a rejection through an
-    errback.
+    This is useful for conditionally forwarding a rejection
+    through an errback.
 
         when(API.getPromise(), function (value) {
             return doSomething(value);
@@ -332,8 +333,8 @@ reject(reason)
                 return reject(reason);
         })
     
-    Unconditionally forwarding a rejection is equivalent to omitting
-    an errback on a when call.
+    Unconditionally forwarding a rejection is equivalent to
+    omitting an errback on a when call.
 
 
 isPromise(value)
@@ -363,26 +364,68 @@ promise.valueOf()
     resolved value.
 
 
-defined(value)
-
-    Accepts a value or a promise for a value.
-
-    Returns a promise that will only resolve to a defined value.
-
-    If the given promise is resolved to "undefined", rejects
-    the returned promise.
-
-
 error(reason)
 
-    Accepts a reason and throws an error.  This is a convenience for
-    when calls where you want to trap the error clause and throw it
-    instead of attempting a recovery or forwarding.
+    Accepts a reason and throws an error.  This is a
+    convenience for when calls where you want to trap the
+    error clause and throw it instead of attempting a
+    recovery or forwarding.
 
 
 enqueue(callback Function)
 
     Calls "callback" in a future turn.
+
+
+ADVANCED API
+------------
+
+The "ref" promise constructor establishes the basic API for
+performing operations on objects: "get", "put", "post", and
+"del".  This set of "operators" can be extended by creating
+promises that respond to messages with other operator names,
+and by sending corresponding messages to those promises.
+
+
+makePromise(descriptor, fallback_opt, valueOf_opt)
+
+    Creates a stand-alone promise that responds to messages.
+    These messages have an operator like "when", "get",
+    "put", and "post", corresponding to each of the above
+    methods for sending messages to promises.
+
+    The descriptor is an object with function properties
+    (methods) corresponding to operators.  When the made
+    promise receives a message and a corresponding operator
+    exists in the descriptor, the method gets called with
+    the variadic arguments sent to the promise.  If no
+    descriptor exists, the fallback method is called with
+    the operator, and the subsequent variadic arguments
+    instead.  These functions return a promise for the
+    eventual resolution of the promise returned by the
+    message-sender.  The default fallback returns a
+    rejection.
+
+    The `valueOf` function, if provided, overrides the
+    `valueOf` method of the returned promise.  This is
+    useful for providing information about the promise in
+    the same turn of the event loop.  For example, resolved
+    promises return their resolution value and rejections
+    return an object that is recognized by `isRejected`.
+
+
+send(value, operator, ...args)
+
+    Sends an arbitrary message to a promise.
+
+    Care should be taken not to introduce control-flow
+    hazards and secuirity holes when forwarding messages to
+    promises.  The methods above, particularly "when", are
+    carefully crafted to prevent a poorly crafted or
+    malicious promise from breaking the invariants like not
+    applying callbacks multiple times or in the same turn of
+    the event loop.
+
 
 
 THE UTIL MODULE
