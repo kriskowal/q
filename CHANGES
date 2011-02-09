@@ -9,8 +9,13 @@ Deprecations:
     favor of the name `makePromise`, as conceived proper by
     Mark Miller in a style where TitleCase is reserved for
     constructors.
+  - In the next backward-incompatible revision, "post" will
+    be reverted to its original non-variadic behavior,
+    receiving the post body as a single argument, albeit an
+    array.  An "invoke" method will be introduced to provide
+    the variadic convenience.
 
-Next minor release
+0.2.8
  - Exceptions thrown in the callbacks of a `when` call
    are now consumed, warned, and transformed into
    rejections of the promise returned by `when`.
