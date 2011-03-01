@@ -12,8 +12,9 @@ Deprecations:
   - In the next backward-incompatible revision, "post" will
     be reverted to its original non-variadic behavior,
     receiving the post body as a single argument, albeit an
-    array.  An "invoke" method will be introduced to provide
-    the variadic convenience.
+    array.  An `invoke` alias for `post` has been provided
+    which will continue to support the variadic calling
+    convention when `post` is reverted.
   - The `isResolved` and `isRejected` functions will be
     re-arranged as `isFulfilled`, and `isRejected`, since
     `isResolved` means either fullfilled or rejected.

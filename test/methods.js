@@ -62,9 +62,9 @@ exports['test post resolved'] = function (ASSERT, done) {
         }
     };
 
-    Q.when(Q.post(d.promise, 'a', 1), function (result) {
-        ASSERT.ok(result === 2, 'correct value is returned by post');
-        ASSERT.ok(value._a === 1, 'post invoked function as expected');
+    Q.when(Q.invoke(d.promise, 'a', 1), function (result) {
+        ASSERT.ok(result === 2, 'correct value is returned by invoke');
+        ASSERT.ok(value._a === 1, 'invoke invoked function as expected');
         done();
     }, function (reason) {
         ASSERT.fail(reason);
@@ -73,11 +73,11 @@ exports['test post resolved'] = function (ASSERT, done) {
     d.resolve(value);
 };
 
-exports['test post on undefined method'] = function (ASSERT, done) {
+exports['test invoke on undefined method'] = function (ASSERT, done) {
     var d = Q.defer();
     var value = {};
 
-    Q.when(Q.post(d.promise, 'a', 1), function (result) {
+    Q.when(Q.invoke(d.promise, 'a', 1), function (result) {
         ASSERT.fail('Unxpeced to call non-existing method:' + result);
         done();
     }, function (reason) {
@@ -87,10 +87,10 @@ exports['test post on undefined method'] = function (ASSERT, done) {
     d.resolve(value);
 };
 
-exports['test post on method of undefined'] = function (ASSERT, done) {
+exports['test invoke on method of undefined'] = function (ASSERT, done) {
     var d = Q.defer();
 
-    Q.when(Q.post(d.promise, 'a', [1]), function (result) {
+    Q.when(Q.invoke(d.promise, 'a', [1]), function (result) {
         ASSERT.fail('Unxpeced to call non-existing method:' + result);
         done();
     }, function (reason) {
