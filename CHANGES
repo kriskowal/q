@@ -14,6 +14,14 @@ Deprecations:
     receiving the post body as a single argument, albeit an
     array.  An "invoke" method will be introduced to provide
     the variadic convenience.
+  - The `isResolved` and `isRejected` functions will be
+    re-arranged as `isFulfilled`, and `isRejected`, since
+    `isResolved` means either fullfilled or rejected.
+
+Next minor release:
+ - Exceptions thrown in the callbacks of a `when` call are
+   now emitted to Node's `"uncaughtException"` `process`
+   event in addition to being returned as a rejection reason.
 
 0.2.8
  - Exceptions thrown in the callbacks of a `when` call
