@@ -19,7 +19,10 @@ Deprecations:
     re-arranged as `isFulfilled`, and `isRejected`, since
     `isResolved` means either fullfilled or rejected.
 
-Next minor release:
+0.2.9
+ - The future-compatible `invoke` method has been added,
+   to replace `post`, since `post` will become backward-
+   incompatible in the next major release.
  - Exceptions thrown in the callbacks of a `when` call are
    now emitted to Node's `"uncaughtException"` `process`
    event in addition to being returned as a rejection reason.
