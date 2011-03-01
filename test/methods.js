@@ -62,7 +62,28 @@ exports['test post resolved'] = function (ASSERT, done) {
         }
     };
 
-    Q.when(Q.post(d.promise, 'a', 1), function (result) {
+    Q.when(Q.post(d.promise, 'a', [1]), function (result) {
+        ASSERT.ok(result === 2, 'correct value is returned by post');
+        ASSERT.ok(value._a === 1, 'post invoked function as expected');
+        done();
+    }, function (reason) {
+        ASSERT.fail(reason);
+        done();
+    });
+    d.resolve(value);
+};
+
+exports['test invoke resolved'] = function (ASSERT, done) {
+    var d = Q.defer();
+    var value = {
+        _a: null,
+        a: function a(value) {
+            this._a = value;
+            return 1 + value;
+        }
+    };
+
+    Q.when(Q.invoke(d.promise, 'a', 1), function (result) {
         ASSERT.ok(result === 2, 'correct value is returned by post');
         ASSERT.ok(value._a === 1, 'post invoked function as expected');
         done();
@@ -77,7 +98,7 @@ exports['test post on undefined method'] = function (ASSERT, done) {
     var d = Q.defer();
     var value = {};
 
-    Q.when(Q.post(d.promise, 'a', 1), function (result) {
+    Q.when(Q.post(d.promise, 'a', [1]), function (result) {
         ASSERT.fail('Unxpeced to call non-existing method:' + result);
         done();
     }, function (reason) {

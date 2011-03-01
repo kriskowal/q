@@ -1,12 +1,13 @@
 
 var Q = require('q');
 
-exports['test reject: isRejected, isResolved'] = function (ASSERT, done) {
+exports['test reject: isRejected, isResolved, isFulfilled'] = function (ASSERT, done) {
     var future = false;
     var reason = {};
     var rejection = Q.reject(reason);
     ASSERT.ok(Q.isRejected(rejection), 'should be rejected in current turn');
-    ASSERT.ok(!Q.isResolved(rejection), 'should not be resolved in current turn');
+    ASSERT.ok(!Q.isFulfilled(rejection), 'should not be fulfilled in current turn');
+    ASSERT.ok(Q.isResolved(rejection), 'should be resolved in current turn');
     Q.when(function () {
         ASSERT.ok(false, 'should not be resolved in a future turn');
         done();
