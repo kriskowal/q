@@ -41,6 +41,14 @@
                 "event-queue": ">=0.0.1",
                 "system": ">=0.0.4"
             }
+        },
+        "browser": {
+            "dependencies": {}
+        },
+        "lode": {
+            "directories": {
+                "lib": "lib/q"
+            }
         }
     },
     "directories": {
