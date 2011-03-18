@@ -1,5 +1,5 @@
 // vim:ts=4:sts=4:sw=4:
-'use stirct';
+'use strict';
 
 var Q = require('q');
 
@@ -53,6 +53,27 @@ exports['test put rejected'] = function (ASSERT, done) {
 };
 
 exports['test post resolved'] = function (ASSERT, done) {
+    var d = Q.defer();
+    var value = {
+        _a: null,
+        a: function a(value) {
+            this._a = value;
+            return 1 + value;
+        }
+    };
+
+    Q.when(Q.post(d.promise, 'a', [1]), function (result) {
+        ASSERT.ok(result === 2, 'correct value is returned by post');
+        ASSERT.ok(value._a === 1, 'post invoked function as expected');
+        done();
+    }, function (reason) {
+        ASSERT.fail(reason);
+        done();
+    });
+    d.resolve(value);
+};
+
+exports['test invoke resolved'] = function (ASSERT, done) {
     var d = Q.defer();
     var value = {
         _a: null,
@@ -131,3 +152,4 @@ exports['test delete rejected'] = function (ASSERT, done) {
 
 if (module == require.main)
     require('test').run(exports)
+

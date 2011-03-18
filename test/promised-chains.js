@@ -21,13 +21,13 @@ exports['test resolution propagates through chain'] = function(assert, done) {
   ( Q.when
     ( deferred.promise
     , function(value) {
-        resoved = true
+        resolved = true
         return value
       }
     , reject
     )
   , function(value) {
-      assert.equal(value, resolution, 'value resoved as expected')
+      assert.equal(value, resolution, 'value resolved as expected')
       assert.ok(nextTurn, 'callback is called in next turn of event loop')
       done()
     }
