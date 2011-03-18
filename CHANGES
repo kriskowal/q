@@ -1,6 +1,6 @@
 # vim:ts=4:sts=4:sw=4:et:tw=60
 
-Next major release: BACKWARD-INCOMPATIBLE
+0.3.0 - BACKWARD-INCOMPATIBLE
  - The `post` method has been reverted to its original
    signature, as provided in Tyler Close's `ref_send` API.
    That is, `post` accepts two arguments, the second of
@@ -23,7 +23,7 @@ Next major release: BACKWARD-INCOMPATIBLE
    rejected.  The code has been revised to reflect this
    nuance in terminology.
 
-Next minor release:
+0.2.10
  - Added `join` to `"q/util"` for variadically joining
    multiple promises.
 
