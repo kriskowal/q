@@ -18,141 +18,233 @@ For Node:
     $ node examples/test.js
 
 
-APPLIED INTRODUCTION
---------------------
+EXAMPLES
+--------
 
-Skipping past what an asynchronous promise is and how to use
-them directly for a moment, compare the usage of this
-library to Tim Caswell's excellent `step` library.
 
-    https://github.com/creationix/step
+Promises from callbacks
 
-The `q/util` module, included here, provides a `step`
-function similar to Tim's.  It takes any number of functions
-as arguments and runs them in serial order.  Each function
-returns a promise to complete its step.  When that promise
-is deeply resolved (meaning there are no more unfinished
-jobs in its object graph), the resolution is passed as the
-argument to the next step.
+    function delay(ms) {
+        var deferred = Q.defer();
+        setTimeout(deferred.resolve, ms);
+        return deferred.promise;
+    }
+
+
+Timeout
+
+    function timeout(promise, ms) {
+        var deferred = Q.defer();
+        Q.when(promise, deferred.resolve);
+        Q.when(delay(ms), function () {
+            deferred.reject("Timed out");
+        });
+        return deferred.promise;
+    }
+
+
+Promises with rejection from Node callbacks
+
+    function wrap(wrapped) {
+        var deferred = Q.defer();
+        wrapped(function (error, result) {
+            if (error) {
+                deferred.reject(error);
+            } else {
+                deferred.resolve(result);
+            }
+        });
+        return deferred.promise;
+    }
+
+
+When Blocks
+
+    var bPromise = Q.when(aPromise, function (aValue) {
+        return bValue;
+    });
+
+    var bPromise = Q.when(aPromise, function (aValue) {
+        return bValue;
+    }, function (aReason) {
+        throw bReason;
+    });
+
+
+Parallel Join
+
+    var aPromise = aFunction();
+    var bPromise = bFunction();
+    var cPromise = Q.when(aPromise, function (aValue) {
+        return Q.when(bPromise, function bValue) {
+            return cValue;
+        });
+    });
+
+
+Serial Join
+
+    var aPromise = aFunction();
+    var cPromise = Q.when(aPromise, function (aValue) {
+        // bFunction will not proceed unless aPromise
+        // is fulfilled
+        var bPromise = bFunction();
+        return Q.when(bPromise, function bValue) {
+            return cValue;
+        });
+    });
+
+
+Recovering from Failure
+
+    function justDoIt(value) {
+        var work = doIt(value);
+        work = timeout(1000, work);
+        return Q.when(work, function (work) {
+            return work;
+        }, function errback(reason) {
+            // just do it again
+            return justDoIt(value);
+        });
+    }
+
+
+Array Parallel Join
+
+    var done;
+    array.forEach(function (value) {
+        var work = doWork(value); 
+        done = Q.when(done, function () {
+            return work;
+        });
+    });
+    return done;
+
+
+Or
+
+    return array.reduce(function (done, value) {
+        var work = doWork(value);
+        return Q.when(done, function () {
+            return work;
+        });
+    }, undefined);
+
+
+Array Serial Join
+
+    var done;
+    array.forEach(function (value) {
+        done = Q.when(done, function () {
+            return doWork(value); 
+        });
+    });
+    return done;
+
+Or
+
+    return array.reduce(function (done, value) {
+        return Q.when(done, function () {
+            return doWork(value);
+        });
+    });
+
+
+Conditional Array Serial Join
+
+    var otherwise = function () {
+        throw new Error("No dice");
+    };
+    array.forEach(function (value) {
+        otherwise = (function (otherwise) {
+            return function () {
+                var work = doWork(value);
+                return Q.when(work, function (work) {
+                    if (keepGoing(work)) {
+                        return work;
+                    } else {
+                        return otherwise();
+                    }
+                });
+            };
+        })(otherwise);
+    });
+    return otherwise();
+
+Or
+
+    array.reduce(function (otherwise, value) {
+        var work = doWork(value);
+        return Q.when(work, function (work) {
+            if (keepGoing(work)) {
+                return work;
+            } else {
+                return otherwise();
+            }
+        });
+    }, function otherwise() {
+        throw new Error("No dice");
+    });
+
+
+In Node, this example reads itself and writes itself out in
+all capitals.
 
     var Q = require("q/util");
     var FS = require("q-fs");
 
-    Q.step(
-        function () {
-            return FS.read(__filename);
-            // __filename is NodeJS-specific
-        },
-        function (text) {
-            return text.toUpperCase();
-        },
-        function (text) {
-            console.log(text);
-        }
-    );
+    var text = FS.read(__filename);
+    Q.when(text, function (text) {
+        console.log(text.toUpperCase());
+    });
 
-In Node, this example reads itself and writes itself out in
-all capitals.  Notice that any value can be treated as an
-already resolved promise, since the second and third steps
-return a string and `undefined` respectively.
 
 You can also perform actions in parallel.  This example
 reads two files at the same time and returns an array of
-promises for the results.  Since the second step has more
-than one argument, the results array gets unpacked into the
-variadic arguments.
+promises for the results.
 
     var Q = require("q/util");
     var FS = require("q-fs");
 
-    Q.step(
-        function () {
-            return [
-                FS.read(__filename),
-                FS.read("/etc/passwd")
-            ];
-        },
-        function (self, passwd) {
-            console.log(__filename + ':', self.length);
-            console.log('/etc/passwd:', passwd.length);
-        }
-    );
-
-The number of tasks performed in each step is not limited.
-You can just as well return an array of promises of
-indefinite length.  This example reads all of the files in
-the same directory as the program and notes the length of
-each.
-
-    var Q = require("q/util");
-    var FS = require("q-fs");
-
-    Q.step(
-        function () {
-            return FS.list(__dirname);
-        },
-        function (fileNames) {
-            return fileNames.map(function (fileName) {
-                return [fileName, FS.read(fileName)];
-            });
-        },
-        function (files) {
-            files.forEach(function (pair) {
-                var fileName = pair[0];
-                var file = pair[1];
-                console.log(fileName, file.length);
-            });
-        }
-    );
-
-All of these examples use the `q-fs` module, which is
-packaged separately.  You can try these programs,
-`step{1,2,3}.js` in the `examples/` directory of this
-package.
-
-When working with promises, exceptions are generally only
-thrown to indicate programmer errors.  Promise-returning
-API`s generally `reject` their promises to indicate that the
-promise will never be resolved/fulfilled.  As such, the
-above programs will terminate when the first step rejects a
-the returned promise, which can happen if there is an error
-while reading or listing a file.  The rejection can be
-observed because the `step` function returns a `promise`
-that will be eventually resolved by the return value of the
-last step.
-
-    var completed = Q.step(...);
-
-We use the `when` method to observe either the resolution or
-the rejection of the promise.
-
-    Q.when(completed, function callback(completion) {
-        // ok
-    }, function errback(reason) {
-        // error
+    var self = FS.read(__filename);
+    var passwd = FS.read("/etc/passwd");
+    Q.join(self, passwd, function (self, passwd) {
+        console.log(__filename + ':', self.length);
+        console.log('/etc/passwd:', passwd.length);
     });
 
-If a rejection is not explicitly observed, it gets
-implicitly forwarded to the promise returned by `when`.
+This example reads all of the files in the same directory as
+the program and notes the length of each, in the order in
+which they are finished reading.
 
-This is the implementation of `step` in terms of the `when`
-method and the `deep` resolver method.
+    var Q = require("q/util");
+    var FS = require("q-fs");
 
-    function step() {
-        return Array.prototype.reduce.call(
-            arguments,
-            function (value, callback) {
-                return Q.when(deep(value), function (value) {
-                    if (callback.length > 1) {
-                        return callback.apply(undefined, value);
-                    } else {
-                        return callback(value);
-                    }
-                });
-            },
-            undefined
-        );
-    }
+    var list = FS.list(__dirname);
+    var files = Q.when(list, function (list) {
+        list.forEach(function (fileName) {
+            var content = FS.read(fileName);
+            Q.when(content, function (content) {
+                console.log(fileName, content.length);
+            });
+        });
+    });
+
+
+This example reads all of the files in the same directory as
+the program and notes the length of each, in the order in
+which they were listed.
+
+    var list = FS.list(__dirname);
+    var files = Q.when(list, function (list) {
+        return list.reduce(function (ready, fileName) {
+            var content = FS.read(fileName);
+            return Q.join(ready, content, function (ready, content) {
+                console.log(fileName, content.length);
+            });
+        });
+    });
+
 
 
 The Q Ecosystem
