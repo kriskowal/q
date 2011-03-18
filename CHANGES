@@ -19,7 +19,7 @@ Deprecations:
     re-arranged as `isFulfilled`, and `isRejected`, since
     `isResolved` means either fullfilled or rejected.
 
-Next Minor
+0.2.10
  - Added `join` to `"q/util"` for variadically joining
    multiple promises.
 
