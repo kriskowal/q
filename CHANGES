@@ -19,6 +19,10 @@ Deprecations:
     re-arranged as `isFulfilled`, and `isRejected`, since
     `isResolved` means either fullfilled or rejected.
 
+Next Minor
+ - Added `join` to `"q/util"` for variadically joining
+   multiple promises.
+
 0.2.9
  - The future-compatible `invoke` method has been added,
    to replace `post`, since `post` will become backward-
