@@ -1,9 +1,9 @@
 
-
-Provides a defer/when style promise API for JavaScript
+Provides a defer/when style promise API for JavaScript.
 
 - usable as a CommonJS module, in Node,
 - usable as a <script> in all web browsers,
+- compatible with jQuery and Dojo promises,
 - inspired by Tyler Close's Waterken ref_send promises, and
 - compliant with
    - http://wiki.commonjs.org/wiki/Promises/A
@@ -22,7 +22,10 @@ EXAMPLES
 --------
 
 
-Promises from callbacks
+### `defer`
+
+This example provides a promise-oriented `delay` function
+based on the callback-oriented `setTimeout` function.
 
     function delay(ms) {
         var deferred = Q.defer();
@@ -31,7 +34,9 @@ Promises from callbacks
     }
 
 
-Timeout
+This example takes a promise and returns a promise that will
+be rejected if the given promise is not fulfilled in a
+timely fashion.
 
     function timeout(promise, ms) {
         var deferred = Q.defer();
@@ -43,149 +48,85 @@ Timeout
     }
 
 
-Promises with rejection from Node callbacks
+This example wraps Node's file listing function, returning a
+promise instead of accepting a callback.
 
-    function wrap(wrapped) {
-        var deferred = Q.defer();
-        wrapped(function (error, result) {
-            if (error) {
-                deferred.reject(error);
-            } else {
-                deferred.resolve(result);
-            }
+    var FS = require("fs"); // from Node
+
+    function list(path) {
+        path = String(path);
+        var result = Q.defer();
+        FS.readdir(path, function (error, list) {
+            if (error)
+                return result.reject(error);
+            else
+                result.resolve(list);
         });
-        return deferred.promise;
+        return result.promise;
     }
 
 
-When Blocks
+### `when`
+
+This example illustrates how the `when` primitive can be
+used to observe the fulfillment of a promise.
 
     var bPromise = Q.when(aPromise, function (aValue) {
         return bValue;
     });
+
+* If `aPromise` is fulfilled, the callback is called in a
+  future turn of the even loop with the fulfilled value as
+  `aValue`.
+* If `aPromise` is rejected, `bPromise` will be resolved
+  with `aPromise` (the rejection will be forwarded).
+* `bPromise` is eventually resolved with `bValue`.
+* `aPromise` does not actually need to be a promise.  It
+  can be any value, in which case it is treated as an
+  already fulfilled promise.
+* `bValue` does not actually need to be a value.  It can be
+  a promise, which would further defer the resolution of
+  `bPromise`.
+* If the fulfillment callback throws an exception,
+  `bPromise` will be rejected with the thrown error as the
+  reason.
+
+
+This example illustrates how the `when` primitive can be
+used to observe either the fulfillment or rejection of a
+promise.  
 
     var bPromise = Q.when(aPromise, function (aValue) {
         return bValue;
     }, function (aReason) {
+        return bValue; // or
         throw bReason;
     });
 
+* If `aPromise` is rejected, the second callback, the
+  rejection callback, will be called with the reason for the
+  rejection as `aReason`.
+* The value returned by the rejection callback will be used
+  to resolve `bPromise`.
+* If the rejection callback throws an error, `bPromise` will
+  be rejected with the error as the reason.
+* Unlike a `try` and `catch` block, the rejection callback
+  will not be called if the fulfillment callback throws an
+  error or returns a rejection.  To observe an exception
+  thrown in either the fulfillment or the rejection
+  callback, another `when` block must be used to observe the
+  rejection of `bPromise`.
 
-Parallel Join
+In general,
 
-    var aPromise = aFunction();
-    var bPromise = bFunction();
-    var cPromise = Q.when(aPromise, function (aValue) {
-        return Q.when(bPromise, function bValue) {
-            return cValue;
-        });
-    });
-
-
-Serial Join
-
-    var aPromise = aFunction();
-    var cPromise = Q.when(aPromise, function (aValue) {
-        // bFunction will not proceed unless aPromise
-        // is fulfilled
-        var bPromise = bFunction();
-        return Q.when(bPromise, function bValue) {
-            return cValue;
-        });
-    });
+* If the rejection callback is falsy and `aPromise` is
+rejected, the rejection will be forwarded to `bPromise`.
+* If the fulfillment callback is falsy and `aPromise` is
+fulfilled, the fulfilled value will be forwarded to
+`bPromise`.
 
 
-Recovering from Failure
-
-    function justDoIt(value) {
-        var work = doIt(value);
-        work = timeout(1000, work);
-        return Q.when(work, function (work) {
-            return work;
-        }, function errback(reason) {
-            // just do it again
-            return justDoIt(value);
-        });
-    }
-
-
-Array Parallel Join
-
-    var done;
-    array.forEach(function (value) {
-        var work = doWork(value); 
-        done = Q.when(done, function () {
-            return work;
-        });
-    });
-    return done;
-
-
-Or
-
-    return array.reduce(function (done, value) {
-        var work = doWork(value);
-        return Q.when(done, function () {
-            return work;
-        });
-    }, undefined);
-
-
-Array Serial Join
-
-    var done;
-    array.forEach(function (value) {
-        done = Q.when(done, function () {
-            return doWork(value); 
-        });
-    });
-    return done;
-
-Or
-
-    return array.reduce(function (done, value) {
-        return Q.when(done, function () {
-            return doWork(value);
-        });
-    });
-
-
-Conditional Array Serial Join
-
-    var otherwise = function () {
-        throw new Error("No dice");
-    };
-    array.forEach(function (value) {
-        otherwise = (function (otherwise) {
-            return function () {
-                var work = doWork(value);
-                return Q.when(work, function (work) {
-                    if (keepGoing(work)) {
-                        return work;
-                    } else {
-                        return otherwise();
-                    }
-                });
-            };
-        })(otherwise);
-    });
-    return otherwise();
-
-Or
-
-    array.reduce(function (otherwise, value) {
-        var work = doWork(value);
-        return Q.when(work, function (work) {
-            if (keepGoing(work)) {
-                return work;
-            } else {
-                return otherwise();
-            }
-        });
-    }, function otherwise() {
-        throw new Error("No dice");
-    });
-
+### Node File-system Examples
 
 In Node, this example reads itself and writes itself out in
 all capitals.
@@ -245,6 +186,156 @@ which they were listed.
         });
     });
 
+
+### Parallel Join
+
+Promises can be used to do work either in parallel or
+serial, depending on whether you wait for one promise to be
+fulfilled before beginning work on a second.  To do a
+parallel join, begin work and get promises and use nested
+`when` blocks to create a single promise that will be
+resolved when both inputs are resolved, or when the first is
+rejected.
+
+    var aPromise = aFunction();
+    var bPromise = bFunction();
+    var cPromise = Q.when(aPromise, function (aValue) {
+        return Q.when(bPromise, function (bValue) {
+            return cValue;
+        });
+    });
+
+For short, you can use the `join` function in `q/util`.
+
+    var Q = require("q/util");
+    var aPromise = aFunction();
+    var bPromise = bFunction();
+    Q.join(aPromise, bPromise, function (aValue, bValue) {
+        return cValue;
+    });
+
+If a piece of work can be done on each value in an array in
+parallel, you can use either a `forEach` loop or a `reduce`
+loop to create a `done` promise.
+
+    var done;
+    array.forEach(function (value) {
+        var work = doWork(value); 
+        done = Q.when(done, function () {
+            return work;
+        });
+    });
+    return done;
+
+It is a bit more concise with a `reduce` loop.
+
+    return array.reduce(function (done, value) {
+        var work = doWork(value);
+        return Q.when(done, function () {
+            return work;
+        });
+    }, undefined);
+
+
+### Serial Join
+
+If you have two pieces of work and the second cannot be done
+until the first completes, you can also use nested `when`
+blocks.
+
+    var aPromise = aFunction();
+    var cPromise = Q.when(aPromise, function (aValue) {
+        var bPromise = bFunction(aValue);
+        return Q.when(bPromise, function bValue) {
+            return cValue;
+        });
+    });
+
+If you can do work on each value in an array, but want to do
+them in order and one at a time, you can use `forEach` or
+`reduce` loop.
+
+    var done;
+    array.forEach(function (value) {
+        done = Q.when(done, function () {
+            return doWork(value); 
+        });
+    });
+    return done;
+
+It is more concise with `reduce`.
+
+    return array.reduce(function (done, value) {
+        return Q.when(done, function () {
+            return doWork(value);
+        });
+    });
+
+
+### Recovery
+
+You can use the rejection callback of `when` blocks to
+recover from failure.  Supposing that `doIt` will
+intermittently fail (perhaps because of network conditions),
+`justDoIt` will just keep trying indifinitely.
+
+    function justDoIt(value) {
+        var work = doIt(value);
+        work = timeout(1000, work);
+        return Q.when(work, function (work) {
+            return work;
+        }, function errback(reason) {
+            // just do it again
+            return justDoIt(value);
+        });
+    }
+
+This will not blow out the stack because `when` blocks
+guarantee that the fulfillment and rejection callbacks will
+only be called on their own turn of the event loop.
+
+
+### Conditional Array Serial Join
+
+Consider the process of looking for the first directory in
+an array of paths that contains a particular file.  To do
+this with a synchronous file API is very straight-forward.
+
+    function find(basePaths, soughtPath) {
+        for (var i = 0, ii = basePaths.length; i < ii; i++) {
+            var consideredPath = FS.join(basePaths[i], soughtPath);
+            if (FS.isFile(consideredPath))
+                return consideredPath;
+        }
+        throw new Error("Can't find.");
+    }
+
+To do this with an asynchronous `FS.isFile` is more
+elaborate.  It is a serial iteration, but it halts at the
+first success.  This can be accomplished by creating a chain
+of functions, each making progress on the returned promise
+until the matching path is found, otherwise returning the
+value returned by the next function in line, until all
+options are exhausted and returning a rejection.
+
+    function find(basePaths, soughtPath) {
+        var find = basePaths.reduceRight(function (otherwise, basePath) {
+            return function () {
+                var consideredPath = FS.join(basePath, soughtPath);
+                var isFile = FS.isFile(consideredPath);
+                return Q.when(isFile, function (isFile) {
+                    if (isFile) {
+                        return consideredPath;
+                    } else {
+                        return otherwise();
+                    }
+                });
+            };
+        }, function otherwise() {
+            throw new Error("Can't find");
+        });
+        return find();
+    }
 
 
 The Q Ecosystem
