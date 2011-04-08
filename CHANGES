@@ -1,6 +1,7 @@
 # vim:ts=4:sts=4:sw=4:et:tw=60
 
 Next minor
+ - Fixed thenable assimilation.
  - Fixed some issues with asap, when it resolves to
    undefined, or throws an exception.
 
