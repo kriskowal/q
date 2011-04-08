@@ -43,7 +43,12 @@
             }
         },
         "browser": {
-            "dependencies": {}
+            "dependencies": {
+                "event-queue": ">=0.0.1"
+            },
+            "directories": {
+                "lib": "lib/q"
+            }
         },
         "lode": {
             "directories": {
