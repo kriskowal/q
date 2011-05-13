@@ -409,8 +409,8 @@ when(value, callback_opt, errback_opt)
     INTERSECTION
 
     function and(a, b) {
-        return when(a, function (a) {
-            return when(b, function (b) {
+        return Q.when(a, function (a) {
+            return Q.when(b, function (b) {
                 // ...
             });
         })
@@ -476,8 +476,8 @@ defer()
 
     function or(a, b) {
         var union = Q.defer();
-        when(a, union.resolve);
-        when(b, union.resolve);
+        Q.when(a, union.resolve);
+        Q.when(b, union.resolve);
         return union.promise;
     }
 
@@ -509,7 +509,7 @@ reject(reason)
     This is useful for conditionally forwarding a rejection
     through an errback.
 
-        when(API.getPromise(), function (value) {
+        Q.when(API.getPromise(), function (value) {
             return doSomething(value);
         }, function (reason) {
             if (API.stillPossible())
