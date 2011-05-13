@@ -1,4 +1,3 @@
-
 Provides a defer/when style promise API for JavaScript.
 
 - usable as a CommonJS module, in Node,
@@ -476,7 +475,7 @@ defer()
     UNION
 
     function or(a, b) {
-        var union = defer();
+        var union = Q.defer();
         when(a, union.resolve);
         when(b, union.resolve);
         return union.promise;
