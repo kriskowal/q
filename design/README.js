@@ -199,7 +199,7 @@ which won.  Hereafter, all examples will ignore rather than fault on multiple
 resolution.
 
 At this point, defer can handle both multiple resolution and multiple
-observation. (see design/q0.js)
+observation. (see design/q1.js)
 
 --------------------------------
 
@@ -418,8 +418,9 @@ method, and can either be a promise returned by "defer" or a promise returned
 by "ref".  If it's a "ref" promise, the behavior is identical to before: the
 callback is called immediately by "then(callback)".  If it's a "defer"
 promise, the callback is passed forward to the next promise by calling
-"then(callback)".  Thus, your promise is now observing a new promise for a
-more fully resolved value.  Promises can be forwarded many times.
+"then(callback)".  Thus, your callback is now observing a new promise for a
+more fully resolved value.  Callbacks can be forwarded many times, making
+"progress" toward an eventual resolution with each forwarding.
 */
 
 var defer = function () {
@@ -456,8 +457,8 @@ var defer = function () {
 };
 
 /*
-At this point, we've settled on using "thenable" promises and separating
-the "promise" and "resolve" components of a "deferred".
+The implementation at this point uses "thenable" promises and separates the
+"promise" and "resolve" components of a "deferred".
 (see design/q4.js)
 
 
