@@ -8,7 +8,6 @@ exports['test chains of promises'] = require('./promised-chains')
 exports['test multiple listeners'] = require('./multiple-listeners')
 exports['test methods'] = require('./methods')
 exports['test thenable'] = require('./thenable')
-exports['test util'] = require('./util/all');
 
 if (module == require.main)
     require('test').run(exports)

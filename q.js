@@ -50,8 +50,6 @@
 (function (exports, undefined) {
 "use strict";
 
-var DUCK = "promiseSend";
-
 var enqueue;
 try {
     // Narwhal, Node (with a package, wraps process.nextTick)
@@ -106,7 +104,7 @@ function defer() {
 
     var promise = create(Promise.prototype);
 
-    promise[DUCK] = function () {
+    promise.promiseSend = function () {
         var args = Array.prototype.slice.call(arguments);
         if (pending) {
             pending.push(args);
@@ -164,7 +162,7 @@ function Promise(descriptor, fallback, valueOf) {
 
     var promise = create(Promise.prototype);
 
-    promise[DUCK] = function (op, resolved /* ...args */) {
+    promise.promiseSend = function (op, resolved /* ...args */) {
         var args = Array.prototype.slice.call(arguments, 2);
         var result;
         if (descriptor[op])
@@ -202,7 +200,7 @@ freeze(Promise.prototype);
  */
 exports.isPromise = isPromise;
 function isPromise(object) {
-    return object && typeof object[DUCK] === "function";
+    return object && typeof object.promiseSend === "function";
 };
 
 /**
@@ -273,7 +271,9 @@ function ref(object) {
     if (object && typeof object.then === "function") {
         return Promise({}, function fallback(op, rejected) {
             if (op !== "when") {
-                return reject("Operation " + op + " not supported by thenable promises");
+                return Q.when(object, function (value) {
+                    return Q.ref(value).promiseSend.apply(null, arguments);
+                });
             } else {
                 var result = defer();
                 object.then(result.resolve, result.reject);
@@ -386,7 +386,7 @@ function when(value, fulfilled, rejected) {
         if (done)
             return;
         done = true;
-        deferred.resolve(ref(value)[DUCK]("when", _fulfilled, _rejected));
+        deferred.resolve(ref(value).promiseSend("when", _fulfilled, _rejected));
     }, function (reason) {
         if (done)
             return;
@@ -544,7 +544,7 @@ exports.error = function (reason) {
 function forward(promise /* ... */) {
     var args = Array.prototype.slice.call(arguments, 1);
     enqueue(function () {
-        promise[DUCK].apply(promise, args);
+        promise.promiseSend.apply(promise, args);
     });
 }
 
@@ -553,6 +553,6 @@ function forward(promise /* ... */) {
 })(
     typeof exports !== "undefined" ?
     exports :
-    this["Q"] = {}
+    Q = {}
 );
 
