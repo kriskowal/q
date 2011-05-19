@@ -184,6 +184,10 @@ Promise.prototype.then = function (fulfilled, rejected) {
     return when(this, fulfilled, rejected);
 };
 
+Promise.prototype.end = function () {
+    return when(this, undefined, error);
+};
+
 Promise.prototype.toSource = function () {
     return this.toString();
 };
@@ -534,7 +538,8 @@ exports.keys = Method("keys");
 /**
  * Throws an error with the given reason.
  */
-exports.error = function (reason) {
+exports.error = error;
+function error(reason) {
     throw reason;
 };
 
