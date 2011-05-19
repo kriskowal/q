@@ -13,8 +13,17 @@ Provides a defer/when style promise API for JavaScript.
 For Node:
 
     $ curl http://npmjs.org/install.sh | sh
-    $ npm install q
+    $ npm install q qq
     $ node examples/test.js
+
+
+The "q/util" module has moved to its own package and
+repository.  It is now "qq".  Since it is used in the
+following examples, I've added it to the list of modules to
+install.  "qq" provides everything in "q" plus some derrived
+utility functions.
+
+    https://github.com/kriskowal/qq
 
 
 EXAMPLES
@@ -130,7 +139,7 @@ fulfilled, the fulfilled value will be forwarded to
 In Node, this example reads itself and writes itself out in
 all capitals.
 
-    var Q = require("q/util");
+    var Q = require("q");
     var FS = require("q-fs");
 
     var text = FS.read(__filename);
@@ -143,7 +152,7 @@ You can also perform actions in parallel.  This example
 reads two files at the same time and returns an array of
 promises for the results.
 
-    var Q = require("q/util");
+    var Q = require("qq");
     var FS = require("q-fs");
 
     var self = FS.read(__filename);
@@ -157,7 +166,7 @@ This example reads all of the files in the same directory as
 the program and notes the length of each, in the order in
 which they are finished reading.
 
-    var Q = require("q/util");
+    var Q = require("q");
     var FS = require("q-fs");
 
     var list = FS.list(__dirname);
@@ -174,6 +183,9 @@ which they are finished reading.
 This example reads all of the files in the same directory as
 the program and notes the length of each, in the order in
 which they were listed.
+
+    var Q = require("qq");
+    var FS = require("q-fs");
 
     var list = FS.list(__dirname);
     var files = Q.when(list, function (list) {
@@ -204,9 +216,9 @@ rejected.
         });
     });
 
-For short, you can use the `join` function in `q/util`.
+For short, you can use the `join` function in `qq`.
 
-    var Q = require("q/util");
+    var Q = require("qq");
     var aPromise = aFunction();
     var bPromise = bFunction();
     Q.join(aPromise, bPromise, function (aValue, bValue) {
@@ -340,16 +352,22 @@ options are exhausted and returning a rejection.
 The Q Ecosystem
 ---------------
 
-    q-fs      https://github.com/kriskowal/q-fs
-              basic file system promises
-    q-http    https://github.com/kriskowal/q-http
-              http client and server promises
-    q-util    https://github.com/kriskowal/q-util
-              promise control flow and data structures
-    q-comm    https://github.com/kriskowal/q-comm
-              remote object communication
-    teleport  https://github.com/gozala/teleport
-              browser-side module promises
+    qq          https://github.com/kriskowal/qq
+                derrived utilities
+    q-fs        https://github.com/kriskowal/q-fs
+                basic file system promises
+    promised-io https://github.com/gozala/promised-io
+                alternate basic file system promises
+    q-http      https://github.com/kriskowal/q-http
+                http client and server promises
+    q-util      https://github.com/kriskowal/q-util
+                promise control flow and data structures
+    q-comm      https://github.com/kriskowal/q-comm
+                remote object communication
+    jaque       https://github.com/kriskowal/jaque
+                promising JSGI middleware
+    teleport    https://github.com/gozala/teleport
+                browser-side module promises
     ...
 
     All available through NPM.
@@ -613,120 +631,6 @@ send(value, operator, ...args)
 
 
 
-THE UTIL MODULE
----------------
-
-The Q utility module exports all of the Q module's API but
-additionally provides the following functions.
-
-    var Q = require("q/util");
-
-
-step(...functions)
-
-    Calls each step function serially, proceeding only when
-    the promise returned by the previous step is deeply
-    resolved (see: `deep`), and passes the resolution of the
-    previous step into the argument or arguments of the
-    subsequent step.
-    
-    If a step accepts more than one argument, the resolution
-    of the previous step is treated as an array and expanded
-    into the step's respective arguments.
-
-    `step` returns a promise for the value eventually
-    returned by the last step.
-
-
-delay(timeout, eventually_opt)
-
-    Returns a promise for the eventual value after `timeout`
-    miliseconds have elapsed.  `eventually` may be omitted,
-    in which case the promise will be resolved to
-    `undefined`.  If `eventually` is a function, progress
-    will be made by calling that function and resolving to
-    the returned value.  Otherwise, `eventually` is treated
-    as a literal value and resolves the returned promise
-    directly.
-
-
-shallow(object)
-
-    Takes any value and returns a promise for the
-    corresponding value after all of its properties have
-    been resolved.  For arrays, this means that the
-    resolution is a new array with the corresponding values
-    for each respective promise of the original array, and
-    for objects, a new object with the corresponding values
-    for each property.
-
-
-deep(object)
-
-    Takes any value and returns a promise for the
-    corresponding value after all of its properties have
-    been deeply resolved.  Any array or object in the
-    transitive properties of the given value will be
-    replaced with a new array or object where all of the
-    owned properties have been replaced with their
-    resolution.
-
-
-reduceLeft(values, callback, basis, this)
-reduceRight(values, callback, basis, this)
-reduce(values, callback, basis, this)
-
-    The reduce methods all have the signature of `reduce` on
-    an ECMAScript 5 `Array`, but handle the cases where a
-    value is a promise and when the return value of the
-    accumulator is a promise.  In these cases, each reducer
-    guarantees that progress will be made in a particular
-    order.
-    
-    `reduceLeft` guarantees that the callback will be called
-    on each value and accumulation from left to right after
-    all previous values and accumulations are fully
-    resolved.
-
-    `reduceRight` works similarly from right to left.
-
-    `reduce` is opportunistic and will attempt to accumulate
-    the resolution of any previous resolutions.  This is
-    useful when the accumulation function is associative.
-
-
-THE QUEUE MODULE
-----------------
-
-The `q/queue` module provides a `Queue` object where
-infinite promises for values can be dequeued before they are
-enqueued.
-
-
-put(value)
-
-    Places a value on the queue, resolving the next gotten
-    promise in order.
-
-get()
-
-    Returns a promise for the next value from the queue.  If
-    more values have been enqueued than dequeued, this value
-    will already be resolved.
-
-close(reason_opt)
-
-    Causes all promises dequeued after all already enqueued
-    values have been depleted will be rejected for the given
-    reason.
-
-closed
-
-    A promise that, when resolved, indicates that all
-    enqueued values from before the call to `close` have
-    been dequeued.
-
-
-Copyright 2009, 2010 Kristopher Michael Kowal
+Copyright 2009-2011 Kristopher Michael Kowal
 MIT License (enclosed)
 
