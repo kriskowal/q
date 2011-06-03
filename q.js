@@ -23,8 +23,10 @@
     // replaced with a single-character.
 
     // RequireJS
-    if (typeof define === "function") {
-        define(definition);
+    if (typeof define === "function" && define.amd) {
+        define(function (require, exports) {
+            definition(require, exports);
+        });
     // CommonJS
     } else if (typeof exports === "object") {
         definition(require, exports);
