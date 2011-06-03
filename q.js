@@ -1,66 +1,47 @@
 // vim:ts=4:sts=4:sw=4:
-// Tyler Close
-// Ported and revised by Kris Kowal
-//
-// This API varies from Tyler Closes ref_send in the
-// following ways:
-//
-// * Promises can be resolved to function values.
-// * Promises can be resolved to null or undefined.
-// * Promises are distinguishable from arbitrary functions.
-// * The promise API is abstracted with a Promise constructor
-//   that accepts a descriptor that receives all of the
-//   messages forwarded to that promise and handles the
-//   common patterns for message receivers.  The promise
-//   constructor also takes optional fallback and valueOf
-//   methods which handle the cases for missing handlers on
-//   the descriptor (rejection by default) and the valueOf
-//   call (which returns the promise itself by default)
-// * near(ref) has been changed to Promise.valueOf() in
-//   keeping with JavaScript's existing Object.valueOf().
-// * post(promise, name, args) has been altered to a variadic
-//   post(promise, name ...args)
-// * variadic arguments are used internally where
-//   applicable. However, I have not altered the Q.post()
-//   API to expand variadic arguments since Tyler Close
-//   informed the CommonJS list that it would restrict
-//   usage patterns for web_send, posting arbitrary JSON
-//   objects as the "arguments" over HTTP.
-
-/*
+/*!
+ *
  * Copyright 2007-2009 Tyler Close under the terms of the MIT X license found
  * at http://www.opensource.org/licenses/mit-license.html
- * ref_send.js version: 2009-05-11
- */
-
-/*
- * Copyright 2009-2010 Kris Kowal under the terms of the MIT
+ * Forked at ref_send.js version: 2009-05-11
+ *
+ * Copyright 2009-2011 Kris Kowal under the terms of the MIT
  * license found at http://github.com/kriskowal/q/raw/master/LICENSE
+ *
  */
 
-/*whatsupdoc*/
+(function (definition, undefined) {
+    "use strict";
+    // This file will function properly as a <script> tag, or a module
+    // using CommonJS and NodeJS or RequireJS module formats.  In
+    // Common/Node/RequireJS, the module exports the Q API and when
+    // executed as a simple <script>, it creates a Q global instead.
 
-// - the enclosure ensures that this module will function properly both as a
-// CommonJS module and as a script in the browser.  In CommonJS and
-// CommonJS-friendly environments, this module exports the "Q" API.
-// For the cases where there is not a CommonJS-friendly API in the browser,
-// this script creates a "Q" object in global scope.
-// - the use of "undefined" on the enclosure is a micro-optmization for
-// compression systems, permitting every occurrence of the "undefined" keyword
-// bo be replaced with a single-character.
-(function (define, undefined) {
+    // The use of "undefined" in the arguments is a
+    // micro-optmization for compression systems, permitting
+    // every occurrence of the "undefined" variable bo be
+    // replaced with a single-character.
+
+    // RequireJS
+    if (typeof define === "function") {
+        define(definition);
+    // CommonJS
+    } else if (typeof exports === "object") {
+        definition(require, exports);
+    // <script>
+    } else {
+        definition(undefined, Q = {});
+    }
+
+})(function (serverSideRequire, exports, undefined) {
 "use strict";
 
-// "req" is used for require here to allow the Function.prototype.toString()
-// scanning that can happen with CommonJS-friendly define() calls to not
-// find the event-queue dependency below.
-define(function (req, exports) {
 
 var enqueue;
 try {
     // Narwhal, Node (with a package, wraps process.nextTick)
-    enqueue = req("event-queue").enqueue;
-} catch(e) {
+    enqueue = serverSideRequire("event-queue").enqueue;
+} catch (e) {
     // browsers
     enqueue = function (task) {
         setTimeout(task, 0);
@@ -559,22 +540,4 @@ function forward(promise /* ... */) {
     });
 }
 
-// Complete the define() call.
 });
-
-// Complete the closure: use either CommonJS exports or browser global Q object
-// for the exports internally.
-})(
-    typeof define === "function" && define.amd ?
-    // AMD's define, a CommonJS-friendly API that has a require and exports
-    define :
-    function (cb) {
-        if (typeof require !== "undefined" && typeof exports !== "undefined") {
-            // CommonJS environment
-            cb(require, exports);
-        } else {
-            // Browser. no require, set up exports to be global Q object.
-            cb(null, Q = {});
-        }
-    }
-);
