@@ -33,7 +33,7 @@
  * ref_send.js version: 2009-05-11
  */
 
-/* 
+/*
  * Copyright 2009-2010 Kris Kowal under the terms of the MIT
  * license found at http://github.com/kriskowal/q/raw/master/LICENSE
  */
@@ -41,19 +41,25 @@
 /*whatsupdoc*/
 
 // - the enclosure ensures that this module will function properly both as a
-// CommonJS module and as a script in the browser.  In CommonJS, this module
-// exports the "Q" API.  In the browser, this script creates a "Q" object in
-// global scope.
+// CommonJS module and as a script in the browser.  In CommonJS and
+// CommonJS-friendly environments, this module exports the "Q" API.
+// For the cases where there is not a CommonJS-friendly API in the browser,
+// this script creates a "Q" object in global scope.
 // - the use of "undefined" on the enclosure is a micro-optmization for
 // compression systems, permitting every occurrence of the "undefined" keyword
 // bo be replaced with a single-character.
-(function (exports, undefined) {
+(function (define, undefined) {
 "use strict";
+
+// "req" is used for require here to allow the Function.prototype.toString()
+// scanning that can happen with CommonJS-friendly define() calls to not
+// find the event-queue dependency below.
+define(function (req, exports) {
 
 var enqueue;
 try {
     // Narwhal, Node (with a package, wraps process.nextTick)
-    enqueue = require("event-queue").enqueue;
+    enqueue = req("event-queue").enqueue;
 } catch(e) {
     // browsers
     enqueue = function (task) {
@@ -553,11 +559,22 @@ function forward(promise /* ... */) {
     });
 }
 
+// Complete the define() call.
+});
+
 // Complete the closure: use either CommonJS exports or browser global Q object
 // for the exports internally.
 })(
-    typeof exports !== "undefined" ?
-    exports :
-    Q = {}
+    typeof define === "function" && define.amd ?
+    // AMD's define, a CommonJS-friendly API that has a require and exports
+    define :
+    function (cb) {
+        if (typeof require !== "undefined" && typeof exports !== "undefined") {
+            // CommonJS environment
+            cb(require, exports);
+        } else {
+            // Browser. no require, set up exports to be global Q object.
+            cb(null, Q = {});
+        }
+    }
 );
-
