@@ -1,5 +1,9 @@
 # vim:ts=4:sts=4:sw=4:et:tw=60
 
+0.4.3
+ - Fixed <script> support that regressed with 0.4.2 because
+   of "use strict" in the module system multi-plexer.
+
 0.4.2
  - Added support for RequireJS (jburke)
 

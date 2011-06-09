@@ -11,7 +11,7 @@
  */
 
 (function (definition, undefined) {
-    "use strict";
+
     // This file will function properly as a <script> tag, or a module
     // using CommonJS and NodeJS or RequireJS module formats.  In
     // Common/Node/RequireJS, the module exports the Q API and when
@@ -23,7 +23,7 @@
     // replaced with a single-character.
 
     // RequireJS
-    if (typeof define === "function" && define.amd) {
+    if (typeof define === "function") {
         define(function (require, exports) {
             definition(require, exports);
         });
