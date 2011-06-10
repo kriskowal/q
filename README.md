@@ -15,12 +15,29 @@ The Q module can be loaded as:
 -   a RequireJS module
 
 Q is designed to work well with jQuery, Dojo, and as part of an
-ecosystem of NodeJS packages, many of which also work in browsers.
+ecosystem of NodeJS NPM packages, many of which also work in browsers,
+including:
+
+-   [qq](https://github.com/kriskowal/qq)
+    infinite queues, deep and shallow object resolution,
+    map/reduce helpers, lazy objects
+-   [q-fs](https://github.com/kriskowal/q-fs)
+    file system
+-   [promised-io](https://github.com/gozala/promised-io)
+    alternate file system, same in spirit
+-   [q-http](https://github.com/kriskowal/q-http)
+    http client and server
+-   [q-comm](https://github.com/kriskowal/q-comm)
+    remote objects
+-   [jaque](https://github.com/kriskowal/jaque)
+    promising HTTP server, JSGI middleware
+-   [teleport](https://github.com/gozala/teleport)
+    browser-side module promises
 
 Q conforms to many proposed standards, mostly by Kris Zyp and myself,
 with mentoring from Mark Miller: [UncommonJS/Promises][]
-[CommonJS/Promises/A][], [CommonJS/Promises/B][B], and
-[CommonJS/Promises/D][D].  Q is based on Tyler Close's ``ref_send``
+[CommonJS/Promises/A][], [CommonJS/Promises/B][], and
+[CommonJS/Promises/D][].  Q is based on Tyler Close's ``ref_send``
 API for [Waterken][].
 
 [UncommonJS/Promises]: https://github.com/kriskowal/uncommonjs/blob/master/promises/specification.md
@@ -36,6 +53,7 @@ To install the most recent  Q and QQ packages on NodeJS with NPM:
     $ node examples/test.js
 
 
+
 EXAMPLES
 --------
 
@@ -47,10 +65,10 @@ Q plus some derrived utility functions.
 [QQ]: https://github.com/kriskowal/qq
 
 
-### `defer`
+## ``defer``
 
-This example provides a promise-oriented `delay` function
-based on the callback-oriented `setTimeout` function.
+This example provides a promise-oriented ``delay`` function
+based on the callback-oriented ``setTimeout`` function.
 
     function delay(ms) {
         var deferred = Q.defer();
@@ -91,30 +109,30 @@ promise instead of accepting a callback.
     }
 
 
-### `when`
+## ``when``
 
-This example illustrates how the `when` primitive can be
+This example illustrates how the ``when`` primitive can be
 used to observe the fulfillment of a promise.
 
     var bPromise = Q.when(aPromise, function (aValue) {
         return bValue;
     });
 
-*   If `aPromise` is fulfilled, the callback is called in a future
-    turn of the even loop with the fulfilled value as `aValue`.
-*   If `aPromise` is rejected, `bPromise` will be resolved with
-    `aPromise` (the rejection will be forwarded).
-*   `bPromise` is eventually resolved with `bValue`.
-*   `aPromise` does not actually need to be a promise.  It can be any
+*   If ``aPromise`` is fulfilled, the callback is called in a future
+    turn of the even loop with the fulfilled value as ``aValue``.
+*   If ``aPromise`` is rejected, ``bPromise`` will be resolved with
+    ``aPromise`` (the rejection will be forwarded).
+*   ``bPromise`` is eventually resolved with ``bValue``.
+*   ``aPromise`` does not actually need to be a promise.  It can be any
     value, in which case it is treated as an already fulfilled
     promise.
-*   `bValue` does not actually need to be a value.  It can be a
-    promise, which would further defer the resolution of `bPromise`.
-*   If the fulfillment callback throws an exception, `bPromise` will
+*   ``bValue`` does not actually need to be a value.  It can be a
+    promise, which would further defer the resolution of ``bPromise``.
+*   If the fulfillment callback throws an exception, ``bPromise`` will
     be rejected with the thrown error as the reason.
 
 
-This example illustrates how the `when` primitive can be used to
+This example illustrates how the ``when`` primitive can be used to
 observe either the fulfillment or rejection of a promise.  
 
     var bPromise = Q.when(aPromise, function (aValue) {
@@ -124,28 +142,28 @@ observe either the fulfillment or rejection of a promise.
         throw bReason;
     });
 
-*   If `aPromise` is rejected, the second callback, the rejection
+*   If ``aPromise`` is rejected, the second callback, the rejection
     callback, will be called with the reason for the rejection as
-    `aReason`.
+    ``aReason``.
 *   The value returned by the rejection callback will be used to
-    resolve `bPromise`.
-*   If the rejection callback throws an error, `bPromise` will be
+    resolve ``bPromise``.
+*   If the rejection callback throws an error, ``bPromise`` will be
     rejected with the error as the reason.
-*   Unlike a `try` and `catch` block, the rejection callback will not
+*   Unlike a ``try`` and ``catch`` block, the rejection callback will not
     be called if the fulfillment callback throws an error or returns a
     rejection.  To observe an exception thrown in either the
-    fulfillment or the rejection callback, another `when` block must
-    be used to observe the rejection of `bPromise`.
+    fulfillment or the rejection callback, another ``when`` block must
+    be used to observe the rejection of ``bPromise``.
 
 In general,
 
-*   If the rejection callback is falsy and `aPromise` is rejected, the
-    rejection will be forwarded to `bPromise`.
-*   If the fulfillment callback is falsy and `aPromise` is fulfilled,
-    the fulfilled value will be forwarded to `bPromise`.
+*   If the rejection callback is falsy and ``aPromise`` is rejected, the
+    rejection will be forwarded to ``bPromise``.
+*   If the fulfillment callback is falsy and ``aPromise`` is fulfilled,
+    the fulfilled value will be forwarded to ``bPromise``.
 
 
-### Node File-system Examples
+## Node File-system Examples
 
 In Node, this example reads itself and writes itself out in
 all capitals.
@@ -207,13 +225,13 @@ which they were listed.
     });
 
 
-### Parallel Join
+## Parallel Join
 
 Promises can be used to do work either in parallel or
 serial, depending on whether you wait for one promise to be
 fulfilled before beginning work on a second.  To do a
 parallel join, begin work and get promises and use nested
-`when` blocks to create a single promise that will be
+``when`` blocks to create a single promise that will be
 resolved when both inputs are resolved, or when the first is
 rejected.
 
@@ -225,7 +243,7 @@ rejected.
         });
     });
 
-For short, you can use the `join` function in `qq`.
+For short, you can use the ``join`` function in ``qq``.
 
     var Q = require("qq");
     var aPromise = aFunction();
@@ -235,8 +253,8 @@ For short, you can use the `join` function in `qq`.
     });
 
 If a piece of work can be done on each value in an array in
-parallel, you can use either a `forEach` loop or a `reduce`
-loop to create a `done` promise.
+parallel, you can use either a ``forEach`` loop or a ``reduce``
+loop to create a ``done`` promise.
 
     var done;
     array.forEach(function (value) {
@@ -247,7 +265,7 @@ loop to create a `done` promise.
     });
     return done;
 
-It is a bit more concise with a `reduce` loop.
+It is a bit more concise with a ``reduce`` loop.
 
     return array.reduce(function (done, value) {
         var work = doWork(value);
@@ -257,10 +275,10 @@ It is a bit more concise with a `reduce` loop.
     }, undefined);
 
 
-### Serial Join
+## Serial Join
 
 If you have two pieces of work and the second cannot be done
-until the first completes, you can also use nested `when`
+until the first completes, you can also use nested ``when``
 blocks.
 
     var aPromise = aFunction();
@@ -272,8 +290,8 @@ blocks.
     });
 
 If you can do work on each value in an array, but want to do
-them in order and one at a time, you can use `forEach` or
-`reduce` loop.
+them in order and one at a time, you can use ``forEach`` or
+``reduce`` loop.
 
     var done;
     array.forEach(function (value) {
@@ -283,7 +301,7 @@ them in order and one at a time, you can use `forEach` or
     });
     return done;
 
-It is more concise with `reduce`.
+It is more concise with ``reduce``.
 
     return array.reduce(function (done, value) {
         return Q.when(done, function () {
@@ -292,12 +310,12 @@ It is more concise with `reduce`.
     });
 
 
-### Recovery
+## Recovery
 
-You can use the rejection callback of `when` blocks to
-recover from failure.  Supposing that `doIt` will
+You can use the rejection callback of ``when`` blocks to
+recover from failure.  Supposing that ``doIt`` will
 intermittently fail (perhaps because of network conditions),
-`justDoIt` will just keep trying indifinitely.
+``justDoIt`` will just keep trying indifinitely.
 
     function justDoIt(value) {
         var work = doIt(value);
@@ -310,12 +328,12 @@ intermittently fail (perhaps because of network conditions),
         });
     }
 
-This will not blow out the stack because `when` blocks
+This will not blow out the stack because ``when`` blocks
 guarantee that the fulfillment and rejection callbacks will
 only be called on their own turn of the event loop.
 
 
-### Conditional Array Serial Join
+## Conditional Array Serial Join
 
 Consider the process of looking for the first directory in
 an array of paths that contains a particular file.  To do
@@ -330,7 +348,7 @@ this with a synchronous file API is very straight-forward.
         throw new Error("Can't find.");
     }
 
-To do this with an asynchronous `FS.isFile` is more
+To do this with an asynchronous ``FS.isFile`` is more
 elaborate.  It is a serial iteration, but it halts at the
 first success.  This can be accomplished by creating a chain
 of functions, each making progress on the returned promise
@@ -358,35 +376,11 @@ options are exhausted and returning a rejection.
     }
 
 
-The Q Ecosystem
----------------
-
-    qq          https://github.com/kriskowal/qq
-                derrived utilities
-    q-fs        https://github.com/kriskowal/q-fs
-                basic file system promises
-    promised-io https://github.com/gozala/promised-io
-                alternate basic file system promises
-    q-http      https://github.com/kriskowal/q-http
-                http client and server promises
-    q-util      https://github.com/kriskowal/q-util
-                promise control flow and data structures
-    q-comm      https://github.com/kriskowal/q-comm
-                remote object communication
-    jaque       https://github.com/kriskowal/jaque
-                promising JSGI middleware
-    teleport    https://github.com/gozala/teleport
-                browser-side module promises
-    ...
-
-    All available through NPM.
-
-
 THE HALLOWED API
 ----------------
 
 
-### ``when(value, callback_opt, errback_opt)``
+## ``when(value, callback_opt, errback_opt)``
 
 Arranges for a callback to be called:
 
@@ -447,7 +441,7 @@ INTERSECTION
     }
 
 
-### ``defer()``
+## ``defer()``
 
 Returns a "deferred" object with a:
 
@@ -505,7 +499,7 @@ UNION
     }
 
 
-### ``ref(value)``
+## ``ref(value)``
 
 If value is a promise, returns the promise.
 
@@ -513,7 +507,7 @@ If value is not a promise, returns a promise that has already been
 resolved with the given value.
 
 
-### ``def(value)``
+## ``def(value)``
 
 Annotates a value, wrapping it in a promise, such that that it is a
 local promise object which cannot be serialized and sent to resolve a
@@ -524,7 +518,7 @@ so remote promise communication libraries can distinguish it from
 non-def values.
 
 
-### ``reject(reason)``
+## ``reject(reason)``
 
 Returns a promise that has already been rejected with the given reason.
 
@@ -544,25 +538,25 @@ Unconditionally forwarding a rejection is equivalent to omitting an
 errback on a when call.
 
 
-### ``isPromise(value)``
+## ``isPromise(value)``
 
 Returns whether the given value is a promise.
 
 
-### ``isResolved(value)``
+## ``isResolved(value)``
 
 Returns whether the given value is fully resolved.  The given value may
 be any value, including but not limited to promises returned by defer()
 and ref(). Rejected promises are not considered resolved.
 
 
-### ``isRejected(value)``
+## ``isRejected(value)``
 
 Returns whether the given value is a rejected promise.
 
 
 
-### ``end(promise)``
+## ``end(promise)``
 
 Accepts a promise that is intended to be the last promise in a chain of
 promises.  If an error propagates to the end of the promise chain, it
@@ -570,7 +564,7 @@ will be thrown as an exception and handled by either NodeJS or the
 browser as an uncaught exception.
 
 
-### ``enqueue(callback Function)``
+## ``enqueue(callback Function)``
 
 Calls ``callback`` in a future turn.
 
@@ -585,7 +579,7 @@ messages with other operator names, and by sending corresponding
 messages to those promises.
 
 
-### ``makePromise(descriptor, fallback_opt, valueOf_opt)``
+## ``makePromise(descriptor, fallback_opt, valueOf_opt)``
 
 Creates a stand-alone promise that responds to messages.  These messages
 have an operator like "when", "get", "put", and "post", corresponding to
@@ -607,7 +601,7 @@ promises return their resolution value and rejections return an object
 that is recognized by `isRejected`.
 
 
-### ``send(value, operator, ...args)``
+## ``send(value, operator, ...args)``
 
 Sends an arbitrary message to a promise.
 
