@@ -174,7 +174,20 @@ Promise.prototype.then = function (fulfilled, rejected) {
 };
 
 Promise.prototype.end = function () {
-    return when(this, undefined, error);
+    when(this, undefined, error);
+};
+
+Promise.prototype.report = function (error) {
+    if (!error) {
+        error = new Error("REPORT");
+    } else if (!error.message) {
+        error = new Error(error || "REPORT");
+    }
+    return when(this, undefined, function (reason) {
+        report(error);
+        report(reason);
+        return reject(reason);
+    });
 };
 
 Promise.prototype.toSource = function () {
@@ -357,11 +370,6 @@ function when(value, fulfilled, rejected) {
         try {
             return fulfilled ? fulfilled(value) : value;
         } catch (exception) {
-            if (typeof process !== "undefined") {
-                process.emit('uncaughtException', exception);
-            } else {
-                print(exception && exception.stack || exception);
-            }
             return reject(exception);
         }
     }
@@ -370,7 +378,6 @@ function when(value, fulfilled, rejected) {
         try {
             return rejected ? rejected(reason) : reject(reason);
         } catch (exception) {
-            print(exception && exception.stack || exception);
             return reject(exception);
         }
     }
@@ -529,8 +536,36 @@ exports.keys = Method("keys");
  */
 exports.error = error;
 function error(reason) {
-    throw reason;
+    if (typeof process !== "undefined") {
+        report(reason);
+        process.exit(reason ? reason.exit || 1 : 1);
+    } else {
+        report(reason);
+        throw reason;
+    }
 };
+
+/**
+ * Reports an error and returns it as a rejection.
+ *
+ *      Q.when(function () {
+ *          if (failure) {
+ *              throw new Error();
+ *          } else {
+ *              return success;
+ *          }
+ *      })
+ *          // report the error
+ *      .then(null, Q.report)
+ *      .then(function (success) {
+ *          // carry on if no failure
+ *      });
+ */
+exports.report = report;
+function report(reason) {
+    print(reason && reason.stack || reason);
+    return reject(reason);
+}
 
 /*
  * Enqueues a promise operation for a future turn.
