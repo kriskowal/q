@@ -60,6 +60,12 @@ var create = Object.create || function create(prototype) {
     Type.prototype = prototype;
     return new Type();
 }
+var reduce = Array.prototype.reduce || function (callback, basis) {
+    for (var i = 0, ii = this.length; i < ii; i++) {
+        basis = callback(basis, this[i], i);
+    }
+    return basis;
+};
 
 var print = typeof console === "undefined" ? identity : function (message) {
     console.log(message);
@@ -173,8 +179,32 @@ Promise.prototype.then = function (fulfilled, rejected) {
     return when(this, fulfilled, rejected);
 };
 
+Promise.prototype.wait = function () {
+    return reduce.call(arguments, function (self, next) {
+        return when(next, function () {
+            return self;
+        });
+    }, this);
+};
+
+Promise.prototype.join = function () {
+    var args = Array.prototype.slice.call(arguments);
+    args.unshift(this);
+    var callback = args.pop();
+    return reduce.call(args, function (done, next, i) {
+        return when(next, function (next) {
+            return when(done, function () {
+                args[i] = next;
+            });
+        });
+    }, undefined)
+    .then(function () {
+        return callback.apply(undefined, args);
+    });
+};
+
 Promise.prototype.end = function () {
-    when(this, undefined, error);
+    end(this);
 };
 
 Promise.prototype.report = function (error) {
@@ -184,8 +214,8 @@ Promise.prototype.report = function (error) {
         error = new Error(error || "REPORT");
     }
     return when(this, undefined, function (reason) {
-        report(error);
-        report(reason);
+        print(error && error.stack || error);
+        print(reason && reason.stack || reason);
         return reject(reason);
     });
 };
@@ -277,8 +307,8 @@ function ref(object) {
     if (object && typeof object.then === "function") {
         return Promise({}, function fallback(op, rejected) {
             if (op !== "when") {
-                return Q.when(object, function (value) {
-                    return Q.ref(value).promiseSend.apply(null, arguments);
+                return when(object, function (value) {
+                    return ref(value).promiseSend.apply(null, arguments);
                 });
             } else {
                 var result = defer();
@@ -532,39 +562,18 @@ exports.invoke = function (value, name) {
 exports.keys = Method("keys");
 
 /**
- * Throws an error with the given reason.
+ * Terminates a chain of promises, forcing rejections to be
+ * thrown as exceptions.
  */
-exports.error = error;
-function error(reason) {
-    if (typeof process !== "undefined") {
-        report(reason);
-        process.exit(reason ? reason.exit || 1 : 1);
-    } else {
-        report(reason);
-        throw reason;
-    }
-};
-
-/**
- * Reports an error and returns it as a rejection.
- *
- *      Q.when(function () {
- *          if (failure) {
- *              throw new Error();
- *          } else {
- *              return success;
- *          }
- *      })
- *          // report the error
- *      .then(null, Q.report)
- *      .then(function (success) {
- *          // carry on if no failure
- *      });
- */
-exports.report = report;
-function report(reason) {
-    print(reason && reason.stack || reason);
-    return reject(reason);
+exports.end = end;
+function end(promise) {
+    when(promise, undefined, function (error) {
+        // forward to a future turn so that ``when``
+        // does not catch it and turn it into a rejection.
+        enqueue(function () {
+            throw error;
+        });
+    });
 }
 
 /*
