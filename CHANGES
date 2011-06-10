@@ -1,5 +1,20 @@
 # vim:ts=4:sts=4:sw=4:et:tw=60
 
+0.5.0 - MINOR BACKWARD INCOMPATIBILITY
+ - Exceptions are no longer reported when consumed.
+ - Removed ``error`` from the API.  Since exceptions are
+   getting consumed, throwing them in an errback causes the
+   exception to silently disappear.  Use ``end``.
+ - Added ``end`` as both an API method and a promise-chain
+   ending method.  It causes propagated rejections to be
+   thrown, which allows Node to write stack traces and
+   emit ``uncaughtException`` events, and browsers to
+   likewise emit ``onerror`` and log to the console.
+ - Added ``join`` and ``wait`` as promise chain functions,
+   so you can wait for variadic promises, returning your own
+   promise back, or join variadic promises, resolving with a
+   callback that receives variadic fulfillment values.
+
 0.4.4
  - ``end`` no longer returns a promise. It is the end of the
    promise chain.
