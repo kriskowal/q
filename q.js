@@ -60,6 +60,12 @@ var create = Object.create || function create(prototype) {
     Type.prototype = prototype;
     return new Type();
 }
+var keys = Object.keys || function (object) {
+    var keys = [];
+    for (var key in object)
+        keys.push(key);
+    return keys;
+};
 var reduce = Array.prototype.reduce || function (callback, basis) {
     for (var i = 0, ii = this.length; i < ii; i++) {
         basis = callback(basis, this[i], i);
@@ -179,46 +185,26 @@ Promise.prototype.then = function (fulfilled, rejected) {
     return when(this, fulfilled, rejected);
 };
 
-Promise.prototype.wait = function () {
-    return reduce.call(arguments, function (self, next) {
-        return when(next, function () {
-            return self;
-        });
-    }, this);
-};
-
-Promise.prototype.join = function () {
-    var args = Array.prototype.slice.call(arguments);
-    args.unshift(this);
-    var callback = args.pop();
-    return reduce.call(args, function (done, next, i) {
-        return when(next, function (next) {
-            return when(done, function () {
-                args[i] = next;
-            });
-        });
-    }, undefined)
-    .then(function () {
-        return callback.apply(undefined, args);
-    });
-};
-
-Promise.prototype.end = function () {
-    end(this);
-};
-
-Promise.prototype.report = function (error) {
-    if (!error) {
-        error = new Error("REPORT");
-    } else if (!error.message) {
-        error = new Error(error || "REPORT");
-    }
-    return when(this, undefined, function (reason) {
-        print(error && error.stack || error);
-        print(reason && reason.stack || reason);
-        return reject(reason);
-    });
-};
+// Chainable methods
+reduce.call(
+    [
+        "get", "put", "del",
+        "post", "invoke",
+        "apply", "call",
+        "keys",
+        "wait", "join",
+        "report", "end"
+    ],
+    function (prev, name) {
+        Promise.prototype[name] = function () {
+            return exports[name].apply(
+                exports,
+                [this].concat(Array.prototype.slice.call(arguments))
+            );
+        };
+    },
+    undefined
+)
 
 Promise.prototype.toSource = function () {
     return this.toString();
@@ -346,8 +332,13 @@ function ref(object) {
                 return reject("Property " + name + " on object " + object + " is not a method");
             return object[name].apply(object, value);
         },
+        "apply": function (self, args) {
+            if (!object || typeof object.apply !== "function")
+                return reject("" + object + " is not a function");
+            return object.apply(self, args);
+        },
         "keys": function () {
-            return Object.keys(object);
+            return keys(object);
         }
     }, undefined, function valueOf() {
         return object;
@@ -554,12 +545,75 @@ exports.invoke = function (value, name) {
 };
 
 /**
+ * Applies the promised function in a future turn.
+ * @param object    promise or immediate reference for target function
+ * @param context   the context object (this) for the call
+ * @param args      array of application arguments
+ */
+var apply = exports.apply = Method("apply");
+
+/**
+ * Calls the promised function in a future turn.
+ * @param object    promise or immediate reference for target function
+ * @param context   the context object (this) for the call
+ * @param ...args   array of application arguments
+ */
+exports.call = function (value, context) {
+    var args = Array.prototype.slice.call(arguments, 2);
+    return apply(value, context, args);
+};
+
+/**
  * Requests the names of the owned properties of a promised
  * object in a future turn.
  * @param object    promise or immediate reference for target object
  * @return promise for the keys of the eventually resolved object
  */
 exports.keys = Method("keys");
+
+/**
+ */
+exports.wait = function (promise) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    return reduce.call(args, function (promise, next) {
+        return when(next, function () {
+            return promise;
+        });
+    }, promise);
+};
+
+/**
+ */
+exports.join = function () {
+    var args = Array.prototype.slice.call(arguments);
+    var callback = args.pop();
+    return reduce.call(args, function (done, next, i) {
+        return when(next, function (next) {
+            return when(done, function () {
+                args[i] = next;
+            });
+        });
+    }, undefined)
+    .then(function () {
+        return callback.apply(undefined, args);
+    });
+};
+
+/**
+ */
+exports.report = report;
+function report(promise, error) {
+    if (!error) {
+        error = new Error("REPORT");
+    } else if (!error.message) {
+        error = new Error(error || "REPORT");
+    }
+    return when(promise, undefined, function (reason) {
+        print(error && error.stack || error);
+        print(reason && reason.stack || reason);
+        return reject(reason);
+    });
+}
 
 /**
  * Terminates a chain of promises, forcing rejections to be
