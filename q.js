@@ -190,8 +190,8 @@ reduce.call(
     [
         "get", "put", "del",
         "post", "invoke",
-        "apply", "call",
         "keys",
+        "apply", "call",
         "wait", "join",
         "report", "end"
     ],

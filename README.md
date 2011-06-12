@@ -11,7 +11,8 @@ like file system, inter-process, and network operations.  An eventual
 The Q module can be loaded as:
 
 -   a ``<script>`` tag (creating a ``Q`` global variable)
--   a NodeJS module, or generally a CommonJS module
+-   a NodeJS module, or generally a CommonJS module,
+    available from NPM as the ``q`` package.
 -   a RequireJS module
 
 Q is designed to work well with jQuery, Dojo, and as part of an
@@ -20,7 +21,9 @@ including:
 
 -   [qq](https://github.com/kriskowal/qq)
     infinite queues, deep and shallow object resolution,
-    map/reduce helpers, lazy objects
+    map/reduce helpers, lazy objects (/!\ This was
+    originally ``q/util`` in this package, but has moved
+    into its own home due to changes in NPM 1.)
 -   [q-fs](https://github.com/kriskowal/q-fs)
     file system
 -   [promised-io](https://github.com/gozala/promised-io)
@@ -46,24 +49,9 @@ API for [Waterken][].
 [CommonJS/Promises/D]: http://wiki.commonjs.org/wiki/Promises/D
 [Waterken]: http://waterken.sourceforge.net/
 
-To install the most recent  Q and QQ packages on NodeJS with NPM:
-
-    $ curl http://npmjs.org/install.sh | sh
-    $ npm install q qq
-    $ node examples/test.js
-
-
 
 EXAMPLES
 --------
-
-The ``"q/util"`` module has moved to its own package and repository.
-It is now [QQ][].  Since it is used in the following examples, I've
-added it to the list of modules to install.  QQ provides everything in
-Q plus some derrived utility functions.
-
-[QQ]: https://github.com/kriskowal/qq
-
 
 ## ``defer``
 
@@ -177,10 +165,10 @@ all capitals.
     });
 
 You can also perform actions in parallel.  This example
-reads two files at the same time and returns an array of
-promises for the results.
+reads two files at the same time, waits for both to finish,
+then logs their lengths.
 
-    var Q = require("qq");
+    var Q = require("q");
     var FS = require("q-fs");
 
     var self = FS.read(__filename);
@@ -211,7 +199,7 @@ This example reads all of the files in the same directory as
 the program and notes the length of each, in the order in
 which they were listed.
 
-    var Q = require("qq");
+    var Q = require("q");
     var FS = require("q-fs");
 
     var list = FS.list(__dirname);
@@ -243,9 +231,9 @@ rejected.
         });
     });
 
-For short, you can use the ``join`` function in ``qq``.
+For short, you can use the ``join`` function.
 
-    var Q = require("qq");
+    var Q = require("q");
     var aPromise = aFunction();
     var bPromise = bFunction();
     Q.join(aPromise, bPromise, function (aValue, bValue) {
@@ -272,6 +260,14 @@ It is a bit more concise with a ``reduce`` loop.
         return Q.when(done, function () {
             return work;
         });
+    }, undefined);
+
+You can also join the promises with a variadic ``wait``
+call, which is equivalent.
+
+    return array.reduce(function (done, value) {
+        var work = doWork(value);
+        return Q.wait(work, done);
     }, undefined);
 
 
@@ -301,12 +297,10 @@ them in order and one at a time, you can use ``forEach`` or
     });
     return done;
 
-It is more concise with ``reduce``.
+It is more concise with ``reduce`` and ``wait``.
 
     return array.reduce(function (done, value) {
-        return Q.when(done, function () {
-            return doWork(value);
-        });
+        return Q.wait(done, doWork(value));
     });
 
 
@@ -380,44 +374,46 @@ THE HALLOWED API
 ----------------
 
 
-## ``when(value, callback_opt, errback_opt)``
+## ``when(value, fulfilled_opt, rejected_opt)``
 
-Arranges for a callback to be called:
+Arranges for ``fulfilled`` to be called:
 
 -   with the value as its sole argument
 -   in a future turn of the event loop
 -   if and when the value is or becomes a fully resolved
 
-Arranges for errback to be called:
+Arranges for ``rejected`` to be called:
 
 -   with a value respresenting the reason why the object will
-    never be resolved, typically a string.
+    never be resolved, typically an ``Error`` object.
 -   in a future turn of the event loop
 -   if the value is a promise and
     -   if and when the promise is rejected
 
 Returns a promise:
 
--   that will resolve to the value returned by either the callback
-    or errback, if either of those functions are called, or
--   that will be rejected if the value is rejected and no errback
-    is provided, thus forwarding rejections by default.
+-   that will resolve to the value returned by either of the
+    callbacks, if either of those functions are called, or
+-   that will be rejected if the value is rejected and no
+    ``rejected`` callback is provided, thus forwarding
+    rejections by default.
 
-The value may be truly _any_ value.
+The value may be truly __any__ value.  It can be a function.
+It can be a promise.
 
-The callback and errback may be falsy, in which case they will not
-be called.
+Either callback may be falsy, in which case it will not be
+called.
 
 Guarantees:
 
--   The callback will not be called before when returns.
--   The errback will not be called before when returns.
--   The callback will not be called more than once.
--   The errback will not be called more than once.
--   If the callback is called, the errback will never be called.
--   If the errback is called, the callback will never be called.
--   If a promise is never resolved, neither the callback or the
-    errback will ever be called.
+-   ``fulfilled`` will not be called before when returns.
+-   ``rejected`` will not be called before when returns.
+-   ``fulfilled`` will not be called more than once.
+-   ``rejected`` will not be called more than once.
+-   If ``fulfilled`` is called, ``rejected`` will never be called.
+-   If ``rejected`` is called, ``fulfilled`` will never be called.
+-   If a promise is never resolved, neither callback will
+    ever be called.
 
 THIS IS COOL
 
@@ -449,44 +445,50 @@ Returns a "deferred" object with a:
 -   ``resolve(value)`` function
 -   ``reject(reason)`` function
 
-The promise is suitable for passing as a value to the ``when`` function.
+The promise is suitable for passing as a value to the
+``when`` function, among others.
 
-Calling resolve with a promise notifies all observers that they must now
-wait for that promise to resolve.
+Calling resolve with a promise notifies all observers that
+they must now wait for that promise to resolve.
 
-Calling resolve with a rejected promise notifies all observers that the
-promise will never be fully resolved with the rejection reason.  This
-forwards through the the chain of ``when`` calls and their returned
-promises until it reaches a ``when`` call that has an ``errback``.
+Calling resolve with a rejected promise notifies all
+observers that the promise will never be fully resolved with
+the rejection reason.  This forwards through the the chain
+of ``when`` calls and their returned promises until it
+reaches a ``when`` call that has a ``rejected`` callback.
 
-Calling resolve with a fully resolved value notifies all observers that
-they may proceed with that value in a future turn.  This forwards
-through the ``callback`` chain of any pending ``when`` calls.
+Calling resolve with a fully resolved value notifies all
+observers that they may proceed with that value in a future
+turn.  This forwards through the ``fulfilled`` chain of any
+pending ``when`` calls.
 
-Calling reject with a reason is equivalent to resolving with a
-rejection.
+Calling ``reject`` with a reason is equivalent to resolving
+with a rejection.
 
-In all cases where the resolution of a promise is set, (promise,
-rejection, value) the resolution is permanent and cannot be reset.  All
-future observers of the resolution of the promise will be notified of
-the resolved value, so it is safe to call ``when`` on a promise
-regardless of whether it has been or will be resolved.
+In all cases where the resolution of a promise is set,
+(promise, rejection, value) the resolution is permanent and
+cannot be reset.  All future observers of the resolution of
+the promise will be notified of the resolved value, so it is
+safe to call ``when`` on a promise regardless of whether it
+has been or will be resolved.
 
 
 THIS IS COOL
 
-The Deferred separates the promise part from the resolver part. So:
+The Deferred separates the promise part from the resolver
+part. So:
 
--   You can give the promise to any number of consumers and all of them
-    will observe the resolution independently.  Because the capability
-    of observing a promise is separated from the capability of resolving
-    the promise, none of the recipients of the promise have the ability
+-   You can give the promise to any number of consumers and
+    all of them will observe the resolution independently.
+    Because the capability of observing a promise is
+    separated from the capability of resolving the promise,
+    none of the recipients of the promise have the ability
     to "trick" other recipients with misinformation.
 
--   You can give the resolver to any number of producers and whoever
-    resolves the promise first wins.  Furthermore, none of the producers
-    can observe that they lost unless you give them the promise part
-    too.
+-   You can give the resolver to any number of producers and
+    whoever resolves the promise first wins.  Furthermore,
+    none of the producers can observe that they lost unless
+    you give them the promise part too.
 
 
 UNION
@@ -503,39 +505,53 @@ UNION
 
 If value is a promise, returns the promise.
 
-If value is not a promise, returns a promise that has already been
-resolved with the given value.
+If value is not a promise, returns a promise that has
+already been resolved with the given value.
 
 
 ## ``def(value)``
 
-Annotates a value, wrapping it in a promise, such that that it is a
-local promise object which cannot be serialized and sent to resolve a
-remote promise.
+Annotates a value, wrapping it in a promise, such that that
+it is a local promise object which cannot be serialized and
+sent to resolve a remote promise.
 
-A def'ed value will respond to the `isDef` message without a rejection
-so remote promise communication libraries can distinguish it from
-non-def values.
+A def'ed value will respond to the ``"isDef"`` message
+without a rejection so remote promise communication
+libraries can distinguish it from non-def values.
 
 
 ## ``reject(reason)``
 
-Returns a promise that has already been rejected with the given reason.
+Returns a promise that has already been rejected with the
+given reason.
 
-This is useful for conditionally forwarding a rejection through an
-errback.
+This is useful for conditionally forwarding a rejection
+through an errback.
 
     Q.when(API.getPromise(), function (value) {
         return doSomething(value);
     }, function (reason) {
-        if (API.stillPossible())
+        if (API.stillPossible()) {
             return API.tryAgain();
-        else
-            return reject(reason);
+        } else {
+            return Q.reject(reason);
+        }
     })
 
-Unconditionally forwarding a rejection is equivalent to omitting an
-errback on a when call.
+Unconditionally forwarding a rejection is equivalent to
+omitting an errback on a when call.
+
+    Q.when(API.getPromise(), function (value) {
+        return doSomething(value);
+    }, function (reason) {
+        return Q.reject(reason);
+    })
+
+Simplifies to:
+
+    Q.when(API.getPromise(), function (value) {
+        return doSomething(value);
+    })
 
 
 ## ``isPromise(value)``
@@ -545,9 +561,10 @@ Returns whether the given value is a promise.
 
 ## ``isResolved(value)``
 
-Returns whether the given value is fully resolved.  The given value may
-be any value, including but not limited to promises returned by defer()
-and ref(). Rejected promises are not considered resolved.
+Returns whether the given value is fully resolved.  The
+given value may be any value, including but not limited to
+promises returned by ``defer`` and ``ref``. Rejected
+promises are not considered resolved.
 
 
 ## ``isRejected(value)``
@@ -555,13 +572,13 @@ and ref(). Rejected promises are not considered resolved.
 Returns whether the given value is a rejected promise.
 
 
-
 ## ``end(promise)``
 
-Accepts a promise that is intended to be the last promise in a chain of
-promises.  If an error propagates to the end of the promise chain, it
-will be thrown as an exception and handled by either NodeJS or the
-browser as an uncaught exception.
+Accepts a promise that is intended to be the last promise in
+a chain of promises.  If an error propagates to the end of
+the promise chain, it will be thrown as an exception and
+handled by either NodeJS or the browser as an uncaught
+exception.
 
 
 ## ``enqueue(callback Function)``
@@ -572,46 +589,176 @@ Calls ``callback`` in a future turn.
 ADVANCED API
 ------------
 
-The ``ref`` promise constructor establishes the basic API for performing
-operations on objects: "get", "put", "post", and "del".  This set of
-"operators" can be extended by creating promises that respond to
-messages with other operator names, and by sending corresponding
-messages to those promises.
+The ``ref`` promise constructor establishes the basic API
+for performing operations on objects: "get", "put", "del",
+"post", "apply", and "keys".  This set of "operators" can be
+extended by creating promises that respond to messages with
+other operator names, and by sending corresponding messages
+to those promises.
 
 
-## ``makePromise(descriptor, fallback_opt, valueOf_opt)``
+## ``makePromise(handlers, fallback_opt, valueOf_opt)``
 
-Creates a stand-alone promise that responds to messages.  These messages
-have an operator like "when", "get", "put", and "post", corresponding to
-each of the above methods for sending messages to promises.
+Creates a stand-alone promise that responds to messages.
+These messages have an operator like "when", "get", "put",
+and "post", corresponding to each of the above functions for
+sending messages to promises.
 
-The descriptor is an object with function properties (methods)
-corresponding to operators.  When the made promise receives a message
-and a corresponding operator exists in the descriptor, the method gets
-called with the variadic arguments sent to the promise.  If no
-descriptor exists, the fallback method is called with the operator, and
-the subsequent variadic arguments instead.  These functions return a
-promise for the eventual resolution of the promise returned by the
-message-sender.  The default fallback returns a rejection.
+The ``handlers`` are an object with function properties
+corresponding to operators.  When the made promise receives
+a message and a corresponding operator exists in the
+``handlers``, the function gets called with the variadic
+arguments sent to the promise.  If no ``handlers`` object
+exists, the ``fallback`` function is called with the operator,
+and the subsequent variadic arguments instead.  These
+functions return a promise for the eventual resolution of
+the promise returned by the message-sender.  The default
+fallback returns a rejection.
 
-The `valueOf` function, if provided, overrides the `valueOf` method of
-the returned promise.  This is useful for providing information about
-the promise in the same turn of the event loop.  For example, resolved
-promises return their resolution value and rejections return an object
-that is recognized by `isRejected`.
+The ``valueOf`` function, if provided, overrides the
+``valueOf`` function of the returned promise.  This is useful
+for providing information about the promise in the same turn
+of the event loop.  For example, resolved promises return
+their resolution value and rejections return an object that
+is recognized by ``isRejected``.
 
 
 ## ``send(value, operator, ...args)``
 
 Sends an arbitrary message to a promise.
 
-Care should be taken not to introduce control-flow hazards and secuirity
-holes when forwarding messages to promises.  The methods above,
-particularly ``when``, are carefully crafted to prevent a poorly crafted
-or malicious promise from breaking the invariants like not applying
-callbacks multiple times or in the same turn of the event loop.
+Care should be taken not to introduce control-flow hazards
+and security holes when forwarding messages to promises.
+The functions above, particularly ``when``, are carefully
+crafted to prevent a poorly crafted or malicious promise
+from breaking the invariants like not applying callbacks
+multiple times or in the same turn of the event loop.
 
 
+## ``get(object, name)``
+
+Returns a promise for the named property of an object,
+albeit a promise for an object.
+
+
+## ``put(object, name, value)``
+
+Returns a promise to set the named property of an object,
+albeit a promise, to the given value.
+
+
+## ``del(object, name)``
+
+Returns a promise to delete the named property of an object,
+albeit a promise.
+
+
+## ``post(object, name, arguments)``
+
+Returns a promise to call the named function property of an
+eventually fulfilled object with the given array of
+arguments.  The object itself is ``this`` in the function.
+
+
+## ``invoke(object, name, ...arguments)``
+
+Returns a promise to call the named function property of an
+eventually fulfilled object with the given variadic
+arguments.  The object itself is ``this`` in the function.
+
+
+## ``keys(object)``
+
+Returns a promise for an array of the property names of the
+eventually fulfilled object.
+
+
+## ``apply(function, this, arguments)``
+
+Returns a promise for the result of calling an eventually
+fulfilled function, with the given values for the ``this``
+and ``arguments`` array in that function.
+
+
+## ``call(function, this, ...arguments)``
+
+Returns a promise for the result of eventually calling the
+fulfilled function, with the given context and variadic
+arguments.
+
+
+## ``wait(...objects)``
+
+Returns a promise for the fulfilled value of the first
+object when all of the objects have been fulfilled, or the
+rejection of the first object to be rejected from left to
+right.
+
+
+## ``join(...objects, callback(...objects))``
+
+Returns a promise for the value eventually fulfilled by the
+return value of the callback, or the rejection of the first
+object to be rejected from left to right.  If and when all
+of the variadic object arguments have been fulfilled, the
+callback is called with the respective fulfillment values
+variadically.
+
+
+## ``report(promise, message_opt)``
+
+Returns a promise for the resolution of the given promise
+(effectively a no-op), but if the promise is rejected, dumps
+a stack trace with the given error message at the line
+number of the report call, as well as dumpping the rejection
+and its stack trace if it has one.
+
+
+## ``end(promise)``
+
+Accepts a promise and returns ``undefined``, to terminate a
+chain of promises at the end of a program.  If the promise
+is rejected, throws it as an exception in a future turn of
+the event loop.
+
+Since exceptions thrown in ``when`` callbacks are consumed
+and transformed into rejections, exceptions are easy to
+accidentally silently ignore.  It is furthermore non-trivial
+to get those exceptions reported since the obvious way to do
+this is to use ``when`` to register a rejection callback,
+where ``throw`` would just get consumed again.  ``end``
+arranges for the error to be thrown in a future turn of the
+event loop, so it won't be caught; it will cause the
+exception to emit a browser's ``onerror`` event or NodeJS's
+``process`` ``"uncaughtException"``.
+
+
+Chaining
+--------
+
+Promises created by the Q API support chaining for some
+functions.  The ``this`` promise becomes the first argument
+of the corresponding Q API function.  For example, the
+following are equivalent:
+
+-   ``when(promise, fulfilled)`` and
+    ``promise.then(fulfilled)``.
+-   ``end(promise)`` and ``promise.end()``.
+
+The following functions are supported for chaining:
+
+-   ``get``
+-   ``put``
+-   ``del``
+-   ``post``
+-   ``invoke``
+-   ``apply``
+-   ``call``
+-   ``keys``
+-   ``wait``
+-   ``join``
+-   ``report``
+-   ``end``
 
 Copyright 2009-2011 Kristopher Michael Kowal
 MIT License (enclosed)
