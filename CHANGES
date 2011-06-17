@@ -4,6 +4,10 @@ Next Backward Incompatible
  - ``def`` will be removed.  Use ``master`` instead.  The
    term ``def`` was too confusing to new users.
 
+0.5.2
+ - Minor improvement to ``spy``; now waits for resolution of
+   callback promise.
+
 0.5.1
  - Made most Q API methods chainable on promise objects, and
    turned the previous promise-methods of ``join``,

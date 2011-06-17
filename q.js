@@ -635,11 +635,13 @@ function fin(promise, callback) {
 exports.spy = spy;
 function spy(promise, callback) {
     return when(promise, function (value) {
-        callback(value, undefined);
-        return value;
+        return when(callback(value, undefined), function () {
+            return value;
+        });
     }, function (reason) {
-        callback(undefined, reason);
-        return reject(reason);
+        return when(callback(undefined, reason), function () {
+            return reject(reason);
+        });
     });
 }
 
