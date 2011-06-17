@@ -26,8 +26,6 @@ including:
     into its own home due to changes in NPM 1.)
 -   [q-fs](https://github.com/kriskowal/q-fs)
     file system
--   [promised-io](https://github.com/gozala/promised-io)
-    alternate file system, same in spirit
 -   [q-http](https://github.com/kriskowal/q-http)
     http client and server
 -   [q-comm](https://github.com/kriskowal/q-comm)

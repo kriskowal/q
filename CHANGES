@@ -1,11 +1,23 @@
 # vim:ts=4:sts=4:sw=4:et:tw=60
 
-Next
+Next Backward Incompatible
+ - ``def`` will be removed.  Use ``master`` instead.  The
+   term ``def`` was too confusing to new users.
+
+0.5.1
  - Made most Q API methods chainable on promise objects, and
    turned the previous promise-methods of ``join``,
    ``wait``, and ``report`` into Q API methods.
  - Added ``apply`` and ``call`` to the Q API, and ``apply``
    as a promise handler.
+ - Added ``fail``, ``fin``, and ``spy`` to Q and the promise
+   prototype for convenience when observing rejection,
+   fulfillment and rejection, or just observing without
+   affecting the resolution.
+ - Renamed ``def`` (although ``def`` remains shimmed until
+   the next major release) to ``master``.
+ - Switched to using ``MessageChannel`` for next tick task
+   enqueue in browsers that support it.
 
 0.5.0 - MINOR BACKWARD INCOMPATIBILITY
  - Exceptions are no longer reported when consumed.

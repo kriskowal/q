@@ -45,9 +45,20 @@ try {
     enqueue = serverSideRequire("event-queue").enqueue;
 } catch (e) {
     // browsers
-    enqueue = function (task) {
-        setTimeout(task, 0);
-    };
+    if (typeof MessageChannel !== "undefined") {
+        // modern browsers
+        // http://www.nonblocking.io/2011/06/windownexttick.html
+        var channel = new MessageChannel();
+        enqueue = function (task) {
+            channel.port1.onmessage = task;
+            channel.port2.postMessage();
+        };
+    } else {
+        // old browsers
+        enqueue = function (task) {
+            setTimeout(task, 0);
+        };
+    }
 }
 
 // useful for an identity stub and default resolvers
@@ -193,6 +204,7 @@ reduce.call(
         "keys",
         "apply", "call",
         "wait", "join",
+        "fail", "fin", "spy",
         "report", "end"
     ],
     function (prev, name) {
@@ -354,6 +366,7 @@ function ref(object) {
  * additionally responds to the 'isDef' message
  * without a rejection.
  */
+exports.master =
 exports.def = def;
 function def(object) {
     return Promise({
@@ -601,17 +614,47 @@ exports.join = function () {
 
 /**
  */
-exports.report = report;
-function report(promise, error) {
-    if (!error) {
-        error = new Error("REPORT");
-    } else if (!error.message) {
-        error = new Error(error || "REPORT");
-    }
-    return when(promise, undefined, function (reason) {
-        print(error && error.stack || error);
-        print(reason && reason.stack || reason);
+exports.fail = fail;
+function fail(promise, rejected) {
+    return when(promise, undefined, rejected);
+}
+
+/**
+ */
+exports.fin = fin;
+function fin(promise, callback) {
+    return when(promise, function (value) {
+        return callback(value, undefined);
+    }, function (reason) {
+        return callback(undefined, reason);
+    });
+}
+
+/**
+ */
+exports.spy = spy;
+function spy(promise, callback) {
+    return when(promise, function (value) {
+        callback(value, undefined);
+        return value;
+    }, function (reason) {
+        callback(undefined, reason);
         return reject(reason);
+    });
+}
+
+/**
+ */
+exports.report = report;
+function report(promise, message) {
+    var error = new Error(message || "REPORT");
+    return spy(promise, function (value, reason) {
+        print(error && error.stack || error);
+        if (reason) {
+            print(reason && reason.stack || reason);
+        } else {
+            print(value);
+        }
     });
 }
 
