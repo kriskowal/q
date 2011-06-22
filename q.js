@@ -83,6 +83,11 @@ var reduce = Array.prototype.reduce || function (callback, basis) {
     }
     return basis;
 };
+// Spidermonkey Shims
+var isStopIteration = function (exception) {
+    return Object.prototype.toString.call(exception)
+        === "[object StopIteration]";
+}
 
 var print = typeof console === "undefined" ? identity : function (message) {
     console.log(message);
@@ -474,6 +479,39 @@ var valueOf = function (value) {
 };
 
 /**
+ * Decorates a generator function such that:
+ *  - it may yield promises
+ *  - execution will continue when that promise is fulfilled
+ *  - the value of the yield expression will be the fulfilled value
+ *  - it returns a promise for the final yield
+ *  - the decorated function returns a promise for the final yielded value or
+ *    the first rejected yield promise.
+ */
+exports.async = async;
+function async(makeGenerator) {
+    return function () {
+        // verb is "send" or "throw"
+        var continuer = function (verb, promise) {
+            var awaited;
+            try {
+                generator[verb](promise);
+            } catch (exception) {
+                if (isStopIteration(exception)) {
+                    return ref(exception.value);
+                } else {
+                    return reject(exception);
+                }
+            }
+            return when(ref(awaited), callback, errback);
+        };
+        var generator = makeGenerator.apply(this, arguments);
+        var callback = continuer.bind(continuer, 'send');
+        var errback = continuer.bind(continuer, 'throw');
+        return callback();
+    };
+}
+
+/**
  * Constructs a promise method that can be used to safely observe resolution of
  * a promise for an arbitrarily named method like "propfind" in a future turn.
  *
@@ -674,6 +712,7 @@ function end(promise) {
         });
     });
 }
+
 
 /*
  * Enqueues a promise operation for a future turn.
