@@ -13,18 +13,17 @@
 
         function test() {
 
-            var generator = Q.async(function () {
+            var eventuallyFourty = Q.async(function () {
                 var ten = yield 10;
                 console.log(ten, 10);
                 var twenty = yield ten + 10;
                 console.log(twenty, 20);
                 var thirty = yield twenty + 10;
                 console.log(thirty, 30);
-                StopIteration.value = thirty + 10;
-                throw StopIteration;
+                return thrity + 10;
             });
 
-            Q.when(generator(), function (fourty) {
+            Q.when(eventuallyFourty(), function (fourty) {
                 console.log(fourty, 40);
             }, function (reason) {
                 console.log("error", reason);

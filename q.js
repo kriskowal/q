@@ -494,15 +494,19 @@ function async(makeGenerator) {
         var continuer = function (verb, promise) {
             var awaited;
             try {
-                generator[verb](promise);
+                return when(
+                    generator[verb](promise),
+                    callback,
+                    errback
+                );
             } catch (exception) {
                 if (isStopIteration(exception)) {
-                    return ref(exception.value);
+                    return exception.value;
                 } else {
                     return reject(exception);
                 }
             }
-            return when(ref(awaited), callback, errback);
+            return when(awaited, callback, errback);
         };
         var generator = makeGenerator.apply(this, arguments);
         var callback = continuer.bind(continuer, 'send');
