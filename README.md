@@ -38,13 +38,14 @@ including:
 Q conforms to many proposed standards, mostly by Kris Zyp and myself,
 with mentoring from Mark Miller: [UncommonJS/Promises][]
 [CommonJS/Promises/A][], [CommonJS/Promises/B][], and
-[CommonJS/Promises/D][].  Q is based on Tyler Close's ``ref_send``
-API for [Waterken][].
+[CommonJS/Promises/D][].  Q is based on Tyler Close's [ref_send][] API
+for [Waterken][].
 
 [UncommonJS/Promises]: https://github.com/kriskowal/uncommonjs/blob/master/promises/specification.md
 [CommonJS/Promises/A]: http://wiki.commonjs.org/wiki/Promises/A
 [CommonJS/Promises/B]: http://wiki.commonjs.org/wiki/Promises/B
 [CommonJS/Promises/D]: http://wiki.commonjs.org/wiki/Promises/D
+[ref_send]: http://waterken.svn.sourceforge.net/viewvc/waterken/server/trunk/waterken/config/file/site/ref_send.js?view=markup
 [Waterken]: http://waterken.sourceforge.net/
 
 
