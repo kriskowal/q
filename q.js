@@ -628,25 +628,15 @@ function fail(promise, rejected) {
 
 /**
  */
+exports.spy = // Deprecated
 exports.fin = fin;
 function fin(promise, callback) {
     return when(promise, function (value) {
-        return callback(value, undefined);
-    }, function (reason) {
-        return callback(undefined, reason);
-    });
-}
-
-/**
- */
-exports.spy = spy;
-function spy(promise, callback) {
-    return when(promise, function (value) {
-        return when(callback(value, undefined), function () {
+        return when(callback(undefined, value), function () {
             return value;
         });
     }, function (reason) {
-        return when(callback(undefined, reason), function () {
+        return when(callback(reason), function () {
             return reject(reason);
         });
     });
