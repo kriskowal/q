@@ -209,7 +209,7 @@ reduce.call(
         "keys",
         "apply", "call",
         "wait", "join",
-        "fail", "fin", "spy",
+        "fail", "fin", "spy", // XXX spy deprecated
         "report", "end"
     ],
     function (prev, name) {
@@ -691,7 +691,7 @@ function fail(promise, rejected) {
 
 /**
  */
-exports.spy = // Deprecated
+exports.spy = // XXX spy deprecated
 exports.fin = fin;
 function fin(promise, callback) {
     return when(promise, function (value) {
