@@ -4,6 +4,12 @@ Next Backward Incompatible
  - ``def`` will be removed.  Use ``master`` instead.  The
    term ``def`` was too confusing to new users.
 
+Next minor
+ - Added ``async`` decorator for generators that use yield
+   to "trampoline" promises. In engines that support
+   generators (SpiderMonkey), this will greatly reduce the
+   need for nested callbacks.
+
 0.5.2
  - Minor improvement to ``spy``; now waits for resolution of
    callback promise.
