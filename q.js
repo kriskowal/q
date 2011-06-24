@@ -208,7 +208,7 @@ reduce.call(
         "post", "invoke",
         "keys",
         "apply", "call",
-        "wait", "join",
+        "all", "wait", "join",
         "fail", "fin", "spy", // XXX spy deprecated
         "report", "end"
     ],
@@ -651,19 +651,21 @@ exports.keys = Method("keys");
 // http://wiki.ecmascript.org/doku.php?id=strawman:concurrency&rev=1308776521#allfulfilled
 exports.all = all;
 function all(promises) {
-    var countDown = promises.length;
-    var values = [];
-    if (countDown === 0)
-        return ref(values);
-    var deferred = defer();
-    reduce.call(promises, function (undefined, promise, index) {
-        when(promise, function (answer) {
-            values[index] = answer;
-            if (--countDown === 0)
-                deferred.resolve(values);
-        }, deferred.reject);
-    }, undefined);
-    return deferred.promise;
+    return when(promises, function (promises) {
+        var countDown = promises.length;
+        var values = [];
+        if (countDown === 0)
+            return ref(values);
+        var deferred = defer();
+        reduce.call(promises, function (undefined, promise, index) {
+            when(promise, function (answer) {
+                values[index] = answer;
+                if (--countDown === 0)
+                    deferred.resolve(values);
+            }, deferred.reject);
+        }, undefined);
+        return deferred.promise;
+    });
 }
 
 /**
