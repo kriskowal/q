@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <!--
+        Works in Firefox, or where generators are implemented.
+    -->
+    <script src="../../q.js"></script>
+    <script type="application/javascript;version=1.7">
+
+        function test() {
+
+            var generator = Q.async(function () {
+                try {
+                    var ten = yield Q.reject('Rejected!');
+                    console.log("Should not get here 1");
+                } catch (exception) {
+                    console.log("Should get here 1");
+                    console.log(exception, "should be", "Rejected!");
+                    throw "Threw!";
+                }
+            });
+
+            Q.when(generator(), function () {
+                console.log("Should not get here 2");
+            }, function (reason) {
+                console.log("Should get here 2");
+                console.log(reason, "should be", "Threw!");
+            });
+
+        }
+
+    </script> 
+    </head>
+    <body onload="test()">
+        <div id="box" style="width: 20px; height: 20px; background-color: red;"></div>
+    </body>
+</html>

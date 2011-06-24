@@ -9,6 +9,12 @@ Next major
    were useful.  I've removed the old ``fin`` implementation and
    renamed/aliased ``spy``.
 
+Next minor
+ - Added ``async`` decorator for generators that use yield
+   to "trampoline" promises. In engines that support
+   generators (SpiderMonkey), this will greatly reduce the
+   need for nested callbacks.
+
 0.5.3
  - Added ``all`` and refactored ``join`` and ``wait`` to use it.  All
    of these will now reject at the earliest rejection.

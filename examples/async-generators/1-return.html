@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <!--
+        Works in Firefox, or where generators are implemented.
+    -->
+    <script src="../../q.js"></script>
+    <script type="application/javascript;version=1.7">
+
+        function test() {
+
+            var generator = Q.async(function () {
+                var ten = yield 10;
+                console.log(ten, 10);
+                var twenty = yield ten + 10;
+                console.log(twenty, 20);
+                var thirty = yield twenty + 10;
+                console.log(thirty, 30);
+                StopIteration.value = thirty + 10;
+                throw StopIteration;
+            });
+
+            Q.when(generator(), function (fourty) {
+                console.log(fourty, 40);
+            }, function (reason) {
+                console.log("error", reason);
+            });
+
+        }
+
+    </script> 
+    </head>
+    <body onload="test()">
+        <div id="box" style="width: 20px; height: 20px; background-color: red;"></div>
+    </body>
+</html>
