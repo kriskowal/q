@@ -14,6 +14,7 @@ Next minor
    to "trampoline" promises. In engines that support
    generators (SpiderMonkey), this will greatly reduce the
    need for nested callbacks.
+ - Made ``when`` chainable.
 
 0.5.3
  - Added ``all`` and refactored ``join`` and ``wait`` to use it.  All

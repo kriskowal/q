@@ -204,6 +204,7 @@ Promise.prototype.then = function (fulfilled, rejected) {
 // Chainable methods
 reduce.call(
     [
+        "when",
         "get", "put", "del",
         "post", "invoke",
         "keys",
