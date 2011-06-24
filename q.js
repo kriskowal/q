@@ -584,15 +584,29 @@ exports.call = function (value, context) {
  */
 exports.keys = Method("keys");
 
+// By Mark Miller
+// http://wiki.ecmascript.org/doku.php?id=strawman:concurrency&rev=1308776521#allfulfilled
+exports.all = all;
+function all(promises) {
+    var countDown = promises.length;
+    var values = [];
+    if (countDown === 0)
+        return ref(values);
+    var deferred = defer();
+    reduce.call(promises, function (undefined, promise, index) {
+        when(promise, function (answer) {
+            values[index] = answer;
+            if (--countDown === 0)
+                deferred.resolve(values);
+        }, deferred.reject);
+    }, undefined);
+    return deferred.promise;
+}
+
 /**
  */
 exports.wait = function (promise) {
-    var args = Array.prototype.slice.call(arguments, 1);
-    return reduce.call(args, function (promise, next) {
-        return when(next, function () {
-            return promise;
-        });
-    }, promise);
+    return all(arguments).get(0);
 };
 
 /**
@@ -600,14 +614,7 @@ exports.wait = function (promise) {
 exports.join = function () {
     var args = Array.prototype.slice.call(arguments);
     var callback = args.pop();
-    return reduce.call(args, function (done, next, i) {
-        return when(next, function (next) {
-            return when(done, function () {
-                args[i] = next;
-            });
-        });
-    }, undefined)
-    .then(function () {
+    return all(args).then(function (args) {
         return callback.apply(undefined, args);
     });
 };
