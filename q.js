@@ -24,18 +24,18 @@
 
     // RequireJS
     if (typeof define === "function") {
-        define(function (require, exports) {
-            definition(require, exports);
+        define(function (require, exports, module) {
+            definition(require, exports, module);
         });
     // CommonJS
     } else if (typeof exports === "object") {
-        definition(require, exports);
+        definition(require, exports, module);
     // <script>
     } else {
-        definition(undefined, Q = {});
+        Q = definition(undefined, {}, {});
     }
 
-})(function (serverSideRequire, exports, undefined) {
+})(function (serverSideRequire, exports, module, undefined) {
 "use strict";
 
 
@@ -737,7 +737,6 @@ function end(promise) {
     });
 }
 
-
 /*
  * Enqueues a promise operation for a future turn.
  */
@@ -747,5 +746,15 @@ function forward(promise /* ... */) {
         promise.promiseSend.apply(promise, args);
     });
 }
+
+/*
+ * In module systems that support ``module.exports`` assignment or exports
+ * return, allow the ``ref`` function to be used as the ``Q`` constructor
+ * exported by the "q" module.
+ */
+for (var name in exports)
+    ref[name] = exports[name];
+module.exports = ref;
+return ref;
 
 });
