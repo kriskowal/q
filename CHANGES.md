@@ -1,18 +1,20 @@
-# vim:ts=4:sts=4:sw=4:et:tw=60
+<!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
 Future Backward Incompatible
+
  - ``def`` will be removed.  Use ``master`` instead.  The
    term ``def`` was too confusing to new users.
 
 0.6.0 - BACKWARD INCOMPATIBILITY
+
  - WARNING: In practice, the implementation of ``spy`` and
-   the ``name`` ``fin`` were useful.  I've removed the old
+   the name ``fin`` were useful.  I've removed the old
    ``fin`` implementation and renamed/aliased ``spy``.
- - The "q" module now exports its "ref" function as a "Q"
+ - The "q" module now exports its ``ref`` function as a "Q"
    constructor, with module systems that support exports
    assignment including NodeJS, RequireJS, and when used as
-   a <script> tag. Notably, strictly compliant CommonJS does
-   not support this, but UncommonJS does.
+   a ``<script>`` tag. Notably, strictly compliant CommonJS
+   does not support this, but UncommonJS does.
  - Added ``async`` decorator for generators that use yield
    to "trampoline" promises. In engines that support
    generators (SpiderMonkey), this will greatly reduce the
@@ -21,15 +23,18 @@ Future Backward Incompatible
  - Made ``all`` chainable.
 
 0.5.3
+
  - Added ``all`` and refactored ``join`` and ``wait`` to use
    it.  All of these will now reject at the earliest
    rejection.
 
 0.5.2
+
  - Minor improvement to ``spy``; now waits for resolution of
    callback promise.
 
 0.5.1
+
  - Made most Q API methods chainable on promise objects, and
    turned the previous promise-methods of ``join``,
    ``wait``, and ``report`` into Q API methods.
@@ -45,6 +50,7 @@ Future Backward Incompatible
    enqueue in browsers that support it.
 
 0.5.0 - MINOR BACKWARD INCOMPATIBILITY
+
  - Exceptions are no longer reported when consumed.
  - Removed ``error`` from the API.  Since exceptions are
    getting consumed, throwing them in an errback causes the
@@ -60,6 +66,7 @@ Future Backward Incompatible
    callback that receives variadic fulfillment values.
 
 0.4.4
+
  - ``end`` no longer returns a promise. It is the end of the
    promise chain.
  - Stopped reporting thrown exceptions in ``when`` callbacks
@@ -72,19 +79,24 @@ Future Backward Incompatible
    can be reported if it passes such a gate.
 
 0.4.3
- - Fixed <script> support that regressed with 0.4.2 because
-   of "use strict" in the module system multi-plexer.
+
+ - Fixed ``<script>`` support that regressed with 0.4.2
+   because of "use strict" in the module system
+   multi-plexer.
 
 0.4.2
+
  - Added support for RequireJS (jburke)
 
 0.4.1
+
  - Added an "end" method to the promise prototype,
    as a shorthand for waiting for the promise to
    be resolved gracefully, and failing to do so,
    to dump an error message.
 
 0.4.0 - BACKWARD INCOMPATIBLE*
+
  - *Removed the utility modules. NPM and Node no longer
    expose any module except the main module.  These have
    been moved and merged into the "qq" package.
@@ -95,6 +107,7 @@ Future Backward Incompatible
    undefined, or throws an exception.
 
 0.3.0 - BACKWARD-INCOMPATIBLE
+
  - The `post` method has been reverted to its original
    signature, as provided in Tyler Close's `ref_send` API.
    That is, `post` accepts two arguments, the second of
@@ -118,10 +131,12 @@ Future Backward Incompatible
    nuance in terminology.
 
 0.2.10
+
  - Added `join` to `"q/util"` for variadically joining
    multiple promises.
 
 0.2.9
+
  - The future-compatible `invoke` method has been added,
    to replace `post`, since `post` will become backward-
    incompatible in the next major release.
@@ -130,17 +145,20 @@ Future Backward Incompatible
    event in addition to being returned as a rejection reason.
 
 0.2.8
+
  - Exceptions thrown in the callbacks of a `when` call
    are now consumed, warned, and transformed into
    rejections of the promise returned by `when`.
 
 0.2.7
+
  - Fixed a minor bug in thenable assimilation, regressed
    because of the change in the forwarding protocol.
  - Fixed behavior of "q/util" `deep` method on dates and
    other primitives. Github issue #11.
 
 0.2.6
+
  - Thenables (objects with a "then" method) are accepted
    and provided, bringing this implementation of Q
    into conformance with Promises/A, B, and D.
@@ -159,6 +177,7 @@ Future Backward Incompatible
    previous undocumented behavior may break.
 
 0.2.5
+
  - Changed promises into a duck-type such that multiple
    instances of the Q module can exchange promise objects.
    A promise is now defined as "an object that implements the
@@ -167,19 +186,23 @@ Future Backward Incompatible
    as rejections.
 
 0.2.4
+
  - Fixed bug in `ref` that prevented `del` messages from
    being received (gozala)
  - Fixed a conflict with FireFox 4; constructor property
    is now read-only.
 
 0.2.3
+
  - Added `keys` message to promises and to the promise API.
 
 0.2.2
+
  - Added boilerplate to `q/queue` and `q/util`.
  - Fixed missing dependency to `q/queue`.
 
 0.2.1
+
  - The `resolve` and `reject` methods of `defer` objects now
    return the resolution promise for convenience.
  - Added `q/util`, which provides `step`, `delay`, `shallow`,
@@ -190,6 +213,7 @@ Future Backward Incompatible
    `q/util`.
 
 0.2.0 - BACKWARD INCOMPATIBLE
+
  - Changed post(ref, name, args) to variadic
    post(ref, name, ...args). BACKWARD INCOMPATIBLE
  - Added a def(value) method to annotate an object as being
@@ -201,19 +225,23 @@ Future Backward Incompatible
    forwarding messages to a value or promise in a future turn.
 
 0.1.9
+
  - Added isRejected() for testing whether a value is a rejected
    promise.  isResolved() retains the behavior of stating
    that rejected promises are not resolved.
 
 0.1.8
+
  - Fixed isResolved(null) and isResolved(undefined) [issue #9]
  - Fixed a problem with the Object.create shim
 
 0.1.7
+
  - shimmed ES5 Object.create in addition to Object.freeze
    for compatibility on non-ES5 engines (gozala)
 
 0.1.6
+
  - Q.isResolved added
  - promise.valueOf() now returns the value of resolved
    and near values
@@ -221,31 +249,39 @@ Future Backward Incompatible
  - promises are frozen when possible
 
 0.1.5
+
  - fixed dependency list for Teleport (gozala)
  - all unit tests now pass (gozala)
 
 0.1.4
+
  - added support for Teleport as an engine (gozala)
  - simplified and updated methods for getting internal
    print and enqueue functions universally (gozala)
 
 0.1.3
+
  - fixed erroneous link to the q module in package.json
 
 0.1.2
+
  - restructured for overlay style package compatibility
 
 0.1.0
+
  - removed asap because it was broken, probably down to the
    philosophy.
 
 0.0.3
+
  - removed q-util
  - fixed asap so it returns a value if completed
 
 0.0.2
+
  - added q-util
 
 0.0.1
+
  - initial version
 
