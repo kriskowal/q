@@ -5,20 +5,27 @@ Future Backward Incompatible
    term ``def`` was too confusing to new users.
 
 Next major
- - In practice, the implementation of ``spy`` and the ``name`` ``fin``
-   were useful.  I've removed the old ``fin`` implementation and
-   renamed/aliased ``spy``.
+ - In practice, the implementation of ``spy`` and the
+   ``name`` ``fin`` were useful.  I've removed the old
+   ``fin`` implementation and renamed/aliased ``spy``.
 
 Next minor
+ - The "q" module now exports its "ref" function as a "Q"
+   constructor, with module systems that support exports
+   assignment including NodeJS, RequireJS, and when used as
+   a <script> tag. Notably, strictly compliant CommonJS does
+   not support this, but UncommonJS does.
  - Added ``async`` decorator for generators that use yield
    to "trampoline" promises. In engines that support
    generators (SpiderMonkey), this will greatly reduce the
    need for nested callbacks.
  - Made ``when`` chainable.
+ - Made ``all`` chainable.
 
 0.5.3
- - Added ``all`` and refactored ``join`` and ``wait`` to use it.  All
-   of these will now reject at the earliest rejection.
+ - Added ``all`` and refactored ``join`` and ``wait`` to use
+   it.  All of these will now reject at the earliest
+   rejection.
 
 0.5.2
  - Minor improvement to ``spy``; now waits for resolution of
