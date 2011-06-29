@@ -204,13 +204,14 @@ Promise.prototype.then = function (fulfilled, rejected) {
 // Chainable methods
 reduce.call(
     [
-        "when",
+        "when", "send",
         "get", "put", "del",
         "post", "invoke",
         "keys",
         "apply", "call",
         "all", "wait", "join",
         "fail", "fin", "spy", // XXX spy deprecated
+        "view", "viewInfo",
         "report", "end"
     ],
     function (prev, name) {
@@ -355,6 +356,21 @@ function ref(object) {
                 return reject("" + object + " is not a function");
             return object.apply(self, args);
         },
+        "viewInfo": function () {
+            var on = object;
+            var properties = {};
+            while (on) {
+                Object.getOwnPropertyNames(on).forEach(function (name) {
+                    if (!properties[name])
+                        properties[name] = typeof on[name];
+                });
+                on = Object.getPrototypeOf(on);
+            }
+            return {
+                "type": typeof object,
+                "properties": properties
+            }
+        },
         "keys": function () {
             return keys(object);
         }
@@ -384,6 +400,47 @@ function def(object) {
         return object.valueOf();
     });
 }
+
+exports.viewInfo = viewInfo;
+function viewInfo(object, info) {
+    object = ref(object);
+    if (info) {
+        return Promise({
+            "viewInfo": function () {
+                return info;
+            }
+        }, function fallback(op) {
+            var args = Array.prototype.slice.call(arguments);
+            return send.apply(undefined, [object].concat(args));
+        }, function valueOf() {
+            return object.valueOf();
+        });
+    } else {
+        return send(object, "viewInfo")
+    }
+}
+
+exports.view = function (object) {
+    return viewInfo(object).when(function (info) {
+        var view;
+        if (info.type === "function") {
+            view = function () {
+                return apply(object, undefined, arguments);
+            };
+        } else {
+            view = {};
+        }
+        var properties = info.properties || {};
+        Object.keys(properties).forEach(function (name) {
+            if (properties[name] === "function") {
+                view[name] = function () {
+                    return post(object, name, arguments);
+                };
+            }
+        });
+        return ref(view);
+    });
+};
 
 /**
  * Registers an observer on a promise.

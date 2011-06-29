@@ -5,6 +5,12 @@ Future Backward Incompatible
  - ``def`` will be removed.  Use ``master`` instead.  The
    term ``def`` was too confusing to new users.
 
+Next minor:
+
+ - Added experimental ``view`` and ``viewInfo`` for creating
+   views of promises either when or before they're
+   fulfilled.
+
 0.6.0 - BACKWARD INCOMPATIBILITY
 
  - WARNING: In practice, the implementation of ``spy`` and
