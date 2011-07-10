@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <!--
+        Works in Firefox, or where generators are implemented.
+
+        Peter Hallam, Tom van Cutsem, Mark S. Miller, Dave Herman.
+        The animation example was taken from
+        <http://wiki.ecmascript.org/doku.php?id=strawman:deferred_functions>
+    -->
+    <script src="../../q.js"></script>
+    <script type="application/javascript;version=1.7">
+
+        function delay(millis, answer) {
+            const deferredResult = Q.defer();
+            setTimeout(function() {
+                deferredResult.resolve(answer);
+            }, millis);
+            return deferredResult.promise;
+        }
+
+        var deferredAnimate = Q.async(function(element) {
+            for (var i = 0; i < 100; ++i) {
+                element.style.marginLeft = ''+i+'px';
+                yield delay(20);
+            }
+        });
+
+        function test() {
+            Q.when(
+                deferredAnimate(document.getElementById('box')),
+                function () {
+                    alert('Done!');
+                }
+            )
+        }
+
+    </script> 
+    </head>
+    <body onload="test()">
+        <div id="box" style="width: 20px; height: 20px; background-color: red;"></div>
+    </body>
+</html>
