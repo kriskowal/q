@@ -1,5 +1,5 @@
 
-var Q = require('q');
+var Q = require('../q');
 
 exports['test defer'] = function (ASSERT) {
     var d = Q.defer();

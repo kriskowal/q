@@ -1,5 +1,5 @@
 
-var Q = require('q');
+var Q = require('../../q');
 
 exports['test'] = function (ASSERT) {
     ASSERT.ok(Q.isResolved(null), 'null is a fully resolved value');

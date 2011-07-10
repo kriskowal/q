@@ -1,5 +1,5 @@
 
-var Q = require('q');
+var Q = require('../q');
 
 exports['test reject: isRejected, isResolved, isFulfilled'] = function (ASSERT, done) {
     var future = false;

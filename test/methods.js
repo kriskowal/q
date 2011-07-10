@@ -1,7 +1,7 @@
 // vim:ts=4:sts=4:sw=4:
 'use strict';
 
-var Q = require('q');
+var Q = require('../q');
 
 exports['test get resolved'] = function (ASSERT, done) {
     var d = Q.defer();
