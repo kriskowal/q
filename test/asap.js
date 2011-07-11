@@ -1,5 +1,5 @@
 
-var Q = require('q');
+var Q = require('../q');
 
 exports['test synchronous'] = function (ASSERT) {
     ASSERT.equal(Q.asap(1), 1, 'without callback');

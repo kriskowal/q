@@ -1,6 +1,6 @@
 'use strict'
 
-var Q = require('q')
+var Q = require('../q')
 
 function Callback(expect, assert, done, asserts) {
   return function generatedCallback(reason) {

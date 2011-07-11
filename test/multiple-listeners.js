@@ -1,6 +1,6 @@
 'use strict'
 
-var Q = require('q')
+var Q = require('../q')
 
 exports['test all listenners are called'] = function(assert, done) {
   var nextTurn = false

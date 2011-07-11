@@ -1,5 +1,5 @@
 
-var Q = require('q');
+var Q = require('../q');
 
 exports['test assimilation'] = function (ASSERT, done) {
     Q.when({

@@ -28,11 +28,11 @@
         "teleport": ">=0.2.0"
     },
     "dependencies": {
-        "test": ">=0.0.7",
         "event-queue": ">=0.0.1"
     },
     "devDependencies": {
-        "uglify-js": ">= 0.0.5"
+        "uglify-js": ">= 0.0.5",
+        "test": ">=0.3.0"
     },
     "scripts": {
         "prepublish": "uglifyjs -o q.min.js -nc q.js"
