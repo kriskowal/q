@@ -49,8 +49,16 @@ try {
         // modern browsers
         // http://www.nonblocking.io/2011/06/windownexttick.html
         var channel = new MessageChannel();
+        // singly-linked list of tasks
+        var head = {}, tail = head;
+        channel.port1.onmessage = function () {
+            var next = head.next;
+            var task = next.task;
+            head = next;
+            task();
+        };
         enqueue = function (task) {
-            channel.port1.onmessage = task;
+            tail = tail.next = {task: task};
             channel.port2.postMessage();
         };
     } else {
