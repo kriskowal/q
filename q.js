@@ -755,11 +755,11 @@ exports.spy = // XXX spy deprecated
 exports.fin = fin;
 function fin(promise, callback) {
     return when(promise, function (value) {
-        return when(callback(undefined, value), function () {
+        return when(callback(), function () {
             return value;
         });
     }, function (reason) {
-        return when(callback(reason), function () {
+        return when(callback(), function () {
             return reject(reason);
         });
     });

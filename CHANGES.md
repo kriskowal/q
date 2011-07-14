@@ -5,6 +5,14 @@ Future Backward Incompatible
  - ``def`` will be removed.  Use ``master`` instead.  The
    term ``def`` was too confusing to new users.
 
+Next backward incompatible:
+
+ - The ``callback`` argument of the ``fin`` function no
+   longer receives any arguments. Thus, it can be used to
+   call functions that should not receive arguments on
+   resolution.  Use ``when``, ``then``, or ``fail`` if you
+   need a value.
+
 Next minor:
 
  - Added experimental ``view`` and ``viewInfo`` for creating
