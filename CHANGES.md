@@ -4,20 +4,28 @@ Future Backward Incompatible
 
  - ``def`` will be removed.  Use ``master`` instead.  The
    term ``def`` was too confusing to new users.
+ - ``enqueue`` will be removed.  Use ``nextTick`` instead.
+   This is more consistent with NodeJS and (subjectively)
+   more explicit and intuitive.
 
-Next backward incompatible:
+0.7.0 - BACKWARD INCOMPATIBILITY
 
- - The ``callback`` argument of the ``fin`` function no
-   longer receives any arguments. Thus, it can be used to
-   call functions that should not receive arguments on
-   resolution.  Use ``when``, ``then``, or ``fail`` if you
-   need a value.
-
-Next minor:
-
+ - WARNING: Removed ``report`` and ``asap``
+ - WARNING: The ``callback`` argument of the ``fin``
+   function no longer receives any arguments. Thus, it can
+   be used to call functions that should not receive
+   arguments on resolution.  Use ``when``, ``then``, or
+   ``fail`` if you need a value.
+ - IMPORTANT: Fixed a bug in the use of ``MessageChannel``
+   for ``nextTick``.
+ - Renamed ``enqueue`` to ``nextTick``.
  - Added experimental ``view`` and ``viewInfo`` for creating
    views of promises either when or before they're
    fulfilled.
+ - Shims are now externally applied so subsequent scripts or
+   dependees can use them.
+ - Improved minification results.
+ - Improved readability.
 
 0.6.0 - BACKWARD INCOMPATIBILITY
 

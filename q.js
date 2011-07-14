@@ -39,17 +39,17 @@
 "use strict";
 
 
-var enqueue;
+var nextTick;
 try {
     // Narwhal, Node (with a package, wraps process.nextTick)
-    enqueue = serverSideRequire("event-queue").enqueue;
+    nextTick = serverSideRequire("event-queue").enqueue;
 } catch (e) {
     // browsers
     if (typeof MessageChannel !== "undefined") {
         // modern browsers
         // http://www.nonblocking.io/2011/06/windownexttick.html
         var channel = new MessageChannel();
-        // singly-linked list of tasks
+        // linked list of tasks (single, with head node)
         var head = {}, tail = head;
         channel.port1.onmessage = function () {
             var next = head.next;
@@ -57,55 +57,70 @@ try {
             head = next;
             task();
         };
-        enqueue = function (task) {
+        nextTick = function (task) {
             tail = tail.next = {task: task};
             channel.port2.postMessage();
         };
     } else {
         // old browsers
-        enqueue = function (task) {
+        nextTick = function (task) {
             setTimeout(task, 0);
         };
     }
 }
 
 // useful for an identity stub and default resolvers
-function identity (x) {return x}
+function identity (x) {return x;}
 
-// ES5 shims
-var freeze = Object.freeze || identity;
-var create = Object.create || function create(prototype) {
-    var Type = function () {};
-    Type.prototype = prototype;
-    return new Type();
-}
-var keys = Object.keys || function (object) {
-    var keys = [];
-    for (var key in object)
-        keys.push(key);
-    return keys;
-};
-var reduce = Array.prototype.reduce || function (callback, basis) {
-    for (var i = 0, ii = this.length; i < ii; i++) {
-        basis = callback(basis, this[i], i);
-    }
-    return basis;
-};
-// Spidermonkey Shims
+// shims
+var freeze =
+    Object.freeze =
+    Object.freeze || identity;
+var create =
+    Object.create =
+    Object.create || function (prototype) {
+        var Type = function () {};
+        Type.prototype = prototype;
+        return new Type();
+    };
+var keys =
+    Object.keys =
+    Object.keys || function (object) {
+        var keys = [];
+        for (var key in object)
+            keys.push(key);
+        return keys;
+    };
+var reduce =
+    Array.prototype.reduce =
+    Array.prototype.reduce || function (callback, basis) {
+        for (var i = 0, ii = this.length; i < ii; i++) {
+            basis = callback(basis, this[i], i);
+        }
+        return basis;
+    };
 var isStopIteration = function (exception) {
     return Object.prototype.toString.call(exception)
         === "[object StopIteration]";
-}
+};
+// Abbreviations for performance and minification
+var slice = Array.prototype.slice;
+var nil = null;
 
-var print = typeof console === "undefined" ? identity : function (message) {
-    console.log(message);
+var valueOf = function (value) {
+    if (value === undefined || value === nil) {
+        return value;
+    } else {
+        return value.valueOf();
+    }
 };
 
 /**
  * Performs a task in a future turn of the event loop.
  * @param {Function} task
  */
-exports.enqueue = enqueue;
+exports.enqueue = // XXX enqueue deprecated
+exports.nextTick = nextTick;
 
 /**
  * Constructs a {promise, resolve} object.
@@ -130,18 +145,20 @@ function defer() {
     var promise = create(Promise.prototype);
 
     promise.promiseSend = function () {
-        var args = Array.prototype.slice.call(arguments);
+        var args = slice.call(arguments);
         if (pending) {
             pending.push(args);
         } else {
-            forward.apply(undefined, [value].concat(args));
+            nextTick(function () {
+                value.promiseSend.apply(value, args);
+            });
         }
     };
 
     promise.valueOf = function () {
         if (pending)
             return promise;
-        return valueOf(value);
+        return value.valueOf();
     };
 
     var resolve = function (resolvedValue) {
@@ -149,9 +166,11 @@ function defer() {
         if (!pending)
             return;
         value = ref(resolvedValue);
-        for (i = 0, ii = pending.length; i < ii; ++i) {
-            forward.apply(undefined, [value].concat(pending[i]));
-        }
+        reduce.call(pending, function (undefined, pending) {
+            nextTick(function () {
+                value.promiseSend.apply(value, pending);
+            });
+        }, undefined);
         pending = undefined;
         return value;
     };
@@ -188,14 +207,18 @@ function Promise(descriptor, fallback, valueOf) {
     var promise = create(Promise.prototype);
 
     promise.promiseSend = function (op, resolved /* ...args */) {
-        var args = Array.prototype.slice.call(arguments, 2);
+        var args = slice.call(arguments, 2);
         var result;
-        if (descriptor[op])
-            result = descriptor[op].apply(descriptor, args);
-        else
-            result = fallback.apply(descriptor, [op].concat(args));
-        resolved = resolved || identity;
-        return resolved(result);
+        try {
+            if (descriptor[op]) {
+                result = descriptor[op].apply(descriptor, args);
+            } else {
+                result = fallback.apply(descriptor, [op].concat(args));
+            }
+        } catch (exception) {
+            result = reject(exception);
+        }
+        return (resolved || identity)(result);
     };
 
     if (valueOf)
@@ -220,13 +243,13 @@ reduce.call(
         "all", "wait", "join",
         "fail", "fin", "spy", // XXX spy deprecated
         "view", "viewInfo",
-        "report", "end"
+        "end"
     ],
     function (prev, name) {
         Promise.prototype[name] = function () {
             return exports[name].apply(
                 exports,
-                [this].concat(Array.prototype.slice.call(arguments))
+                [this].concat(slice.call(arguments))
             );
         };
     },
@@ -257,7 +280,7 @@ function isPromise(object) {
  */
 exports.isResolved = isResolved;
 function isResolved(object) {
-    return !isPromise(valueOf(object.valueOf()));
+    return !isPromise(valueOf(object));
 };
 
 /**
@@ -275,7 +298,7 @@ function isFulfilled(object) {
 exports.isRejected = isRejected;
 function isRejected(object) {
     object = valueOf(object);
-    if (object === undefined || object === null)
+    if (object === undefined || object === nil)
         return false;
     return !!object.promiseRejected;
 }
@@ -321,7 +344,7 @@ function ref(object) {
         return Promise({}, function fallback(op, rejected) {
             if (op !== "when") {
                 return when(object, function (value) {
-                    return ref(value).promiseSend.apply(null, arguments);
+                    return ref(value).promiseSend.apply(undefined, arguments);
                 });
             } else {
                 var result = defer();
@@ -335,33 +358,18 @@ function ref(object) {
             return object;
         },
         "get": function (name) {
-            if (object === undefined || object === null)
-                return reject("Cannot access property " + name + " of " + object);
             return object[name];
         },
         "put": function (name, value) {
-            if (object === undefined || object === null)
-                return reject("Cannot set property " + name + " of " + object + " to " + value);
             return object[name] = value;
         },
         "del": function (name) {
-            if (object === undefined || object === null)
-                return reject("Cannot delete property " + name + " of " + object);
             return delete object[name];
         },
         "post": function (name, value) {
-            if (object === undefined || object === null)
-                return reject("" + object + " has no methods");
-            var method = object[name];
-            if (!method)
-                return reject("No such method " + name + " on object " + object);
-            if (!method.apply)
-                return reject("Property " + name + " on object " + object + " is not a method");
             return object[name].apply(object, value);
         },
         "apply": function (self, args) {
-            if (!object || typeof object.apply !== "function")
-                return reject("" + object + " is not a function");
             return object.apply(self, args);
         },
         "viewInfo": function () {
@@ -402,10 +410,10 @@ function def(object) {
     return Promise({
         "isDef": function () {}
     }, function fallback(op) {
-        var args = Array.prototype.slice.call(arguments);
+        var args = slice.call(arguments);
         return send.apply(undefined, [object].concat(args));
-    }, function valueOf() {
-        return object.valueOf();
+    }, function () {
+        return valueOf(object);
     });
 }
 
@@ -418,10 +426,10 @@ function viewInfo(object, info) {
                 return info;
             }
         }, function fallback(op) {
-            var args = Array.prototype.slice.call(arguments);
+            var args = slice.call(arguments);
             return send.apply(undefined, [object].concat(args));
-        }, function valueOf() {
-            return object.valueOf();
+        }, function () {
+            return valueOf(object);
         });
     } else {
         return send(object, "viewInfo")
@@ -487,62 +495,25 @@ function when(value, fulfilled, rejected) {
         }
     }
 
-    forward(ref(value), "when", function (value) {
-        if (done)
-            return;
-        done = true;
-        deferred.resolve(ref(value).promiseSend("when", _fulfilled, _rejected));
-    }, function (reason) {
-        if (done)
-            return;
-        done = true;
-        deferred.resolve(_rejected(reason));
+    nextTick(function () {
+        ref(value).promiseSend("when", function (value) {
+            if (done)
+                return;
+            done = true;
+            deferred.resolve(
+                ref(value)
+                .promiseSend("when", _fulfilled, _rejected)
+            );
+        }, function (reason) {
+            if (done)
+                return;
+            done = true;
+            deferred.resolve(_rejected(reason));
+        });
     });
+
     return deferred.promise;
 }
-
-/**
- * Like "when", but attempts to return a fulfilled value in
- * the same turn. If the given value is fulfilled and the
- * value returned by the fulfilled callback is fulfilled,
- * asap returns the latter value in the same turn.
- * Otherwise, it returns a promise that will be resolved in
- * a future turn.
- *
- * This method is an experiment in providing an API that can
- * unify synchronous and asynchronous API's.  An API that
- * uses "asap" guarantees that, if it is provided fully
- * resolved values, it will produce fully resolved values or
- * throw exceptions, but if it is provided asynchronous
- * promises, it will produce asynchronous promises.
- *
- * /!\ WARNING: this method is experimental and likely to be
- * removed on the grounds that it probably will result in
- * composition hazards.
- */
-exports.asap = function (value, fulfilled, rejected) {
-    fulfilled = fulfilled || identity;
-    if (isFulfilled(value)) {
-        return valueOf(fulfilled(valueOf(value)))
-    } else if (isRejected(value)) {
-        var reason = value.valueOf().reason;
-        if (rejected) {
-            return rejected(reason);
-        } else {
-            throw reason;
-        }
-    } else {
-        return when(value, fulfilled, rejected);
-    }
-};
-
-var valueOf = function (value) {
-    if (value === undefined || value === null) {
-        return value;
-    } else {
-        return value.valueOf();
-    }
-};
 
 /**
  * The async function is a decorator for generator functions, turning
@@ -611,7 +582,7 @@ function async(makeGenerator) {
 exports.Method = Method;
 function Method (op) {
     return function (object) {
-        var args = Array.prototype.slice.call(arguments, 1);
+        var args = slice.call(arguments, 1);
         return send.apply(undefined, [object, op].concat(args));
     };
 }
@@ -626,12 +597,14 @@ function Method (op) {
 exports.send = send;
 function send(object, op) {
     var deferred = defer();
-    var args = Array.prototype.slice.call(arguments, 2);
-    forward.apply(undefined, [
-        ref(object),
-        op,
-        deferred.resolve
-    ].concat(args));
+    var args = slice.call(arguments, 2);
+    object = ref(object);
+    nextTick(function () {
+        object.promiseSend.apply(
+            object,
+            [op, deferred.resolve].concat(args)
+        );
+    });
     return deferred.promise;
 }
 
@@ -682,7 +655,7 @@ var post = exports.post = Method("post");
  * @return promise for the return value
  */
 exports.invoke = function (value, name) {
-    var args = Array.prototype.slice.call(arguments, 2);
+    var args = slice.call(arguments, 2);
     return post(value, name, args);
 };
 
@@ -701,7 +674,7 @@ var apply = exports.apply = Method("apply");
  * @param ...args   array of application arguments
  */
 exports.call = function (value, context) {
-    var args = Array.prototype.slice.call(arguments, 2);
+    var args = slice.call(arguments, 2);
     return apply(value, context, args);
 };
 
@@ -743,7 +716,7 @@ exports.wait = function (promise) {
 /**
  */
 exports.join = function () {
-    var args = Array.prototype.slice.call(arguments);
+    var args = slice.call(arguments);
     var callback = args.pop();
     return all(args).then(function (args) {
         return callback.apply(undefined, args);
@@ -774,21 +747,6 @@ function fin(promise, callback) {
 }
 
 /**
- */
-exports.report = report;
-function report(promise, message) {
-    var error = new Error(message || "REPORT");
-    return spy(promise, function (value, reason) {
-        print(error && error.stack || error);
-        if (reason) {
-            print(reason && reason.stack || reason);
-        } else {
-            print(value);
-        }
-    });
-}
-
-/**
  * Terminates a chain of promises, forcing rejections to be
  * thrown as exceptions.
  */
@@ -797,19 +755,9 @@ function end(promise) {
     when(promise, undefined, function (error) {
         // forward to a future turn so that ``when``
         // does not catch it and turn it into a rejection.
-        enqueue(function () {
+        nextTick(function () {
             throw error;
         });
-    });
-}
-
-/*
- * Enqueues a promise operation for a future turn.
- */
-function forward(promise /* ... */) {
-    var args = Array.prototype.slice.call(arguments, 1);
-    enqueue(function () {
-        promise.promiseSend.apply(promise, args);
     });
 }
 
