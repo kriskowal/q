@@ -91,14 +91,25 @@ var keys =
             keys.push(key);
         return keys;
     };
-var reduce =
-    Array.prototype.reduce =
-    Array.prototype.reduce || function (callback, basis) {
+var defineProperty =
+    Object.defineProperty =
+    Object.defineProperty || function(obj, prop, descriptor) {
+        // sadly, this one can't be faked very well
+        obj[prop] = descriptor.value;
+    };
+var reduce = Array.prototype.reduce;
+if (!reduce) {
+    reduce = function (callback, basis) {
         for (var i = 0, ii = this.length; i < ii; i++) {
             basis = callback(basis, this[i], i);
         }
         return basis;
     };
+    defineProperty(Array.prototype, 'reduce', {
+        value: reduce,
+        enumerable: false
+    });
+}
 var isStopIteration = function (exception) {
     return Object.prototype.toString.call(exception)
         === "[object StopIteration]";
