@@ -711,23 +711,15 @@ callback is called with the respective fulfillment values
 variadically.
 
 
-## ``fin(promise, callback(reason, value))``
+## ``fin(promise, callback())``
 
 Like a ``finally`` clause, allows you to observe either the
 fulfillment or rejection of a callback, but to do so without
 modifying the final value.  This is useful for collecting
 resources regardless of whether a job succeeded, like
 closing a database connection, shutting a server down, or
-deleting an unneeded key from an object.
-
-
-## ``report(promise, message_opt)``
-
-Returns a promise for the resolution of the given promise
-(effectively a no-op), but if the promise is rejected, dumps
-a stack trace with the given error message at the line
-number of the report call, as well as dumpping the rejection
-and its stack trace if it has one.
+deleting an unneeded key from an object. The callback 
+receives no arguments.
 
 
 ## ``end(promise)``
@@ -784,7 +776,6 @@ The following functions are supported for chaining:
 -   ``.all``
 -   ``.wait`` (``.all().get(0)``)
 -   ``.join`` (``.all().when(function ([...]) {}))``)
--   ``.report``
 -   ``.fin``
 -   ``.end``
 
