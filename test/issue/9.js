@@ -8,6 +8,6 @@ exports['test'] = function (ASSERT) {
     ASSERT.ok(Q.isResolved(), 'omitted argument is a fully resolved value');
 };
 
-if (module == require.main)
-    require('test').run(exports)
-
+if (module == require.main) {
+    require('test').run(exports);
+}
