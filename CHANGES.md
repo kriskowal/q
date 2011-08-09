@@ -7,6 +7,9 @@ Future Backward Incompatible
  - ``enqueue`` will be removed.  Use ``nextTick`` instead.
    This is more consistent with NodeJS and (subjectively)
    more explicit and intuitive.
+ - Stopped shimming ``Array.prototype.reduce``. The
+   enumerable property has bad side-effects.  Libraries that
+   depend on this (for example, QQ) will need to be revised.
 
 0.7.0 - BACKWARD INCOMPATIBILITY
 

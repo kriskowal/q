@@ -73,51 +73,61 @@ try {
 function identity (x) {return x;}
 
 // shims
-var freeze =
-    Object.freeze =
-    Object.freeze || identity;
-var create =
-    Object.create =
-    Object.create || function (prototype) {
-        var Type = function () {};
-        Type.prototype = prototype;
-        return new Type();
-    };
-var keys =
-    Object.keys =
-    Object.keys || function (object) {
-        var keys = [];
-        for (var key in object)
-            keys.push(key);
-        return keys;
-    };
-var defineProperty =
-    Object.defineProperty =
-    Object.defineProperty || function(obj, prop, descriptor) {
-        // sadly, this one can't be faked very well
-        obj[prop] = descriptor.value;
-    };
-var reduce = Array.prototype.reduce;
-if (!reduce) {
-    reduce = function (callback, basis) {
-        for (var i = 0, ii = this.length; i < ii; i++) {
+var shim = function (object, name, shim) {
+    if (!object[name])
+        object[name] = shim;
+    return object[name];
+};
+
+var freeze = shim(Object, "freeze", identity);
+
+var create = shim(Object, "create", function (prototype) {
+    var Type = function () {};
+    Type.prototype = prototype;
+    return new Type();
+});
+
+var keys = shim(Object, "keys", function (object) {
+    var keys = [];
+    for (var key in object)
+        keys.push(key);
+    return keys;
+});
+
+var reduce = Array.prototype.reduce || function (callback, basis) {
+    var i = 0,
+        ii = this.length;
+    // concerning the initial value, if one is not provided
+    if (arguments.length == 1) {
+        // seek to the first value in the array, accounting
+        // for the possibility that is is a sparse array
+        do {
+            if (i in this) {
+                basis = this[i++];
+                break;
+            }
+            if (++i >= ii)
+                throw new TypeError();
+        } while (1);
+    }
+    // reduce
+    for (; i < ii; i++) {
+        // account for the possibility that the array is sparse
+        if (i in this) {
             basis = callback(basis, this[i], i);
         }
-        return basis;
-    };
-    defineProperty(Array.prototype, 'reduce', {
-        value: reduce,
-        enumerable: false
-    });
-}
+    }
+    return basis;
+};
+
 var isStopIteration = function (exception) {
     return Object.prototype.toString.call(exception)
         === "[object StopIteration]";
 };
+
 // Abbreviations for performance and minification
 var slice = Array.prototype.slice;
 var nil = null;
-
 var valueOf = function (value) {
     if (value === undefined || value === nil) {
         return value;
