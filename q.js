@@ -19,7 +19,7 @@
 
     // The use of "undefined" in the arguments is a
     // micro-optmization for compression systems, permitting
-    // every occurrence of the "undefined" variable bo be
+    // every occurrence of the "undefined" variable to be
     // replaced with a single-character.
 
     // RequireJS

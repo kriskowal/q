@@ -15,6 +15,10 @@ The Q module can be loaded as:
     available from NPM as the ``q`` package.
 -   a RequireJS module
 
+We have a [mailing list].
+
+[mailing list]: https://groups.google.com/forum/#!forum/q-continuum
+
 Q is designed to work well with jQuery, Dojo, and as part of an
 ecosystem of NodeJS NPM packages, many of which also work in browsers,
 including:
