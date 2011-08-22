@@ -1,7 +1,7 @@
 {
     "name": "q",
-    "description": "A library for promises (CommonJS/Promises/A,B,D)",
     "version": "0.7.1",
+    "description": "A library for promises (CommonJS/Promises/A,B,D)",
     "homepage": "http://github.com/kriskowal/q/",
     "author": "Kris Kowal <kris@cixar.com> (http://github.com/kriskowal/)",
     "contributors": [
@@ -28,14 +28,15 @@
         "teleport": ">=0.2.0"
     },
     "dependencies": {
-        "event-queue": ">=0.0.1"
+        "event-queue": "0.1.0"
     },
     "devDependencies": {
         "uglify-js": ">= 0.0.5",
         "test": ">=0.3.0"
     },
     "scripts": {
-        "prepublish": "uglifyjs -o q.min.js -nc q.js"
+        "prepublish": "uglifyjs -o q.min.js -nc q.js",
+        "test": "node test/all.js"
     },
     "overlay": {
         "teleport": {
@@ -47,8 +48,5 @@
     },
     "directories": {
         "test": "./test"
-    },
-    "scripts": {
-        "test": "node test/all.js"
     }
 }
