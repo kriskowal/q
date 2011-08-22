@@ -264,6 +264,7 @@ reduce.call(
         "all", "wait", "join",
         "fail", "fin", "spy", // XXX spy deprecated
         "view", "viewInfo",
+        "timeout", "delay",
         "end"
     ],
     function (prev, name) {
@@ -780,6 +781,29 @@ function end(promise) {
             throw error;
         });
     });
+}
+
+/**
+ */
+exports.timeout = timeout;
+function timeout(promise, timeout) {
+    var deferred = defer();
+    when(promise, deferred.resolve, deferred.reject);
+    setTimeout(function () {
+        deferred.reject("Timed out");
+    }, timeout);
+    return deferred.promise;
+}
+
+/**
+ */
+exports.delay = delay;
+function delay(promise, timeout) {
+    var deferred = defer();
+    setTimeout(function () {
+        deferred.resolve(promise);
+    }, timeout);
+    return deferred.promise;
 }
 
 /*
