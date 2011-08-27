@@ -783,6 +783,36 @@ function end(promise) {
 }
 
 /**
+ * Wraps a NodeJS continuation passing function and returns an equivalent
+ * version that returns a promise.
+ *
+ *      Q.node(FS.readFile)(__filename)
+ *      .then(console.log)
+ *      .end()
+ *
+ */
+exports.node = node;
+function node(callback) {
+    return function () {
+        var deferred = defer();
+        var args = slice.call(arguments);
+        // add a continuation that resolves the promise
+        args.push(function (error, value) {
+            if (error) {
+                deferred.reject(error);
+            } else {
+                deferred.resolve(value);
+            }
+        });
+        // trap exceptions thrown by the callback
+        when(undefined, function () {
+            callback.apply(this, args);
+        }).fail(deferred.reject);
+        return deferred.promise;
+    };
+}
+
+/**
  * Passes a continuation to a Node function and returns a promise.
  *
  *      var FS = require("fs");
@@ -793,21 +823,8 @@ function end(promise) {
  */
 exports.ncall = ncall;
 function ncall(callback /*, ...args*/) {
-    var deferred = defer();
     var args = slice.call(arguments, 1);
-    // add a continuation that resolves the promise
-    args.push(function (error, value) {
-        if (error) {
-            deferred.reject(error);
-        } else {
-            deferred.resolve(value);
-        }
-    });
-    // trap exceptions thrown by the callback
-    when(undefined, function () {
-        callback.apply(this, args);
-    }).fail(deferred.reject);
-    return deferred.promise;
+    return node(callback).apply(undefined, args);
 }
 
 /*
