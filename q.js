@@ -782,6 +782,34 @@ function end(promise) {
     });
 }
 
+/**
+ * Passes a continuation to a Node function and returns a promise.
+ *
+ *      var FS = require("fs");
+ *      Q.ncall(FS.readFile, __filename)
+ *      .then(function (content) {
+ *      })
+ *
+ */
+exports.ncall = ncall;
+function ncall(callback /*, ...args*/) {
+    var deferred = defer();
+    var args = slice.call(arguments, 1);
+    // add a continuation that resolves the promise
+    args.push(function (error, value) {
+        if (error) {
+            deferred.reject(error);
+        } else {
+            deferred.resolve(value);
+        }
+    });
+    // trap exceptions thrown by the callback
+    when(undefined, function () {
+        callback.apply(this, args);
+    }).fail(deferred.reject);
+    return deferred.promise;
+}
+
 /*
  * In module systems that support ``module.exports`` assignment or exports
  * return, allow the ``ref`` function to be used as the ``Q`` constructor
