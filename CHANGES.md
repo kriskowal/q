@@ -8,7 +8,7 @@ Future Backward Incompatible
    This is more consistent with NodeJS and (subjectively)
    more explicit and intuitive.
 
-Next
+0.7.2
 
  - Fixed thenable promise assimilation.
 
