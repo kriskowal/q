@@ -363,17 +363,9 @@ function ref(object) {
         return object;
     // assimilate thenables, CommonJS/Promises/A
     if (object && typeof object.then === "function") {
-        return Promise({}, function fallback(op, rejected) {
-            if (op !== "when") {
-                return when(object, function (value) {
-                    return ref(value).promiseSend.apply(undefined, arguments);
-                });
-            } else {
-                var result = defer();
-                object.then(result.resolve, result.reject);
-                return result.promise;
-            }
-        });
+        var result = defer();
+        object.then(result.resolve, result.reject);
+        return result.promise;
     }
     return Promise({
         "when": function (rejected) {
