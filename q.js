@@ -163,6 +163,7 @@ function defer() {
     // resolved values and other promises gracefully.
     var pending = [], value;
 
+    var deferred = create(defer.prototype);
     var promise = create(Promise.prototype);
 
     promise.promiseSend = function () {
@@ -196,14 +197,37 @@ function defer() {
         return value;
     };
 
-    return {
-        "promise": freeze(promise),
-        "resolve": resolve,
-        "reject": function (reason) {
-            return resolve(reject(reason));
+    deferred.promise = freeze(promise);
+    deferred.resolve = resolve;
+    deferred.reject = function (reason) {
+        return resolve(reject(reason));
+    };
+
+    return deferred;
+}
+
+defer.prototype.node = function () {
+    var self = this;
+    return function (error, value) {
+        if (error) {
+            self.reject(error);
+        } else {
+            self.resolve(value);
         }
     };
-}
+};
+
+defer.prototype.restNode = function () {
+    var self = this;
+    return function (error /*, ...values */) {
+        if (error) {
+            self.reject(error);
+        } else {
+            var values = Array.prototype.slice.call(arguments, 1);
+            self.resolve(values);
+        }
+    };
+};
 
 /**
  * Constructs a Promise with a promise descriptor object and optional fallback
@@ -796,6 +820,51 @@ function delay(promise, timeout) {
         deferred.resolve(promise);
     }, timeout);
     return deferred.promise;
+}
+
+/**
+ * Wraps a NodeJS continuation passing function and returns an equivalent
+ * version that returns a promise.
+ *
+ *      Q.node(FS.readFile)(__filename)
+ *      .then(console.log)
+ *      .end()
+ *
+ */
+exports.node = node;
+function node(callback) {
+    return function () {
+        var deferred = defer();
+        var args = slice.call(arguments);
+        // add a continuation that resolves the promise
+        args.push(function (error, value) {
+            if (error) {
+                deferred.reject(error);
+            } else {
+                deferred.resolve(value);
+            }
+        });
+        // trap exceptions thrown by the callback
+        when(undefined, function () {
+            callback.apply(this, args);
+        }).fail(deferred.reject);
+        return deferred.promise;
+    };
+}
+
+/**
+ * Passes a continuation to a Node function and returns a promise.
+ *
+ *      var FS = require("fs");
+ *      Q.ncall(FS.readFile, __filename)
+ *      .then(function (content) {
+ *      })
+ *
+ */
+exports.ncall = ncall;
+function ncall(callback /*, ...args*/) {
+    var args = slice.call(arguments, 1);
+    return node(callback).apply(undefined, args);
 }
 
 /*
