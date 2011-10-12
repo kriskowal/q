@@ -8,6 +8,10 @@ Future Backward Incompatible
    This is more consistent with NodeJS and (subjectively)
    more explicit and intuitive.
 
+0.7.2
+
+ - Fixed thenable promise assimilation.
+
 0.7.1
 
  - Stopped shimming ``Array.prototype.reduce``. The

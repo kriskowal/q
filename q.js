@@ -264,6 +264,7 @@ reduce.call(
         "all", "wait", "join",
         "fail", "fin", "spy", // XXX spy deprecated
         "view", "viewInfo",
+        "timeout", "delay",
         "end"
     ],
     function (prev, name) {
@@ -362,17 +363,9 @@ function ref(object) {
         return object;
     // assimilate thenables, CommonJS/Promises/A
     if (object && typeof object.then === "function") {
-        return Promise({}, function fallback(op, rejected) {
-            if (op !== "when") {
-                return when(object, function (value) {
-                    return ref(value).promiseSend.apply(undefined, arguments);
-                });
-            } else {
-                var result = defer();
-                object.then(result.resolve, result.reject);
-                return result.promise;
-            }
-        });
+        var result = defer();
+        object.then(result.resolve, result.reject);
+        return result.promise;
     }
     return Promise({
         "when": function (rejected) {
@@ -780,6 +773,29 @@ function end(promise) {
             throw error;
         });
     });
+}
+
+/**
+ */
+exports.timeout = timeout;
+function timeout(promise, timeout) {
+    var deferred = defer();
+    when(promise, deferred.resolve, deferred.reject);
+    setTimeout(function () {
+        deferred.reject("Timed out");
+    }, timeout);
+    return deferred.promise;
+}
+
+/**
+ */
+exports.delay = delay;
+function delay(promise, timeout) {
+    var deferred = defer();
+    setTimeout(function () {
+        deferred.resolve(promise);
+    }, timeout);
+    return deferred.promise;
 }
 
 /*
