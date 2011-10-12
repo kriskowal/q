@@ -280,7 +280,7 @@ Promise.prototype.then = function (fulfilled, rejected) {
 // Chainable methods
 reduce.call(
     [
-        "when", "send",
+        "when", "spread", "send",
         "get", "put", "del",
         "post", "invoke",
         "keys",
@@ -551,6 +551,13 @@ function when(value, fulfilled, rejected) {
     });
 
     return deferred.promise;
+}
+
+exports.spread = spread;
+function spread(promise, fulfilled, rejected) {
+    return when(promise, function (values) {
+        return fulfilled.apply(undefined, values);
+    }, rejected);
 }
 
 /**
