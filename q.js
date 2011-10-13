@@ -19,24 +19,25 @@
 
     // RequireJS
     if (typeof define === "function") {
-        define(function (require, exports, module) {
-            definition(require, exports, module);
-        });
+        define(definition);
     // CommonJS
     } else if (typeof exports === "object") {
-        definition(require, exports, module);
+        definition(require, exports);
     // <script>
     } else {
-        Q = definition(void 0, {}, {});
+        definition(void 0, Q = {});
     }
 
-})(function (serverSideRequire, exports, module) {
+})(function (serverSideRequire, exports) {
 "use strict";
 
 
 var nextTick;
 try {
     // Narwhal, Node (with a package, wraps process.nextTick)
+    // "require" is renamed to "serverSideRequire" so
+    // client-side scrapers do not try to load
+    // "event-queue".
     nextTick = serverSideRequire("event-queue").enqueue;
 } catch (e) {
     // browsers
