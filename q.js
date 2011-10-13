@@ -10,17 +10,12 @@
  *
  */
 
-(function (definition, undefined) {
+(function (definition) {
 
     // This file will function properly as a <script> tag, or a module
     // using CommonJS and NodeJS or RequireJS module formats.  In
     // Common/Node/RequireJS, the module exports the Q API and when
     // executed as a simple <script>, it creates a Q global instead.
-
-    // The use of "undefined" in the arguments is a
-    // micro-optmization for compression systems, permitting
-    // every occurrence of the "undefined" variable to be
-    // replaced with a single-character.
 
     // RequireJS
     if (typeof define === "function") {
@@ -32,10 +27,10 @@
         definition(require, exports, module);
     // <script>
     } else {
-        Q = definition(undefined, {}, {});
+        Q = definition(void 0, {}, {});
     }
 
-})(function (serverSideRequire, exports, module, undefined) {
+})(function (serverSideRequire, exports, module) {
 "use strict";
 
 
@@ -127,9 +122,8 @@ var isStopIteration = function (exception) {
 
 // Abbreviations for performance and minification
 var slice = Array.prototype.slice;
-var nil = null;
 var valueOf = function (value) {
-    if (value === undefined || value === nil) {
+    if (value === void 0 || value === null) {
         return value;
     } else {
         return value.valueOf();
@@ -192,8 +186,8 @@ function defer() {
             nextTick(function () {
                 value.promiseSend.apply(value, pending);
             });
-        }, undefined);
-        pending = undefined;
+        }, void 0);
+        pending = void 0;
         return value;
     };
 
@@ -233,7 +227,7 @@ defer.prototype.node = function () {
 exports.makePromise = Promise;
 function Promise(descriptor, fallback, valueOf) {
 
-    if (fallback === undefined) {
+    if (fallback === void 0) {
         fallback = function (op) {
             return reject("Promise does not support operation: " + op);
         };
@@ -289,7 +283,7 @@ reduce.call(
             );
         };
     },
-    undefined
+    void 0
 )
 
 Promise.prototype.toSource = function () {
@@ -334,7 +328,7 @@ function isFulfilled(object) {
 exports.isRejected = isRejected;
 function isRejected(object) {
     object = valueOf(object);
-    if (object === undefined || object === nil)
+    if (object === void 0 || object === null)
         return false;
     return !!object.promiseRejected;
 }
@@ -418,7 +412,7 @@ function ref(object) {
         "keys": function () {
             return keys(object);
         }
-    }, undefined, function valueOf() {
+    }, void 0, function valueOf() {
         return object;
     });
 }
@@ -439,7 +433,7 @@ function def(object) {
         "isDef": function () {}
     }, function fallback(op) {
         var args = slice.call(arguments);
-        return send.apply(undefined, [object].concat(args));
+        return send.apply(void 0, [object].concat(args));
     }, function () {
         return valueOf(object);
     });
@@ -455,7 +449,7 @@ function viewInfo(object, info) {
             }
         }, function fallback(op) {
             var args = slice.call(arguments);
-            return send.apply(undefined, [object].concat(args));
+            return send.apply(void 0, [object].concat(args));
         }, function () {
             return valueOf(object);
         });
@@ -469,7 +463,7 @@ exports.view = function (object) {
         var view;
         if (info.type === "function") {
             view = function () {
-                return apply(object, undefined, arguments);
+                return apply(object, void 0, arguments);
             };
         } else {
             view = {};
@@ -546,7 +540,7 @@ function when(value, fulfilled, rejected) {
 exports.spread = spread;
 function spread(promise, fulfilled, rejected) {
     return when(promise, function (values) {
-        return fulfilled.apply(undefined, values);
+        return fulfilled.apply(void 0, values);
     }, rejected);
 }
 
@@ -618,7 +612,7 @@ exports.Method = Method;
 function Method (op) {
     return function (object) {
         var args = slice.call(arguments, 1);
-        return send.apply(undefined, [object, op].concat(args));
+        return send.apply(void 0, [object, op].concat(args));
     };
 }
 
@@ -737,7 +731,7 @@ function all(promises) {
                 if (--countDown === 0)
                     deferred.resolve(values);
             }, deferred.reject);
-        }, undefined);
+        }, void 0);
         return deferred.promise;
     });
 }
@@ -760,7 +754,7 @@ exports.join = function () {
  */
 exports.fail = fail;
 function fail(promise, rejected) {
-    return when(promise, undefined, rejected);
+    return when(promise, void 0, rejected);
 }
 
 /**
@@ -785,7 +779,7 @@ function fin(promise, callback) {
  */
 exports.end = end;
 function end(promise) {
-    when(promise, undefined, function (error) {
+    when(promise, void 0, function (error) {
         // forward to a future turn so that ``when``
         // does not catch it and turn it into a rejection.
         nextTick(function () {
@@ -812,7 +806,7 @@ exports.delay = delay;
 function delay(promise, timeout) {
     if (arguments.length < 2) {
         timeout = promise;
-        promise = undefined;
+        promise = void 0;
     }
     var deferred = defer();
     setTimeout(function () {
@@ -860,7 +854,7 @@ function node(callback /* thisp, ...args*/) {
 exports.ncall = ncall;
 function ncall(callback /*, ...args*/) {
     var args = slice.call(arguments, 1);
-    return node(callback).apply(undefined, args);
+    return node(callback).apply(void 0, args);
 }
 
 /*
