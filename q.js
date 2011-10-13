@@ -753,9 +753,7 @@ exports.wait = function (promise) {
 exports.join = function () {
     var args = slice.call(arguments);
     var callback = args.pop();
-    return all(args).then(function (args) {
-        return callback.apply(undefined, args);
-    });
+    return all(args).spread(callback);
 };
 
 /**
