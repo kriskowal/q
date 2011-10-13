@@ -134,7 +134,6 @@ var valueOf = function (value) {
  * Performs a task in a future turn of the event loop.
  * @param {Function} task
  */
-exports.enqueue = // XXX enqueue deprecated
 exports.nextTick = nextTick;
 
 /**
@@ -270,7 +269,7 @@ reduce.call(
         "keys",
         "apply", "call",
         "all", "wait", "join",
-        "fail", "fin", "spy", // XXX spy deprecated
+        "fail", "fin",
         "view", "viewInfo",
         "timeout", "delay",
         "end"
@@ -427,8 +426,7 @@ function ref(object) {
  * without a rejection.
  */
 exports.master =
-exports.def = def;
-function def(object) {
+function master(object) {
     return Promise({
         "isDef": function () {}
     }, function fallback(op) {
@@ -759,7 +757,6 @@ function fail(promise, rejected) {
 
 /**
  */
-exports.spy = // XXX spy deprecated
 exports.fin = fin;
 function fin(promise, callback) {
     return when(promise, function (value) {

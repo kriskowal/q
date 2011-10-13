@@ -1,18 +1,16 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
-## Future Backward Incompatible
+## Next - BACKWARD INCOMPATIBILITY
 
- - ``def`` will be removed.  Use ``master`` instead.  The
-   term ``def`` was too confusing to new users.
- - ``enqueue`` will be removed.  Use ``nextTick`` instead.
+ - WARNING: ``enqueue`` removed.  Use ``nextTick`` instead.
    This is more consistent with NodeJS and (subjectively)
    more explicit and intuitive.
-
-## Next
-
- - Removed the ``Q`` function module.exports alias for
-   ``Q.ref``. It conflicts with ``Q.apply`` in weird ways,
-   making it uncallable.
+ - WARNING: ``def`` removed.  Use ``master`` instead.  The
+   term ``def`` was too confusing to new users.
+ - WARNING: ``spy`` removed in favor of ``fin``.
+ - WARNING: Removed the ``Q`` function module.exports alias
+   for ``Q.ref``. It conflicts with ``Q.apply`` in weird
+   ways, making it uncallable.
  - Revised ``delay`` so that it accepts both ``(value,
    timeout)`` and ``(timeout)`` variations based on
    arguments length.
