@@ -1,6 +1,6 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
-Future Backward Incompatible
+## Future Backward Incompatible
 
  - ``def`` will be removed.  Use ``master`` instead.  The
    term ``def`` was too confusing to new users.
@@ -8,32 +8,39 @@ Future Backward Incompatible
    This is more consistent with NodeJS and (subjectively)
    more explicit and intuitive.
 
-Next
+## Next
 
- - Revised ``delay`` so that it accepts both ``(value, timeout)``
-   and ``(timeout)`` variations based on arguments length.
- - Added ``ref().spread(cb(...args))``, a variant of ``then`` that
-   spreads an array across multiple arguments.  Useful with ``all()``.
- - Added ``defer().node()`` Node callback generator.  The callback
-   accepts ``(error, value)`` or ``(error, ...values)``.  For multiple
-   value arguments, the fulfillment value is an array, useful in
-   conjunction with ``spread``.
- - Added ``node`` and ``ncall``, both with the signature ``(fun,
-   thisp_opt, ...args)``.  The former is a decorator and the latter
-   calls immediately.  ``node`` optional binds and partially applies.
-   ``ncall`` can bind and pass arguments.
+ - Removed the ``Q`` function module.exports alias for
+   ``Q.ref``. It conflicts with ``Q.apply`` in weird ways,
+   making it uncallable.
+ - Revised ``delay`` so that it accepts both ``(value,
+   timeout)`` and ``(timeout)`` variations based on
+   arguments length.
+ - Added ``ref().spread(cb(...args))``, a variant of
+   ``then`` that spreads an array across multiple arguments.
+   Useful with ``all()``.
+ - Added ``defer().node()`` Node callback generator.  The
+   callback accepts ``(error, value)`` or ``(error,
+   ...values)``.  For multiple value arguments, the
+   fulfillment value is an array, useful in conjunction with
+   ``spread``.
+ - Added ``node`` and ``ncall``, both with the signature
+   ``(fun, thisp_opt, ...args)``.  The former is a decorator
+   and the latter calls immediately.  ``node`` optional
+   binds and partially applies.  ``ncall`` can bind and pass
+   arguments.
 
-0.7.2
+## 0.7.2
 
  - Fixed thenable promise assimilation.
 
-0.7.1
+## 0.7.1
 
  - Stopped shimming ``Array.prototype.reduce``. The
    enumerable property has bad side-effects.  Libraries that
    depend on this (for example, QQ) will need to be revised.
 
-0.7.0 - BACKWARD INCOMPATIBILITY
+## 0.7.0 - BACKWARD INCOMPATIBILITY
 
  - WARNING: Removed ``report`` and ``asap``
  - WARNING: The ``callback`` argument of the ``fin``
@@ -52,7 +59,7 @@ Next
  - Improved minification results.
  - Improved readability.
 
-0.6.0 - BACKWARD INCOMPATIBILITY
+## 0.6.0 - BACKWARD INCOMPATIBILITY
 
  - WARNING: In practice, the implementation of ``spy`` and
    the name ``fin`` were useful.  I've removed the old
@@ -69,18 +76,18 @@ Next
  - Made ``when`` chainable.
  - Made ``all`` chainable.
 
-0.5.3
+## 0.5.3
 
  - Added ``all`` and refactored ``join`` and ``wait`` to use
    it.  All of these will now reject at the earliest
    rejection.
 
-0.5.2
+## 0.5.2
 
  - Minor improvement to ``spy``; now waits for resolution of
    callback promise.
 
-0.5.1
+## 0.5.1
 
  - Made most Q API methods chainable on promise objects, and
    turned the previous promise-methods of ``join``,
@@ -96,7 +103,7 @@ Next
  - Switched to using ``MessageChannel`` for next tick task
    enqueue in browsers that support it.
 
-0.5.0 - MINOR BACKWARD INCOMPATIBILITY
+## 0.5.0 - MINOR BACKWARD INCOMPATIBILITY
 
  - Exceptions are no longer reported when consumed.
  - Removed ``error`` from the API.  Since exceptions are
@@ -112,7 +119,7 @@ Next
    promise back, or join variadic promises, resolving with a
    callback that receives variadic fulfillment values.
 
-0.4.4
+## 0.4.4
 
  - ``end`` no longer returns a promise. It is the end of the
    promise chain.
@@ -125,24 +132,24 @@ Next
  - Added ``report`` as a promise-chain method, so an error
    can be reported if it passes such a gate.
 
-0.4.3
+## 0.4.3
 
  - Fixed ``<script>`` support that regressed with 0.4.2
    because of "use strict" in the module system
    multi-plexer.
 
-0.4.2
+## 0.4.2
 
  - Added support for RequireJS (jburke)
 
-0.4.1
+## 0.4.1
 
  - Added an "end" method to the promise prototype,
    as a shorthand for waiting for the promise to
    be resolved gracefully, and failing to do so,
    to dump an error message.
 
-0.4.0 - BACKWARD INCOMPATIBLE*
+## 0.4.0 - BACKWARD INCOMPATIBLE*
 
  - *Removed the utility modules. NPM and Node no longer
    expose any module except the main module.  These have
@@ -153,7 +160,7 @@ Next
  - Fixed some issues with asap, when it resolves to
    undefined, or throws an exception.
 
-0.3.0 - BACKWARD-INCOMPATIBLE
+## 0.3.0 - BACKWARD-INCOMPATIBLE
 
  - The `post` method has been reverted to its original
    signature, as provided in Tyler Close's `ref_send` API.
@@ -177,12 +184,12 @@ Next
    rejected.  The code has been revised to reflect this
    nuance in terminology.
 
-0.2.10
+## 0.2.10
 
  - Added `join` to `"q/util"` for variadically joining
    multiple promises.
 
-0.2.9
+## 0.2.9
 
  - The future-compatible `invoke` method has been added,
    to replace `post`, since `post` will become backward-
@@ -191,20 +198,20 @@ Next
    now emitted to Node's `"uncaughtException"` `process`
    event in addition to being returned as a rejection reason.
 
-0.2.8
+## 0.2.8
 
  - Exceptions thrown in the callbacks of a `when` call
    are now consumed, warned, and transformed into
    rejections of the promise returned by `when`.
 
-0.2.7
+## 0.2.7
 
  - Fixed a minor bug in thenable assimilation, regressed
    because of the change in the forwarding protocol.
  - Fixed behavior of "q/util" `deep` method on dates and
    other primitives. Github issue #11.
 
-0.2.6
+## 0.2.6
 
  - Thenables (objects with a "then" method) are accepted
    and provided, bringing this implementation of Q
@@ -223,7 +230,7 @@ Next
    undocumented API, so third-party API's depending on the
    previous undocumented behavior may break.
 
-0.2.5
+## 0.2.5
 
  - Changed promises into a duck-type such that multiple
    instances of the Q module can exchange promise objects.
@@ -232,23 +239,23 @@ Next
  - Exceptions in promises are now captured and returned
    as rejections.
 
-0.2.4
+## 0.2.4
 
  - Fixed bug in `ref` that prevented `del` messages from
    being received (gozala)
  - Fixed a conflict with FireFox 4; constructor property
    is now read-only.
 
-0.2.3
+## 0.2.3
 
  - Added `keys` message to promises and to the promise API.
 
-0.2.2
+## 0.2.2
 
  - Added boilerplate to `q/queue` and `q/util`.
  - Fixed missing dependency to `q/queue`.
 
-0.2.1
+## 0.2.1
 
  - The `resolve` and `reject` methods of `defer` objects now
    return the resolution promise for convenience.
@@ -259,7 +266,7 @@ Next
  - Deprecated `defined` from `q`, with intent to move it to
    `q/util`.
 
-0.2.0 - BACKWARD INCOMPATIBLE
+## 0.2.0 - BACKWARD INCOMPATIBLE
 
  - Changed post(ref, name, args) to variadic
    post(ref, name, ...args). BACKWARD INCOMPATIBLE
@@ -271,23 +278,23 @@ Next
  - Added a send(value, op, ...args) method to the public API, for
    forwarding messages to a value or promise in a future turn.
 
-0.1.9
+## 0.1.9
 
  - Added isRejected() for testing whether a value is a rejected
    promise.  isResolved() retains the behavior of stating
    that rejected promises are not resolved.
 
-0.1.8
+## 0.1.8
 
  - Fixed isResolved(null) and isResolved(undefined) [issue #9]
  - Fixed a problem with the Object.create shim
 
-0.1.7
+## 0.1.7
 
  - shimmed ES5 Object.create in addition to Object.freeze
    for compatibility on non-ES5 engines (gozala)
 
-0.1.6
+## 0.1.6
 
  - Q.isResolved added
  - promise.valueOf() now returns the value of resolved
@@ -295,40 +302,40 @@ Next
  - asap retried
  - promises are frozen when possible
 
-0.1.5
+## 0.1.5
 
  - fixed dependency list for Teleport (gozala)
  - all unit tests now pass (gozala)
 
-0.1.4
+## 0.1.4
 
  - added support for Teleport as an engine (gozala)
  - simplified and updated methods for getting internal
    print and enqueue functions universally (gozala)
 
-0.1.3
+## 0.1.3
 
  - fixed erroneous link to the q module in package.json
 
-0.1.2
+## 0.1.2
 
  - restructured for overlay style package compatibility
 
-0.1.0
+## 0.1.0
 
  - removed asap because it was broken, probably down to the
    philosophy.
 
-0.0.3
+## 0.0.3
 
  - removed q-util
  - fixed asap so it returns a value if completed
 
-0.0.2
+## 0.0.2
 
  - added q-util
 
-0.0.1
+## 0.0.1
 
  - initial version
 

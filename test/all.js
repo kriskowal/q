@@ -7,6 +7,9 @@ exports['test chains of promises'] = require('./promised-chains');
 exports['test multiple listeners'] = require('./multiple-listeners');
 exports['test methods'] = require('./methods');
 exports['test thenable'] = require('./thenable');
+exports['test spread'] = require('./spread');
+exports['test wrap'] = require('./wrap');
+exports['test node'] = require('./node');
 
 exports['test GH issue 9'] = require('./issue/9');
 exports['test GH issue 22'] = require('./issue/22');

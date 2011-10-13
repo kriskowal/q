@@ -702,7 +702,7 @@ var apply = exports.apply = Method("apply");
  * @param context   the context object (this) for the call
  * @param ...args   array of application arguments
  */
-exports.call = function (value, context) {
+var call = exports.call = function (value, context) {
     var args = slice.call(arguments, 2);
     return apply(value, context, args);
 };
@@ -721,16 +721,16 @@ exports.all = all;
 function all(promises) {
     return when(promises, function (promises) {
         var countDown = promises.length;
-        var values = [];
         if (countDown === 0)
             return ref(values);
         var deferred = defer();
         reduce.call(promises, function (undefined, promise, index) {
-            when(promise, function (answer) {
-                values[index] = answer;
+            when(promise, function (value) {
+                promises[index] = value;
                 if (--countDown === 0)
-                    deferred.resolve(values);
-            }, deferred.reject);
+                    deferred.resolve(promises);
+            })
+            .fail(deferred.reject)
         }, void 0);
         return deferred.promise;
     });
@@ -815,6 +815,26 @@ function delay(promise, timeout) {
     return deferred.promise;
 }
 
+exports.wrap = wrap;
+function wrap(callback) {
+    return function () {
+        var deferred = defer();
+        var args = slice.call(arguments);
+        // add a continuation that resolves the promise
+        // trap exceptions thrown by the callback
+        call(callback, this, deferred)
+        .fail(deferred.reject);
+        return deferred.promise;
+    };
+    return deferred.promise;
+}
+
+exports.wcall = wcall;
+function wcall(callback /*, thisp, ...args*/) {
+    var args = slice.call(arguments, 1);
+    return wrap(callback).apply(void 0, args);
+}
+
 /**
  * Wraps a NodeJS continuation passing function and returns an equivalent
  * version that returns a promise.
@@ -852,19 +872,9 @@ function node(callback /* thisp, ...args*/) {
  *
  */
 exports.ncall = ncall;
-function ncall(callback /*, ...args*/) {
-    var args = slice.call(arguments, 1);
-    return node(callback).apply(void 0, args);
+function ncall(callback, thisp /*, ...args*/) {
+    var args = slice.call(arguments, 2);
+    return node(callback).apply(thisp, args);
 }
-
-/*
- * In module systems that support ``module.exports`` assignment or exports
- * return, allow the ``ref`` function to be used as the ``Q`` constructor
- * exported by the "q" module.
- */
-for (var name in exports)
-    ref[name] = exports[name];
-module.exports = ref;
-return ref;
 
 });
