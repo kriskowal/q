@@ -810,6 +810,10 @@ function timeout(promise, timeout) {
  */
 exports.delay = delay;
 function delay(promise, timeout) {
+    if (arguments.length < 2) {
+        timeout = promise;
+        promise = undefined;
+    }
     var deferred = defer();
     setTimeout(function () {
         deferred.resolve(promise);

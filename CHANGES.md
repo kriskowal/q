@@ -10,6 +10,8 @@ Future Backward Incompatible
 
 Next
 
+ - Revised ``delay`` so that it accepts both ``(value, timeout)``
+   and ``(timeout)`` variations based on arguments length.
  - Added ``ref().spread(cb(...args))``, a variant of ``then`` that
    spreads an array across multiple arguments.  Useful with ``all()``.
  - Added ``defer().node()`` Node callback generator.  The callback
