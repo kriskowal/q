@@ -8,6 +8,19 @@ Future Backward Incompatible
    This is more consistent with NodeJS and (subjectively)
    more explicit and intuitive.
 
+Next
+
+ - Added ``ref().spread(cb(...args))``, a variant of ``then`` that
+   spreads an array across multiple arguments.  Useful with ``all()``.
+ - Added ``defer().node()`` Node callback generator.  The callback
+   accepts ``(error, value)`` or ``(error, ...values)``.  For multiple
+   value arguments, the fulfillment value is an array, useful in
+   conjunction with ``spread``.
+ - Added ``node`` and ``ncall``, both with the signature ``(fun,
+   thisp_opt, ...args)``.  The former is a decorator and the latter
+   calls immediately.  ``node`` optional binds and partially applies.
+   ``ncall`` can bind and pass arguments.
+
 0.7.2
 
  - Fixed thenable promise assimilation.

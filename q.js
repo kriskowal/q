@@ -211,20 +211,10 @@ defer.prototype.node = function () {
     return function (error, value) {
         if (error) {
             self.reject(error);
+        } else if (arguments.length > 2) {
+            self.resolve(Array.prototype.slice.call(arguments, 1));
         } else {
             self.resolve(value);
-        }
-    };
-};
-
-defer.prototype.restNode = function () {
-    var self = this;
-    return function (error /*, ...values */) {
-        if (error) {
-            self.reject(error);
-        } else {
-            var values = Array.prototype.slice.call(arguments, 1);
-            self.resolve(values);
         }
     };
 };
@@ -839,22 +829,19 @@ function delay(promise, timeout) {
  *
  */
 exports.node = node;
-function node(callback) {
+function node(callback /* thisp, ...args*/) {
+    if (arguments.length > 1) {
+        var args = Array.prototype.slice.call(arguments, 1);
+        callback = callback.bind.apply(callback, args);
+    }
     return function () {
         var deferred = defer();
         var args = slice.call(arguments);
         // add a continuation that resolves the promise
-        args.push(function (error, value) {
-            if (error) {
-                deferred.reject(error);
-            } else {
-                deferred.resolve(value);
-            }
-        });
+        args.push(deferred.node());
         // trap exceptions thrown by the callback
-        when(undefined, function () {
-            callback.apply(this, args);
-        }).fail(deferred.reject);
+        apply(callback, this, args)
+        .fail(deferred.reject);
         return deferred.promise;
     };
 }
