@@ -1,4 +1,6 @@
 
+[![Build Status](https://secure.travis-ci.org/kriskowal/q.png)](http://travis-ci.org/kriskowal/q)
+
 Q is a tool for making and composing asynchronous promises in
 JavaScript.
 
