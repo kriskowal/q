@@ -1,6 +1,6 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
-## Next - BACKWARD INCOMPATIBILITY
+## 0.8.0
 
  - WARNING: ``enqueue`` removed.  Use ``nextTick`` instead.
    This is more consistent with NodeJS and (subjectively)
@@ -8,6 +8,8 @@
  - WARNING: ``def`` removed.  Use ``master`` instead.  The
    term ``def`` was too confusing to new users.
  - WARNING: ``spy`` removed in favor of ``fin``.
+ - WARNING: ``wait`` removed. Do ``all(args).get(0)`` instead.
+ - WARNING: ``join`` removed. Do ``all(args).spread(callback) instead.
  - WARNING: Removed the ``Q`` function module.exports alias
    for ``Q.ref``. It conflicts with ``Q.apply`` in weird
    ways, making it uncallable.

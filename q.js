@@ -714,6 +714,13 @@ var call = exports.call = function (value, context) {
  */
 exports.keys = Method("keys");
 
+/**
+ * Turns an array of promises into a promise for an array.  If any of
+ * the promises gets rejected, the whole array is rejected immediately.
+ * @param {Array*} an array (or promise for an array) of values (or
+ * promises for values)
+ * @returns a promise for an array of the corresponding values
+ */
 // By Mark Miller
 // http://wiki.ecmascript.org/doku.php?id=strawman:concurrency&rev=1308776521#allfulfilled
 exports.all = all;
@@ -736,20 +743,13 @@ function all(promises) {
 }
 
 /**
- */
-exports.wait = function (promise) {
-    return all(arguments).get(0);
-};
-
-/**
- */
-exports.join = function () {
-    var args = slice.call(arguments);
-    var callback = args.pop();
-    return all(args).spread(callback);
-};
-
-/**
+ * Captures the failure of a promise, giving an oportunity to recover
+ * with a callback.  If the given promise is fulfilled, the returned
+ * promise is fulfilled.
+ * @param {Any*} promise for something
+ * @param {Function} callback to fulfill the returned promise if the
+ * given promise is rejected
+ * @returns a promise for the return value of the callback
  */
 exports.fail = fail;
 function fail(promise, rejected) {
@@ -757,6 +757,15 @@ function fail(promise, rejected) {
 }
 
 /**
+ * Provides an opportunity to observe the rejection of a promise,
+ * regardless of whether the promise is fulfilled or rejected.  Forwards
+ * the resolution to the returned promise when the callback is done.
+ * The callback can return a promise to defer completion.
+ * @param {Any*} promise 
+ * @param {Function} callback to observe the resolution of the given
+ * promise, takes no arguments.
+ * @returns a promise for the resolution of the given promise when
+ * ``fin`` is done.
  */
 exports.fin = fin;
 function fin(promise, callback) {
@@ -774,6 +783,8 @@ function fin(promise, callback) {
 /**
  * Terminates a chain of promises, forcing rejections to be
  * thrown as exceptions.
+ * @param {Any*} promise at the end of a chain of promises
+ * @returns nothing
  */
 exports.end = end;
 function end(promise) {
@@ -787,6 +798,12 @@ function end(promise) {
 }
 
 /**
+ * Causes a promise to be rejected if it does not get fulfilled before
+ * some milliseconds time out.
+ * @param {Any*} promise
+ * @param {Number} milliseconds timeout
+ * @returns a promise for the resolution of the given promise if it is
+ * fulfilled before the timeout, otherwise rejected.
  */
 exports.timeout = timeout;
 function timeout(promise, timeout) {
@@ -799,10 +816,16 @@ function timeout(promise, timeout) {
 }
 
 /**
+ * Returns a promise for the given value (or promised value) after some
+ * milliseconds.
+ * @param {Any*} promise
+ * @param {Number} milliseconds
+ * @returns a promise for the resolution of the given promise after some
+ * time has elapsed.
  */
 exports.delay = delay;
 function delay(promise, timeout) {
-    if (arguments.length < 2) {
+    if (timeout === void 0) {
         timeout = promise;
         promise = void 0;
     }
@@ -811,26 +834,6 @@ function delay(promise, timeout) {
         deferred.resolve(promise);
     }, timeout);
     return deferred.promise;
-}
-
-exports.wrap = wrap;
-function wrap(callback) {
-    return function () {
-        var deferred = defer();
-        var args = slice.call(arguments);
-        // add a continuation that resolves the promise
-        // trap exceptions thrown by the callback
-        call(callback, this, deferred)
-        .fail(deferred.reject);
-        return deferred.promise;
-    };
-    return deferred.promise;
-}
-
-exports.wcall = wcall;
-function wcall(callback /*, thisp, ...args*/) {
-    var args = slice.call(arguments, 1);
-    return wrap(callback).apply(void 0, args);
 }
 
 /**
