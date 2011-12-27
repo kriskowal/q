@@ -449,6 +449,7 @@ Returns a "deferred" object with a:
 -   ``promise`` property
 -   ``resolve(value)`` function
 -   ``reject(reason)`` function
+-   ``node()`` function
 
 The promise is suitable for passing as a value to the
 ``when`` function, among others.
@@ -476,6 +477,9 @@ cannot be reset.  All future observers of the resolution of
 the promise will be notified of the resolved value, so it is
 safe to call ``when`` on a promise regardless of whether it
 has been or will be resolved.
+
+Calling ``node()`` returns a callback suitable for passing
+to a Node function.
 
 
 THIS IS COOL
@@ -699,22 +703,13 @@ respective promise, or rejects when the first promise is
 rejected.
 
 
-## ``wait(...objects)``
+## ``fail(promise, callback())``
 
-Returns a promise for the fulfilled value of the first
-object when all of the objects have been fulfilled, or the
-rejection of the first object to be rejected from left to
-right.
-
-
-## ``join(...objects, callback(...objects))``
-
-Returns a promise for the value eventually fulfilled by the
-return value of the callback, or the rejection of the first
-object to be rejected from left to right.  If and when all
-of the variadic object arguments have been fulfilled, the
-callback is called with the respective fulfillment values
-variadically.
+Accepts a promise and captures rejection with the callback,
+giving the callback an opportunity to recover from the
+failure.  If the promise gets rejected, the return value of
+the callback resolves the returned promise.  Otherwise, the
+fulfillment gets forwarded.
 
 
 ## ``fin(promise, callback())``
@@ -756,6 +751,50 @@ of reducing nested callbacks in engines that support
 further information.
 
 
+## ``node(nodeFunction)``
+
+Wraps a Node function so that it returns a promise instead
+of accepting a callback.
+
+```javascript
+var readFile = FS.node(FS.readFile);
+readFile("foo.txt")
+.then(function (text) {
+});
+```
+
+The ``this`` of the call gets forwarded.
+
+```javascript
+var readFile = FS.node(FS.readFile);
+FS.readFile.call(FS, "foo.txt")
+.then(function (text) {
+});
+```
+
+The ``node`` call can also be used to bind and partially
+apply.
+
+```javascript
+var readFoo = FS.node(FS.readFile, FS, "foo.txt");
+readFoo()
+.then(function (text) {
+});
+```
+
+
+## ``ncall(nodeFunction, thisp, ...args)``
+
+Calls a Node function, returning a promise so you don’t have
+to pass a callback.
+
+```javascript
+Q.ncall(FS.readFile, FS, "foo.txt")
+.then(function (text) {
+});
+```
+
+
 Chaining
 --------
 
@@ -780,8 +819,6 @@ The following functions are supported for chaining:
 -   ``.call``
 -   ``.keys``
 -   ``.all``
--   ``.wait`` (``.all().get(0)``)
--   ``.join`` (``.all().when(function ([...]) {}))``)
 -   ``.fin``
 -   ``.end``
 

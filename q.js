@@ -426,7 +426,7 @@ function ref(object) {
  * additionally responds to the 'isDef' message
  * without a rejection.
  */
-exports.master =
+exports.master = master;
 function master(object) {
     return Promise({
         "isDef": function () {}
@@ -457,7 +457,8 @@ function viewInfo(object, info) {
     }
 }
 
-exports.view = function (object) {
+exports.view = view;
+function view(object) {
     return viewInfo(object).when(function (info) {
         var view;
         if (info.type === "function") {
@@ -477,7 +478,7 @@ exports.view = function (object) {
         });
         return ref(view);
     });
-};
+}
 
 /**
  * Registers an observer on a promise.
