@@ -729,7 +729,7 @@ function all(promises) {
     return when(promises, function (promises) {
         var countDown = promises.length;
         if (countDown === 0)
-            return ref(values);
+            return ref(promises);
         var deferred = defer();
         reduce.call(promises, function (undefined, promise, index) {
             when(promise, function (value) {
