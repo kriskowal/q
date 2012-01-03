@@ -1,5 +1,9 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
+## Upcoming
+
+ - Fixed opera bug. #35 @cadorn
+
 ## 0.8.0
 
  - WARNING: ``enqueue`` removed.  Use ``nextTick`` instead.

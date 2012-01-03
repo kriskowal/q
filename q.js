@@ -55,7 +55,7 @@ try {
         };
         nextTick = function (task) {
             tail = tail.next = {task: task};
-            channel.port2.postMessage();
+            channel.port2.postMessage(0);
         };
     } else {
         // old browsers
