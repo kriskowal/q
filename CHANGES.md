@@ -3,6 +3,7 @@
 ## Upcoming
 
  - Fixed opera bug. #35 @cadorn
+ - Fixed ``Q.all([])`` #32 @domenicdenicola
 
 ## 0.8.0
 
