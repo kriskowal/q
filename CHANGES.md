@@ -1,6 +1,6 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
-## Upcoming
+## 0.8.1
 
  - Fixed opera bug. #35 @cadorn
  - Fixed ``Q.all([])`` #32 @domenicdenicola
