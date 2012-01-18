@@ -49,13 +49,17 @@ caught and handled.
 The callback approach is called an “inversion of control”.
 A function that accepts a callback instead of a return value
 is saying, “Don’t call me, I’ll call you.”.  Promises
-[un-inverts][IOC] the inversion, cleanly separating the
+[un-invert][IOC] the inversion, cleanly separating the
 handling of input argument from the handling of control
 flow.  This simplifies the use and creation of API’s,
 particularly variadic parameters (spread and rest
 arguments).
 
 [IOC]: http://www.slideshare.net/domenicdenicola/callbacks-promises-and-coroutines-oh-my-the-evolution-of-asynchronicity-in-javascript
+
+
+Getting Started
+===============
 
 The Q module can be loaded as:
 
