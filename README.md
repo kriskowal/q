@@ -108,7 +108,7 @@ var bar = foo()
 They also have a ``fin`` function that is like a ``finally`` clause.
 The final handler gets called, with no arguments, when the promise
 returned by ``foo()`` either returns a value or throws an error.  The
-value returned or error thrown passes directly to ``bar``.
+value returned or error thrown by ``foo()`` passes directly to ``bar``.
 
 ```javascript
 var bar = foo()
@@ -117,6 +117,12 @@ var bar = foo()
 })
 ```
 
+-   If the handler returns a value, the value is ignored
+-   If the handler throws an error, the error passes to ``bar``
+-   If the handler returns a promise, ``bar`` gets postponed.  The
+    eventual value or error has the same effect as an immediate return
+    value or thrown error: a value would be ignored, an error would be
+    forwarded.
 
 ## Chaining
 
