@@ -28,7 +28,7 @@
         "teleport": ">=0.2.0"
     },
     "dependencies": {
-        "event-queue": "0.1.0"
+        "event-queue": "0.2.0"
     },
     "devDependencies": {
         "test": ">=0.3.0"
@@ -39,7 +39,7 @@
     "overlay": {
         "teleport": {
             "dependencies": {
-                "event-queue": ">=0.0.1",
+                "event-queue": ">=0.2.0",
                 "system": ">=0.0.4"
             }
         }

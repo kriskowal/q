@@ -4,6 +4,7 @@
 
  - Deprecated ``ref`` in favor of ``resolve`` as recommended by
    @domenicdenicola.
+ - Update event-queue dependency.
 
 ## 0.8.1
 
