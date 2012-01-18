@@ -625,7 +625,7 @@ UNION
     }
 
 
-## ``ref(value)``
+## ``resolve(value)``
 
 If value is a promise, returns the promise.
 

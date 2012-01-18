@@ -177,11 +177,11 @@ function defer() {
         return value.valueOf();
     };
 
-    var resolve = function (resolvedValue) {
+    var become = function (resolvedValue) {
         var i, ii, task;
         if (!pending)
             return;
-        value = ref(resolvedValue);
+        value = resolve(resolvedValue);
         reduce.call(pending, function (undefined, pending) {
             nextTick(function () {
                 value.promiseSend.apply(value, pending);
@@ -192,9 +192,9 @@ function defer() {
     };
 
     deferred.promise = freeze(promise);
-    deferred.resolve = resolve;
+    deferred.resolve = become;
     deferred.reject = function (reason) {
-        return resolve(reject(reason));
+        return become(reject(reason));
     };
 
     return deferred;
@@ -361,12 +361,12 @@ reject.prototype = create(Promise.prototype, {
  * Constructs a promise for an immediate reference.
  * @param value immediate reference
  */
-exports.ref = ref;
-function ref(object) {
+exports.resolve = resolve;
+exports.ref = resolve; // XXX Deprecated
+function resolve(object) {
     // If the object is already a Promise, return it directly.  This enables
-    // the ref function to both be used to created references from
-    // objects, but to tolerably coerce non-promises to refs if they are
-    // not already Promises.
+    // the resolve function to both be used to created references from objects,
+    // but to tolerably coerce non-promises to promises.
     if (isPromise(object))
         return object;
     // assimilate thenables, CommonJS/Promises/A
@@ -440,7 +440,7 @@ function master(object) {
 
 exports.viewInfo = viewInfo;
 function viewInfo(object, info) {
-    object = ref(object);
+    object = resolve(object);
     if (info) {
         return Promise({
             "viewInfo": function () {
@@ -476,7 +476,7 @@ function view(object) {
                 };
             }
         });
-        return ref(view);
+        return resolve(view);
     });
 }
 
@@ -518,12 +518,12 @@ function when(value, fulfilled, rejected) {
     }
 
     nextTick(function () {
-        ref(value).promiseSend("when", function (value) {
+        resolve(value).promiseSend("when", function (value) {
             if (done)
                 return;
             done = true;
             deferred.resolve(
-                ref(value)
+                resolve(value)
                 .promiseSend("when", _fulfilled, _rejected)
             );
         }, function (reason) {
@@ -627,7 +627,7 @@ exports.send = send;
 function send(object, op) {
     var deferred = defer();
     var args = slice.call(arguments, 2);
-    object = ref(object);
+    object = resolve(object);
     nextTick(function () {
         object.promiseSend.apply(
             object,
@@ -668,7 +668,7 @@ exports.del = Method("del");
  * @param name      name of method to invoke
  * @param value     a value to post, typically an array of
  *                  invocation arguments for promises that
- *                  are ultimately backed with `ref` values,
+ *                  are ultimately backed with `resolve` values,
  *                  as opposed to those backed with URLs
  *                  wherein the posted value can be any
  *                  JSON serializable object.
@@ -729,7 +729,7 @@ function all(promises) {
     return when(promises, function (promises) {
         var countDown = promises.length;
         if (countDown === 0)
-            return ref(promises);
+            return resolve(promises);
         var deferred = defer();
         reduce.call(promises, function (undefined, promise, index) {
             when(promise, function (value) {
