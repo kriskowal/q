@@ -630,7 +630,7 @@ UNION
 If value is a promise, returns the promise.
 
 If value is not a promise, returns a promise that has
-already been resolved with the given value.
+already been fulfilled with the given value.
 
 
 ## ``reject(reason)``
@@ -674,10 +674,14 @@ Returns whether the given value is a promise.
 
 ## ``isResolved(value)``
 
-Returns whether the given value is fully resolved.  The
-given value may be any value, including but not limited to
-promises returned by ``defer`` and ``ref``. Rejected
-promises are not considered resolved.
+Returns whether the given value is fulfilled or rejected.
+Non-promise values are equivalent to fulfilled promises.
+
+
+## ``isFulfilled(value)``
+
+Returns whether the given value is fulfilled.  Non-promise
+values are equivalent to fulfilled promises.
 
 
 ## ``isRejected(value)``
