@@ -193,6 +193,17 @@ function eventualAdd(a, b) {
 }
 ```
 
+But ``spread`` calls ``all`` initially, so you can skip it in chains.
+
+```javascript
+return foo()
+.then(function (name, location) {
+    return [name, FS.read(location, "utf-8")];
+})
+.spread(function (name, text) {
+})
+```
+
 
 ## Handling Errors
 
