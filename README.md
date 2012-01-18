@@ -78,8 +78,8 @@ be responsible for resolving ``bar``.
     that promise.  Being able to become a new promise is useful for
     managing delays, combining results, or recovering from errors.
 
-If the ``foo()`` promise gets fulfilled and you omit the value
-handler, the **value** will go to ``bar``.
+If the ``foo()`` promise gets rejected and you omit the error handler,
+the **error** will go to ``bar``:
 
 ```javascript
 var bar = foo()
@@ -87,8 +87,8 @@ var bar = foo()
 })
 ```
 
-If the ``foo()`` promise gets rejected and you omit the error handler,
-the **error** will go to ``bar``.
+If the ``foo()`` promise gets fulfilled and you omit the value
+handler, the **value** will go to ``bar``:
 
 ```javascript
 var bar = foo()
@@ -97,7 +97,7 @@ var bar = foo()
 ```
 
 Q promises provide a ``fail`` shorthand for ``then`` when you are only
-interested in handling the error.
+interested in handling the error:
 
 ```javascript
 var bar = foo()
@@ -108,7 +108,7 @@ var bar = foo()
 They also have a ``fin`` function that is like a ``finally`` clause.
 The final handler gets called, with no arguments, when the promise
 returned by ``foo()`` either returns a value or throws an error.  The
-value or error passes directly to ``bar``.
+value returned or error thrown passes directly to ``bar``.
 
 ```javascript
 var bar = foo()
@@ -207,9 +207,9 @@ return foo()
 
 ## Handling Errors
 
-Promises work mostly like ``try`` and ``catch``. **However,** if you
-throw an exception in the value handler, it will not be be caught by
-the error handler.
+One sometimes-unintuive aspect of promises is that if you throw an
+exception in the value handler, it will not be be caught by the error
+handler.
 
 ```javascript
 foo()
@@ -220,7 +220,13 @@ foo()
 })
 ```
 
-To get around this, you can chain your error handler.
+To see why this is, consider the parallel between promises and
+``try``/``catch``. We are ``try``-ing to execute ``foo()``: the error
+handler represents a ``catch`` for ``foo()``, while the value handler
+represents code that happens *after* the ``try``/``catch`` block.
+That code then needs its own ``try``/``catch`` block.
+
+In terms of promises, this means chaining your error handler:
 
 ```javascript
 foo()
@@ -228,7 +234,7 @@ foo()
     throw new Error("Can't bar.");
 })
 .fail(function (error) {
-    // We get here with either foo’s error or bar’s error
+    // We get here with either foo's error or bar's error
 })
 ```
 
@@ -426,6 +432,30 @@ If the promise is a proxy for a remote object, you can shave
 round-trips by using these functions instead of ``then``.  To take
 advantage of promises for remote objects, check out [Q-Comm][].
 
+Even in the case of non-remote objects, these methods can be used as
+shorthand for particularly-simple value handlers. For example, you
+can replace
+
+```javascript
+return Q.call(function () {
+    return [{ foo: "bar" }, { foo: "baz" }];
+})
+.then(function (value) {
+    return value[0].foo;
+})
+```
+
+with
+
+```javascript
+return Q.call(function () {
+    return [{ foo: "bar" }, { foo: "baz" }];
+})
+.get(0)
+.get("foo")
+```
+
+
 [Q-Comm]: https://github.com/kriskowal/q-comm
 
 
@@ -437,7 +467,7 @@ callback pattern.
 ```javascript
 var deferred = Q.defer();
 FS.readFile("foo.txt", "utf-8", deferred.node());
-return referred.promise;
+return deferred.promise;
 ```
 
 And there’s a ``Q.ncall`` function for shorter.
