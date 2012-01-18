@@ -1,35 +1,26 @@
 
 [![Build Status](https://secure.travis-ci.org/kriskowal/q.png)](http://travis-ci.org/kriskowal/q)
 
-Q is a tool for making and composing asynchronous promises in
-JavaScript.
+If a function cannot return a value or throw an exception without
+blocking, it can return a promise instead.  A promise is an object
+that represents the return value or the thrown exception that the
+function may eventually provide.  A promise can also be used as a
+proxy for a [remote object] to overcome latency.
 
-An asynchronous promise is an object that represents the eventual
-return value (fulfillment) or thrown exception of (rejection) of a
-function that could not respond before returning without blocking,
-like file system, inter-process, and network operations.  An eventual
-"resolution" is either a fulfillment or a rejection.
+[remote object]: https://github.com/kriskowal/q-comm
 
 The Q module can be loaded as:
 
 -   a ``<script>`` tag (creating a ``Q`` global variable)
--   a NodeJS module, or generally a CommonJS module,
-    available from NPM as the ``q`` package.
+-   a NodeJS and CommonJS module available from NPM as the ``q``
+    package
 -   a RequireJS module
 
-We have a [mailing list].
+Please join the Q-Continuum [mailing list](https://groups.google.com/forum/#!forum/q-continuum).
 
-[mailing list]: https://groups.google.com/forum/#!forum/q-continuum
+Q can exchange promises with jQuery and Dojo and the following libraries
+are based on Q.
 
-Q is designed to work well with jQuery, Dojo, and as part of an
-ecosystem of NodeJS NPM packages, many of which also work in browsers,
-including:
-
--   [qq](https://github.com/kriskowal/qq)
-    infinite queues, deep and shallow object resolution,
-    map/reduce helpers, lazy objects (/!\ This was
-    originally ``q/util`` in this package, but has moved
-    into its own home due to changes in NPM 1.)
 -   [q-fs](https://github.com/kriskowal/q-fs)
     file system
 -   [q-http](https://github.com/kriskowal/q-http)
@@ -38,346 +29,424 @@ including:
     remote objects
 -   [jaque](https://github.com/kriskowal/jaque)
     promising HTTP server, JSGI middleware
--   [teleport](https://github.com/gozala/teleport)
-    browser-side module promises
 
-Q conforms to many proposed standards, mostly by Kris Zyp and myself,
-with mentoring from Mark Miller: [UncommonJS/Promises][]
-[CommonJS/Promises/A][], [CommonJS/Promises/B][], and
-[CommonJS/Promises/D][].  Q is based on Tyler Close's [ref_send][] API
-for [Waterken][].
-
-[UncommonJS/Promises]: https://github.com/kriskowal/uncommonjs/blob/master/promises/specification.md
-[CommonJS/Promises/A]: http://wiki.commonjs.org/wiki/Promises/A
-[CommonJS/Promises/B]: http://wiki.commonjs.org/wiki/Promises/B
-[CommonJS/Promises/D]: http://wiki.commonjs.org/wiki/Promises/D
-[ref_send]: http://waterken.svn.sourceforge.net/viewvc/waterken/server/trunk/waterken/config/file/site/ref_send.js?view=markup
-[Waterken]: http://waterken.sourceforge.net/
+[Many other projects](http://search.npmjs.org/#/q) in NPM use Q
+internally or provide Q promises.
 
 
-EXAMPLES
---------
+Tutorial
+========
 
-## ``defer``
+Promises have a ``then`` method, which you can use to get the eventual
+return value (fulfillment) or thrown exception (rejection).
 
-This example provides a promise-oriented ``delay`` function
-based on the callback-oriented ``setTimeout`` function.
+```javascript
+foo()
+.then(function (value) {
+}, function (reason) {
+})
+```
 
-    function delay(ms) {
-        var deferred = Q.defer();
-        setTimeout(deferred.resolve, ms);
-        return deferred.promise;
+If ``foo`` returns a promise that gets fulfilled later with a return
+value, the first function (the value handler) will be called with the
+value.  However, if the ``foo`` function gets rejected later by a
+thrown exception, the second function (the error handler) will be
+called with the error.
+
+
+## Propagation
+
+The ``then`` method returns a promise, which in this example, I’m
+assigning to ``bar``.
+
+```javascript
+var bar = foo()
+.then(function (value) {
+}, function (reason) {
+})
+```
+
+The ``bar`` variable becomes a new promise for the return value of
+either handler.  Since a function can only either return a value or
+throw an exception, only one handler will ever be called and it will
+be responsible for resolving ``bar``.
+
+-   If you return a value in a handler, ``bar`` will get fulfilled.
+
+-   If you throw an exception in a handler ``bar`` will get rejected.
+
+-   If you return a **promise** in a handler, ``bar`` will “become”
+    that promise.  Being able to become a new promise is useful for
+    managing delays, combining results, or recovering from errors.
+
+If the ``foo()`` promise gets fulfilled and you omit the value
+handler, the **value** will go to ``bar``.
+
+```javascript
+var bar = foo()
+.then(function (value) {
+})
+```
+
+If the ``foo()`` promise gets rejected and you omit the error handler,
+the **error** will go to ``bar``.
+
+```javascript
+var bar = foo()
+.then(null, function (error) {
+})
+```
+
+Q promises provide a ``fail`` shorthand for ``then`` when you are only
+interested in handling the error.
+
+```javascript
+var bar = foo()
+.fail(function (error) {
+})
+```
+
+They also have a ``fin`` function that is like a ``finally`` clause.
+The final handler gets called, with no arguments, when the promise
+returned by ``foo()`` either returns a value or throws an error.  The
+value or error passes directly to ``bar``.
+
+```javascript
+var bar = foo()
+.fin(function () {
+    // close files, database connections, stop servers, conclude tests
+})
+```
+
+
+## Chaining
+
+There are two ways to chain promises.  You can chain promises either
+inside or outside handlers.  The next two examples are equivalent.
+
+```javascript
+return foo()
+.then(function (fooValue) {
+    return bar(fooValue)
+    .then(function (barValue) {
+        // if we get here without an error,
+        // the value retuned here
+        // or the exception thrown here
+        // resolves the promise returned
+        // by the first line
+    })
+})
+```
+
+```javascript
+return foo()
+.then(function (fooValue) {
+    return bar(fooValue);
+})
+.then(function (barValue) {
+    // if we get here without an error,
+    // the value retuned here
+    // or the exception thrown here
+    // resolves the promise returned
+    // by the first line
+})
+```
+
+The only difference is nesting.  It’s useful to nest handlers if you
+need to capture both ``fooValue`` and ``bazValue`` in the last
+handler.
+
+```javascript
+function eventualAdd(a, b) {
+    return a.then(function (a) {
+        return a.then(function (b) {
+            return a + b;
+        });
+    });
+}
+```
+
+
+## Combination
+
+You can turn an array of promises into a promise for the whole,
+fulfilled array using ``all``.
+
+```javascript
+return Q.all([
+    eventualAdd(2, 2),
+    eventualAdd(10, 20)
+])
+```
+
+If you have a promise for an array, you can use ``spread`` as a
+replacement for ``then``.  The ``spread`` function “spreads” the
+values over the arguments of the value handler.  The error handler
+will get called at the first sign of failure.  That is, whichever of
+the recived promises fails first gets handled by the error handler.
+
+```javascript
+function eventualAdd(a, b) {
+    return Q.all([a, b])
+    .spread(function (a, b) {
+        return a + b;
+    })
+}
+```
+
+
+## Handling Errors
+
+Promises work mostly like ``try`` and ``catch``. **However,** if you
+throw an exception in the value handler, it will not be be caught by
+the error handler.
+
+```javascript
+foo()
+.then(function (value) {
+    throw new Error("Can't bar.");
+}, function (error) {
+    // We only get here if "foo" fails
+})
+```
+
+To get around this, you can chain your error handler.
+
+```javascript
+foo()
+.then(function (value) {
+    throw new Error("Can't bar.");
+})
+.fail(function (error) {
+    // We get here with either foo’s error or bar’s error
+})
+```
+
+
+## The End
+
+When you get to the end of a chain of promises, you should either
+return the last promise or end the chain.  Since handlers catch
+errors, it’s an unfortunate pattern that the exceptions can go
+unobserved.
+
+So, either return it,
+
+```javascript
+return foo()
+.then(function () {
+    return "bar";
+})
+```
+
+Or, end it.
+
+```javascript
+foo()
+.then(function () {
+    return "bar";
+})
+.end()
+```
+
+Ending a promise chain makes sure that, if an error doesn’t get
+handled before the end, it will get rethrown and reported.
+
+This is a stopgap. We are exploring ways to make unhandled errors
+visible without any explicit handling.
+
+
+## The Beginning
+
+Everything above assumes you get a promise from somewhere else.  This
+is the common case.  Every once in a while, you will need to create a
+promise from scratch.
+
+You can create a promise from a value using ``Q.call``.  This returns a
+promise for 10.
+
+```javascript
+return Q.call(function () {
+    return 10;
+});
+```
+
+You can also use ``call`` to get a promise for an exception.
+
+```javascript
+return Q.call(function () {
+    throw new Error("Can't do it");
+})
+```
+
+As the name implies, ``call`` can call functions, or even promised
+functions.  This uses the ``eventualAdd`` function above to add two
+numbers.  The second argument is the ``this`` object to pass into the
+function.
+
+```javascript
+return Q.call(eventualAdd, null, 2, 2);
+```
+
+When nothing else will do the job, you can use ``defer``, which is
+where all promises ultimately come from.
+
+```javascript
+var deferred = Q.defer();
+FS.readFile("foo.txt", "utf-8", function (error, text) {
+    if (error) {
+        deferred.reject(new Error(error));
+    } else {
+        deferred.resolve(text);
     }
+});
+return referred.promise;
+```
 
+Node that a deferred can be resolved with a value or a promise.  The
+``reject`` function is a shorthand for resolving with a rejected
+promise.
 
-This example takes a promise and returns a promise that will
-be rejected if the given promise is not fulfilled in a
-timely fashion.
+```javascript
+var rejection = Q.call(function () {
+    throw new Error("Can't do it");
+});
+deferred.resolve(rejection);
+```
 
-    function timeout(promise, ms) {
-        var deferred = Q.defer();
-        Q.when(promise, deferred.resolve);
-        Q.when(delay(ms), function () {
-            deferred.reject("Timed out");
-        });
-        return deferred.promise;
-    }
+This is a simplified implementation of ``Q.delay``.
 
+```javascript
+function delay(ms) {
+    var deferred = Q.defer();
+    setTimeout(deferred.resolve, ms);
+    return deferred.promise;
+}
+```
 
-This example wraps Node's file listing function, returning a
-promise instead of accepting a callback.
+This is a simplified implementation of ``Q.timeout``
 
-    var FS = require("fs"); // from Node
-
-    function list(path) {
-        path = String(path);
-        var result = Q.defer();
-        FS.readdir(path, function (error, list) {
-            if (error)
-                return result.reject(error);
-            else
-                result.resolve(list);
-        });
-        return result.promise;
-    }
-
-
-## ``when``
-
-This example illustrates how the ``when`` primitive can be
-used to observe the fulfillment of a promise.
-
-    var bPromise = Q.when(aPromise, function (aValue) {
-        return bValue;
+```javascript
+function timeout(promise, ms) {
+    var deferred = Q.defer();
+    Q.when(promise, deferred.resolve);
+    Q.when(delay(ms), function () {
+        deferred.reject("Timed out");
     });
-
-*   If ``aPromise`` is fulfilled, the callback is called in a future
-    turn of the even loop with the fulfilled value as ``aValue``.
-*   If ``aPromise`` is rejected, ``bPromise`` will be resolved with
-    ``aPromise`` (the rejection will be forwarded).
-*   ``bPromise`` is eventually resolved with ``bValue``.
-*   ``aPromise`` does not actually need to be a promise.  It can be any
-    value, in which case it is treated as an already fulfilled
-    promise.
-*   ``bValue`` does not actually need to be a value.  It can be a
-    promise, which would further defer the resolution of ``bPromise``.
-*   If the fulfillment callback throws an exception, ``bPromise`` will
-    be rejected with the thrown error as the reason.
+    return deferred.promise;
+}
+```
 
 
-This example illustrates how the ``when`` primitive can be used to
-observe either the fulfillment or rejection of a promise.  
+## The Middle
 
-    var bPromise = Q.when(aPromise, function (aValue) {
-        return bValue;
-    }, function (aReason) {
-        return bValue; // or
-        throw bReason;
-    });
+If you are using a function that may return a promise, but just might
+return a value if it doesn’t need to defer, you can use the “static”
+methods of the Q library.
 
-*   If ``aPromise`` is rejected, the second callback, the rejection
-    callback, will be called with the reason for the rejection as
-    ``aReason``.
-*   The value returned by the rejection callback will be used to
-    resolve ``bPromise``.
-*   If the rejection callback throws an error, ``bPromise`` will be
-    rejected with the error as the reason.
-*   Unlike a ``try`` and ``catch`` block, the rejection callback will not
-    be called if the fulfillment callback throws an error or returns a
-    rejection.  To observe an exception thrown in either the
-    fulfillment or the rejection callback, another ``when`` block must
-    be used to observe the rejection of ``bPromise``.
+The ``when`` function is the static equivalent for ``then``.
 
-In general,
+```javascript
+return Q.when(valueOrPromise, function (value) {
+}, function (error) {
+});
+```
 
-*   If the rejection callback is falsy and ``aPromise`` is rejected, the
-    rejection will be forwarded to ``bPromise``.
-*   If the fulfillment callback is falsy and ``aPromise`` is fulfilled,
-    the fulfilled value will be forwarded to ``bPromise``.
+All of the other methods on a promise have static analogs with the
+same name.
 
+The following are equivalent:
 
-## Node File-system Examples
+```javascript
+return Q.all([a, b]);
+```
 
-In Node, this example reads itself and writes itself out in
-all capitals.
+```javascript
+return Q.call(function () {
+    return [a, b];
+})
+.all();
+```
 
-    var Q = require("q");
-    var FS = require("q-fs");
+When working with promises provided by other libraries, you should
+convert it to a Q promise.  Not all promise libraries make the same
+guarantees as Q and certainly don’t provide all of the same methods.
+Most libraries only provide a partially functional ``then`` method.
+This thankfully is all we need to turn them into vibrant Q promises.
 
-    var text = FS.read(__filename);
-    Q.when(text, function (text) {
-        console.log(text.toUpperCase());
-    });
+```javascript
+return Q.when($.ajax(...))
+.then(function () {
+})
+```
 
-You can also perform actions in parallel.  This example
-reads two files at the same time, waits for both to finish,
-then logs their lengths.
+If there is any chance that the promise you receive is not a Q promise
+as provided by your library, you should wrap it using a Q function.
+You can even use ``Q.call`` as a shorthand.
 
-    var Q = require("q");
-    var FS = require("q-fs");
-
-    var self = FS.read(__filename);
-    var passwd = FS.read("/etc/passwd");
-    Q.join(self, passwd, function (self, passwd) {
-        console.log(__filename + ':', self.length);
-        console.log('/etc/passwd:', passwd.length);
-    });
-
-This example reads all of the files in the same directory as
-the program and notes the length of each, in the order in
-which they are finished reading.
-
-    var Q = require("q");
-    var FS = require("q-fs");
-
-    var list = FS.list(__dirname);
-    var files = Q.when(list, function (list) {
-        list.forEach(function (fileName) {
-            var content = FS.read(fileName);
-            Q.when(content, function (content) {
-                console.log(fileName, content.length);
-            });
-        });
-    });
-
-This example reads all of the files in the same directory as
-the program and notes the length of each, in the order in
-which they were listed.
-
-    var Q = require("q");
-    var FS = require("q-fs");
-
-    var list = FS.list(__dirname);
-    var files = Q.when(list, function (list) {
-        return list.reduce(function (ready, fileName) {
-            var content = FS.read(fileName);
-            return Q.join(ready, content, function (ready, content) {
-                console.log(fileName, content.length);
-            });
-        });
-    });
+```javascript
+return Q.call($.ajax, $, ...)
+.then(function () {
+})
+```
 
 
-## Parallel Join
+## Over the Wire
 
-Promises can be used to do work either in parallel or
-serial, depending on whether you wait for one promise to be
-fulfilled before beginning work on a second.  To do a
-parallel join, begin work and get promises and use nested
-``when`` blocks to create a single promise that will be
-resolved when both inputs are resolved, or when the first is
-rejected.
+A promise can serve as a proxy for another object, even a remote
+object.  There are methods that allow you to optimistically manipulate
+properties or call functions.  All of these interactions return
+promises, so they can be chained.
 
-    var aPromise = aFunction();
-    var bPromise = bFunction();
-    var cPromise = Q.when(aPromise, function (aValue) {
-        return Q.when(bPromise, function (bValue) {
-            return cValue;
-        });
-    });
+```
+direct manipulation         using a promise as a proxy
+--------------------------  -------------------------------
+value.foo                   promise.get("foo")
+value.foo = value           promise.put("foo", value)
+delete value.foo            promise.del("foo")
+value.foo(...args)          promise.post("foo", [args])
+value.foo(...args)          promise.invoke("foo", ...args)
+value(...args)              promise.apply(null, [args])
+value(...args)              promise.call(null, ...args)
+value.call(thisp, ...args)  promise.apply(thisp, [args])
+value.apply(thisp, [args])  promise.call(thisp, ...args)
+```
 
-For short, you can use the ``join`` function.
+If the promise is a proxy for a remote object, you can shave
+round-trips by using these functions instead of ``then``.  To take
+advantage of promises for remote objects, check out [Q-Comm][].
 
-    var Q = require("q");
-    var aPromise = aFunction();
-    var bPromise = bFunction();
-    Q.join(aPromise, bPromise, function (aValue, bValue) {
-        return cValue;
-    });
-
-If a piece of work can be done on each value in an array in
-parallel, you can use either a ``forEach`` loop or a ``reduce``
-loop to create a ``done`` promise.
-
-    var done;
-    array.forEach(function (value) {
-        var work = doWork(value); 
-        done = Q.when(done, function () {
-            return work;
-        });
-    });
-    return done;
-
-It is a bit more concise with a ``reduce`` loop.
-
-    return array.reduce(function (done, value) {
-        var work = doWork(value);
-        return Q.when(done, function () {
-            return work;
-        });
-    }, undefined);
-
-You can also join the promises with a variadic ``wait``
-call, which is equivalent.
-
-    return array.reduce(function (done, value) {
-        var work = doWork(value);
-        return Q.wait(work, done);
-    }, undefined);
+[Q-Comm]: https://github.com/kriskowal/q-comm
 
 
-## Serial Join
+## Adapting Node
 
-If you have two pieces of work and the second cannot be done
-until the first completes, you can also use nested ``when``
-blocks.
+There is a ``node`` method on deferreds that is handy for the NodeJS
+callback pattern.
 
-    var aPromise = aFunction();
-    var cPromise = Q.when(aPromise, function (aValue) {
-        var bPromise = bFunction(aValue);
-        return Q.when(bPromise, function bValue) {
-            return cValue;
-        });
-    });
+```javascript
+var deferred = Q.defer();
+FS.readFile("foo.txt", "utf-8", deferred.node());
+return referred.promise;
+```
 
-If you can do work on each value in an array, but want to do
-them in order and one at a time, you can use ``forEach`` or
-``reduce`` loop.
+And there’s a ``Q.ncall`` function for shorter.
 
-    var done;
-    array.forEach(function (value) {
-        done = Q.when(done, function () {
-            return doWork(value); 
-        });
-    });
-    return done;
+```javascript
+return Q.ncall(FS.readFile, FS, "foo.txt", "utf-8");
+```
 
-It is more concise with ``reduce`` and ``wait``.
+There is also a ``Q.node`` function that that creates a reusable
+wrapper.
 
-    return array.reduce(function (done, value) {
-        return Q.wait(done, doWork(value));
-    });
+```javascript
+var readFile = Q.node(FS.readFile, FS)
+return readFile("foo.txt", "utf-8");
+```
 
 
-## Recovery
-
-You can use the rejection callback of ``when`` blocks to
-recover from failure.  Supposing that ``doIt`` will
-intermittently fail (perhaps because of network conditions),
-``justDoIt`` will just keep trying indifinitely.
-
-    function justDoIt(value) {
-        var work = doIt(value);
-        work = timeout(1000, work);
-        return Q.when(work, function (work) {
-            return work;
-        }, function errback(reason) {
-            // just do it again
-            return justDoIt(value);
-        });
-    }
-
-This will not blow out the stack because ``when`` blocks
-guarantee that the fulfillment and rejection callbacks will
-only be called on their own turn of the event loop.
-
-
-## Conditional Array Serial Join
-
-Consider the process of looking for the first directory in
-an array of paths that contains a particular file.  To do
-this with a synchronous file API is very straight-forward.
-
-    function find(basePaths, soughtPath) {
-        for (var i = 0, ii = basePaths.length; i < ii; i++) {
-            var consideredPath = FS.join(basePaths[i], soughtPath);
-            if (FS.isFile(consideredPath))
-                return consideredPath;
-        }
-        throw new Error("Can't find.");
-    }
-
-To do this with an asynchronous ``FS.isFile`` is more
-elaborate.  It is a serial iteration, but it halts at the
-first success.  This can be accomplished by creating a chain
-of functions, each making progress on the returned promise
-until the matching path is found, otherwise returning the
-value returned by the next function in line, until all
-options are exhausted and returning a rejection.
-
-    function find(basePaths, soughtPath) {
-        var find = basePaths.reduceRight(function (otherwise, basePath) {
-            return function () {
-                var consideredPath = FS.join(basePath, soughtPath);
-                var isFile = FS.isFile(consideredPath);
-                return Q.when(isFile, function (isFile) {
-                    if (isFile) {
-                        return consideredPath;
-                    } else {
-                        return otherwise();
-                    }
-                });
-            };
-        }, function otherwise() {
-            throw new Error("Can't find");
-        });
-        return find();
-    }
-
-
-THE HALLOWED API
-----------------
-
+API
+---
 
 ## ``when(value, fulfilled_opt, rejected_opt)``
 
@@ -516,17 +585,6 @@ If value is a promise, returns the promise.
 
 If value is not a promise, returns a promise that has
 already been resolved with the given value.
-
-
-## ``def(value)``
-
-Annotates a value, wrapping it in a promise, such that that
-it is a local promise object which cannot be serialized and
-sent to resolve a remote promise.
-
-A def'ed value will respond to the ``"isDef"`` message
-without a rejection so remote promise communication
-libraries can distinguish it from non-def values.
 
 
 ## ``reject(reason)``
