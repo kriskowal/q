@@ -421,6 +421,30 @@ If the promise is a proxy for a remote object, you can shave
 round-trips by using these functions instead of ``then``.  To take
 advantage of promises for remote objects, check out [Q-Comm][].
 
+Even in the case of non-remote objects, these methods can be used as
+shorthand for particularly-simple value handlers. For example, you
+can replace
+
+```javascript
+return Q.call(function () {
+    return [{ foo: "bar" }, { foo: "baz" }];
+})
+.then(function (value) {
+    return value[0].foo;
+})
+```
+
+with
+
+```javascript
+return Q.call(function () {
+    return [{ foo: "bar" }, { foo: "baz" }];
+})
+.get(0)
+.get("foo")
+```
+
+
 [Q-Comm]: https://github.com/kriskowal/q-comm
 
 
