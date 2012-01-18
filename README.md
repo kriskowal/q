@@ -1,4 +1,3 @@
-
 [![Build Status](https://secure.travis-ci.org/kriskowal/q.png)](http://travis-ci.org/kriskowal/q)
 
 If a function cannot return a value or throw an exception without
@@ -153,13 +152,13 @@ return foo()
 ```
 
 The only difference is nesting.  It’s useful to nest handlers if you
-need to capture both ``fooValue`` and ``bazValue`` in the last
+need to capture both ``fooValue`` and ``barValue`` in the last
 handler.
 
 ```javascript
 function eventualAdd(a, b) {
     return a.then(function (a) {
-        return a.then(function (b) {
+        return b.then(function (b) {
             return a + b;
         });
     });
@@ -300,10 +299,10 @@ FS.readFile("foo.txt", "utf-8", function (error, text) {
         deferred.resolve(text);
     }
 });
-return referred.promise;
+return deferred.promise;
 ```
 
-Node that a deferred can be resolved with a value or a promise.  The
+Note that a deferred can be resolved with a value or a promise.  The
 ``reject`` function is a shorthand for resolving with a rejected
 promise.
 
