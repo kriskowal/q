@@ -426,7 +426,7 @@ callback pattern.
 ```javascript
 var deferred = Q.defer();
 FS.readFile("foo.txt", "utf-8", deferred.node());
-return referred.promise;
+return deferred.promise;
 ```
 
 And there’s a ``Q.ncall`` function for shorter.
