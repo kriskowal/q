@@ -4,9 +4,58 @@ If a function cannot return a value or throw an exception without
 blocking, it can return a promise instead.  A promise is an object
 that represents the return value or the thrown exception that the
 function may eventually provide.  A promise can also be used as a
-proxy for a [remote object] to overcome latency.
+proxy for a [remote object][Q-Comm] to overcome latency.
 
-[remote object]: https://github.com/kriskowal/q-comm
+[Q-Comm]: https://github.com/kriskowal/q-comm
+
+On the first pass, promises can mitigate the “[Pyramid of
+Doom][POD]”: the situation where code marches to the right faster
+than it marches forward.
+
+[POD]: http://calculist.org/blog/2011/12/14/why-coroutines-wont-work-on-the-web/
+
+```javascript
+step1(function (value1) {
+    step2(value1, function(value2) {
+        step3(value2, function(value3) {
+            step4(value3, function(value4) {
+                // Do something with value4
+            });
+        });
+    });
+});
+```
+
+With a promise library, you can flatten the pyramid.
+
+```javascript
+Q.call(step1)
+.then(step2)
+.then(step3)
+.then(step4)
+.then(function (value4) {
+    // Do something with value4
+}, function (error) {
+    // Handle any error from step1 through step4
+})
+.end();
+```
+
+With this approach, you also get implicit error propagation,
+just like ``try``, ``catch``, and ``finally``.  An error in
+``step1`` will flow all the way to ``step5``, where it’s
+caught and handled.
+
+The callback approach is called an “inversion of control”.
+A function that accepts a callback instead of a return value
+is saying, “Don’t call me, I’ll call you.”.  Promises
+[un-inverts][IOC] the inversion, cleanly separating the
+handling of input argument from the handling of control
+flow.  This simplifies the use and creation of API’s,
+particularly variadic parameters (spread and rest
+arguments).
+
+[IOC]: http://www.slideshare.net/domenicdenicola/callbacks-promises-and-coroutines-oh-my-the-evolution-of-asynchronicity-in-javascript
 
 The Q module can be loaded as:
 
@@ -438,6 +487,8 @@ If the promise is a proxy for a remote object, you can shave
 round-trips by using these functions instead of ``then``.  To take
 advantage of promises for remote objects, check out [Q-Comm][].
 
+[Q-Comm]: https://github.com/kriskowal/q-comm
+
 Even in the case of non-remote objects, these methods can be used as
 shorthand for particularly-simple value handlers. For example, you
 can replace
@@ -460,9 +511,6 @@ return Q.call(function () {
 .get(0)
 .get("foo")
 ```
-
-
-[Q-Comm]: https://github.com/kriskowal/q-comm
 
 
 ## Adapting Node
