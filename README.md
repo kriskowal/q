@@ -196,9 +196,9 @@ function eventualAdd(a, b) {
 
 ## Handling Errors
 
-Promises work mostly like ``try`` and ``catch``. **However,** if you
-throw an exception in the value handler, it will not be be caught by
-the error handler.
+One sometimes-unintuive aspect of promises is that if you throw an
+exception in the value handler, it will not be be caught by the error
+handler.
 
 ```javascript
 foo()
@@ -209,7 +209,13 @@ foo()
 })
 ```
 
-To get around this, you can chain your error handler.
+To see why this is, consider the parallel between promises and
+``try``/``catch``. We are ``try``-ing to execute ``foo()``: the error
+handler represents a ``catch`` for ``foo()``, while the value handler
+represents code that happens *after* the ``try``/``catch`` block.
+That code then needs its own ``try``/``catch`` block.
+
+In terms of promises, this means chaining your error handler:
 
 ```javascript
 foo()
@@ -217,7 +223,7 @@ foo()
     throw new Error("Can't bar.");
 })
 .fail(function (error) {
-    // We get here with either foo’s error or bar’s error
+    // We get here with either foo's error or bar's error
 })
 ```
 
