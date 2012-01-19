@@ -542,10 +542,10 @@ return readFile("foo.txt", "utf-8");
 ```
 
 
-API
----
+Reference
+=========
 
-## ``when(value, fulfilled_opt, rejected_opt)``
+## promise.then(fulfilled_opt, rejected_opt) — Q.when(value, fulfilled_opt, rejected_opt)
 
 Arranges for ``fulfilled`` to be called:
 
@@ -608,7 +608,105 @@ INTERSECTION
     }
 
 
-## ``defer()``
+## promise.fail(callback()) — Q.fail(promise, callback())
+
+Accepts a promise and captures rejection with the callback,
+giving the callback an opportunity to recover from the
+failure.  If the promise gets rejected, the return value of
+the callback resolves the returned promise.  Otherwise, the
+fulfillment gets forwarded.
+
+
+## promise.fin(callback()) — Q.fin(promise, callback())
+
+Like a ``finally`` clause, allows you to observe either the
+fulfillment or rejection of a callback, but to do so without
+modifying the final value.  This is useful for collecting
+resources regardless of whether a job succeeded, like
+closing a database connection, shutting a server down, or
+deleting an unneeded key from an object. The callback 
+receives no arguments.
+
+
+## promise.end() — Q.end(value)
+
+Accepts a promise and returns ``undefined``, to terminate a
+chain of promises at the end of a program.  If the promise
+is rejected, throws it as an exception in a future turn of
+the event loop.
+
+Since exceptions thrown in ``when`` callbacks are consumed
+and transformed into rejections, exceptions are easy to
+accidentally silently ignore.  It is furthermore non-trivial
+to get those exceptions reported since the obvious way to do
+this is to use ``when`` to register a rejection callback,
+where ``throw`` would just get consumed again.  ``end``
+arranges for the error to be thrown in a future turn of the
+event loop, so it won't be caught; it will cause the
+exception to emit a browser's ``onerror`` event or NodeJS's
+``process`` ``"uncaughtException"``.
+
+
+## promise.get(name) — Q.get(object, name)
+
+Returns a promise for the named property of an object,
+albeit a promise for an object.
+
+
+## promise.put(name, value) — Q.put(object, name, value)
+
+Returns a promise to set the named property of an object,
+albeit a promise, to the given value.
+
+
+## promise.del(name) — Q.del(object, name)
+
+Returns a promise to delete the named property of an object,
+albeit a promise.
+
+
+## promise.post(name, arguments) — Q.post(object, name, arguments)
+
+Returns a promise to call the named function property of an
+eventually fulfilled object with the given array of
+arguments.  The object itself is ``this`` in the function.
+
+
+## promise.invoke(name, ...arguments) — Q.invoke(object, name, ...arguments)
+
+Returns a promise to call the named function property of an
+eventually fulfilled object with the given variadic
+arguments.  The object itself is ``this`` in the function.
+
+
+## promise.keys() — Q.keys(object)
+
+Returns a promise for an array of the property names of the
+eventually fulfilled object.
+
+
+## promiseForFunction.apply(this, arguments) — Q.apply(function, this, arguments)
+
+Returns a promise for the result of calling an eventually
+fulfilled function, with the given values for the ``this``
+and ``arguments`` array in that function.
+
+
+## promiseForFunction.call(this, ...arguments) — Q.call(function, this, ...arguments)
+
+Returns a promise for the result of eventually calling the
+fulfilled function, with the given context and variadic
+arguments.
+
+
+## promiseForArrayOfPromises.all() — Q.all([...promises])
+
+Returns a promise for an array of the fulfillment of each
+respective promise, or rejects when the first promise is
+rejected.
+
+
+## Q.defer()
 
 Returns a "deferred" object with a:
 
@@ -676,7 +774,7 @@ UNION
     }
 
 
-## ``resolve(value)``
+## Q.resolve(value)
 
 If value is a promise, returns the promise.
 
@@ -684,7 +782,7 @@ If value is not a promise, returns a promise that has
 already been fulfilled with the given value.
 
 
-## ``reject(reason)``
+## Q.reject(reason)
 
 Returns a promise that has already been rejected with the
 given reason.
@@ -718,190 +816,29 @@ Simplifies to:
     })
 
 
-## ``isPromise(value)``
+## Q.isPromise(value)
 
 Returns whether the given value is a promise.
 
 
-## ``isResolved(value)``
+## promise.isResolved() — Q.isResolved(value)
 
 Returns whether the given value is fulfilled or rejected.
 Non-promise values are equivalent to fulfilled promises.
 
 
-## ``isFulfilled(value)``
+## promise.isFulfilled() — Q.isFulfilled(value) 
 
 Returns whether the given value is fulfilled.  Non-promise
 values are equivalent to fulfilled promises.
 
 
-## ``isRejected(value)``
+## promise.isRejected() — Q.isRejected(value)
 
 Returns whether the given value is a rejected promise.
 
 
-## ``end(promise)``
-
-Accepts a promise that is intended to be the last promise in
-a chain of promises.  If an error propagates to the end of
-the promise chain, it will be thrown as an exception and
-handled by either NodeJS or the browser as an uncaught
-exception.
-
-
-## ``enqueue(callback Function)``
-
-Calls ``callback`` in a future turn.
-
-
-ADVANCED API
-------------
-
-The ``ref`` promise constructor establishes the basic API
-for performing operations on objects: "get", "put", "del",
-"post", "apply", and "keys".  This set of "operators" can be
-extended by creating promises that respond to messages with
-other operator names, and by sending corresponding messages
-to those promises.
-
-
-## ``makePromise(handlers, fallback_opt, valueOf_opt)``
-
-Creates a stand-alone promise that responds to messages.
-These messages have an operator like "when", "get", "put",
-and "post", corresponding to each of the above functions for
-sending messages to promises.
-
-The ``handlers`` are an object with function properties
-corresponding to operators.  When the made promise receives
-a message and a corresponding operator exists in the
-``handlers``, the function gets called with the variadic
-arguments sent to the promise.  If no ``handlers`` object
-exists, the ``fallback`` function is called with the operator,
-and the subsequent variadic arguments instead.  These
-functions return a promise for the eventual resolution of
-the promise returned by the message-sender.  The default
-fallback returns a rejection.
-
-The ``valueOf`` function, if provided, overrides the
-``valueOf`` function of the returned promise.  This is useful
-for providing information about the promise in the same turn
-of the event loop.  For example, resolved promises return
-their resolution value and rejections return an object that
-is recognized by ``isRejected``.
-
-
-## ``send(value, operator, ...args)``
-
-Sends an arbitrary message to a promise.
-
-Care should be taken not to introduce control-flow hazards
-and security holes when forwarding messages to promises.
-The functions above, particularly ``when``, are carefully
-crafted to prevent a poorly crafted or malicious promise
-from breaking the invariants like not applying callbacks
-multiple times or in the same turn of the event loop.
-
-
-## ``get(object, name)``
-
-Returns a promise for the named property of an object,
-albeit a promise for an object.
-
-
-## ``put(object, name, value)``
-
-Returns a promise to set the named property of an object,
-albeit a promise, to the given value.
-
-
-## ``del(object, name)``
-
-Returns a promise to delete the named property of an object,
-albeit a promise.
-
-
-## ``post(object, name, arguments)``
-
-Returns a promise to call the named function property of an
-eventually fulfilled object with the given array of
-arguments.  The object itself is ``this`` in the function.
-
-
-## ``invoke(object, name, ...arguments)``
-
-Returns a promise to call the named function property of an
-eventually fulfilled object with the given variadic
-arguments.  The object itself is ``this`` in the function.
-
-
-## ``keys(object)``
-
-Returns a promise for an array of the property names of the
-eventually fulfilled object.
-
-
-## ``apply(function, this, arguments)``
-
-Returns a promise for the result of calling an eventually
-fulfilled function, with the given values for the ``this``
-and ``arguments`` array in that function.
-
-
-## ``call(function, this, ...arguments)``
-
-Returns a promise for the result of eventually calling the
-fulfilled function, with the given context and variadic
-arguments.
-
-
-## ``all([...promises])``
-
-Returns a promise for an array of the fulfillment of each
-respective promise, or rejects when the first promise is
-rejected.
-
-
-## ``fail(promise, callback())``
-
-Accepts a promise and captures rejection with the callback,
-giving the callback an opportunity to recover from the
-failure.  If the promise gets rejected, the return value of
-the callback resolves the returned promise.  Otherwise, the
-fulfillment gets forwarded.
-
-
-## ``fin(promise, callback())``
-
-Like a ``finally`` clause, allows you to observe either the
-fulfillment or rejection of a callback, but to do so without
-modifying the final value.  This is useful for collecting
-resources regardless of whether a job succeeded, like
-closing a database connection, shutting a server down, or
-deleting an unneeded key from an object. The callback 
-receives no arguments.
-
-
-## ``end(promise)``
-
-Accepts a promise and returns ``undefined``, to terminate a
-chain of promises at the end of a program.  If the promise
-is rejected, throws it as an exception in a future turn of
-the event loop.
-
-Since exceptions thrown in ``when`` callbacks are consumed
-and transformed into rejections, exceptions are easy to
-accidentally silently ignore.  It is furthermore non-trivial
-to get those exceptions reported since the obvious way to do
-this is to use ``when`` to register a rejection callback,
-where ``throw`` would just get consumed again.  ``end``
-arranges for the error to be thrown in a future turn of the
-event loop, so it won't be caught; it will cause the
-exception to emit a browser's ``onerror`` event or NodeJS's
-``process`` ``"uncaughtException"``.
-
-
-## ``async(generatorFunction)``
+## Q.async(generatorFunction)
 
 This is an experimental tool for converting a generator
 function into a deferred function.  This has the potential
@@ -910,7 +847,7 @@ of reducing nested callbacks in engines that support
 further information.
 
 
-## ``node(nodeFunction)``
+## Q.node(nodeFunction)
 
 Wraps a Node function so that it returns a promise instead
 of accepting a callback.
@@ -942,7 +879,7 @@ readFoo()
 ```
 
 
-## ``ncall(nodeFunction, thisp, ...args)``
+## Q.ncall(nodeFunction, thisp, ...args)
 
 Calls a Node function, returning a promise so you don’t have
 to pass a callback.
@@ -954,32 +891,59 @@ Q.ncall(FS.readFile, FS, "foo.txt")
 ```
 
 
-Chaining
---------
 
-Promises created by the Q API support chaining for some
-functions.  The ``this`` promise becomes the first argument
-of the corresponding Q API function.  For example, the
-following are equivalent:
+## Q.enqueue(callback Function)
 
--   ``when(promise, fulfilled)`` and
-    ``promise.then(fulfilled)``.
--   ``end(promise)`` and ``promise.end()``.
+Calls ``callback`` in a future turn.
 
-The following functions are supported for chaining:
 
--   ``.when`` (``.then``)
--   ``.get``
--   ``.put``
--   ``.del``
--   ``.post``
--   ``.invoke``
--   ``.apply``
--   ``.call``
--   ``.keys``
--   ``.all``
--   ``.fin``
--   ``.end``
+Advanced Reference
+------------------
+
+The ``resolve`` promise constructor establishes the basic API
+for performing operations on objects: "get", "put", "del",
+"post", "apply", and "keys".  This set of "operators" can be
+extended by creating promises that respond to messages with
+other operator names, and by sending corresponding messages
+to those promises.
+
+
+## Q.makePromise(handlers, fallback_opt, valueOf_opt)
+
+Creates a stand-alone promise that responds to messages.
+These messages have an operator like "when", "get", "put",
+and "post", corresponding to each of the above functions for
+sending messages to promises.
+
+The ``handlers`` are an object with function properties
+corresponding to operators.  When the made promise receives
+a message and a corresponding operator exists in the
+``handlers``, the function gets called with the variadic
+arguments sent to the promise.  If no ``handlers`` object
+exists, the ``fallback`` function is called with the operator,
+and the subsequent variadic arguments instead.  These
+functions return a promise for the eventual resolution of
+the promise returned by the message-sender.  The default
+fallback returns a rejection.
+
+The ``valueOf`` function, if provided, overrides the
+``valueOf`` function of the returned promise.  This is useful
+for providing information about the promise in the same turn
+of the event loop.  For example, resolved promises return
+their resolution value and rejections return an object that
+is recognized by ``isRejected``.
+
+
+## promise.send(operator, ...args) — Q.send(value, operator, ...args)
+
+Sends an arbitrary message to a promise.
+
+Care should be taken not to introduce control-flow hazards
+and security holes when forwarding messages to promises.
+The functions above, particularly ``when``, are carefully
+crafted to prevent a poorly crafted or malicious promise
+from breaking the invariants like not applying callbacks
+multiple times or in the same turn of the event loop.
 
 
 Copyright 2009-2011 Kristopher Michael Kowal
