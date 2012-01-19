@@ -49,11 +49,10 @@ caught and handled.
 The callback approach is called an “inversion of control”.
 A function that accepts a callback instead of a return value
 is saying, “Don’t call me, I’ll call you.”.  Promises
-[un-invert][IOC] the inversion, cleanly separating the
-handling of input argument from the handling of control
-flow.  This simplifies the use and creation of API’s,
-particularly variadic parameters (spread and rest
-arguments).
+[un-invert][IOC] the inversion, cleanly separating the input
+arguments from control flow arguments.  This simplifies the
+use and creation of API’s, particularly variadic,
+rest and spread arguments.
 
 [IOC]: http://www.slideshare.net/domenicdenicola/callbacks-promises-and-coroutines-oh-my-the-evolution-of-asynchronicity-in-javascript
 
@@ -67,8 +66,6 @@ The Q module can be loaded as:
 -   a NodeJS and CommonJS module available from NPM as the ``q``
     package
 -   a RequireJS module
-
-Please join the Q-Continuum [mailing list](https://groups.google.com/forum/#!forum/q-continuum).
 
 Q can exchange promises with jQuery and Dojo and the following libraries
 are based on Q.
@@ -84,6 +81,8 @@ are based on Q.
 
 [Many other projects](http://search.npmjs.org/#/q) in NPM use Q
 internally or provide Q promises.
+
+Please join the Q-Continuum [mailing list](https://groups.google.com/forum/#!forum/q-continuum).
 
 
 Tutorial
