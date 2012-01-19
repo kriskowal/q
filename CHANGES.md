@@ -1,5 +1,10 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
+## Next minor
+
+ - Added ``isFulfilled``, ``isRejected``, and ``isResolved``
+   to the promise prototype.
+
 ## 0.8.2
 
  - Deprecated ``ref`` in favor of ``resolve`` as recommended by

@@ -264,6 +264,7 @@ Promise.prototype.then = function (fulfilled, rejected) {
 // Chainable methods
 reduce.call(
     [
+        "isResolved", "isFulfilled", "isRejected",
         "when", "spread", "send",
         "get", "put", "del",
         "post", "invoke",
