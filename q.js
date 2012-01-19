@@ -240,9 +240,9 @@ function Promise(descriptor, fallback, valueOf) {
         var result;
         try {
             if (descriptor[op]) {
-                result = descriptor[op].apply(descriptor, args);
+                result = descriptor[op].apply(promise, args);
             } else {
-                result = fallback.apply(descriptor, [op].concat(args));
+                result = fallback.apply(promise, [op].concat(args));
             }
         } catch (exception) {
             result = reject(exception);
@@ -333,14 +333,32 @@ function isRejected(object) {
     return !!object.promiseRejected;
 }
 
+var rejections = [];
+var errors = [];
+if (typeof window !== "undefined") {
+    // This promise library consumes exceptions thrown in handlers so
+    // they can be handled by a subsequent promise.  The rejected
+    // promises get added to this array when they are created, and
+    // removed when they are handled.
+    console.log("Should be empty:", errors);
+}
+
 /**
  * Constructs a rejected promise.
  * @param reason value describing the failure
  */
 exports.reject = reject;
 function reject(reason) {
-    return Promise({
+    var rejection = Promise({
         "when": function (rejected) {
+            // note that the error has been handled
+            if (rejected) {
+                var at = rejections.indexOf(this);
+                if (at !== -1) {
+                    errors.splice(at, 1);
+                    rejections.splice(at, 1);
+                }
+            }
             return rejected ? rejected(reason) : reject(reason);
         }
     }, function fallback(op) {
@@ -351,6 +369,10 @@ function reject(reason) {
         rejection.reason = reason;
         return rejection;
     });
+    // note that the error has not been handled
+    rejections.push(rejection);
+    errors.push(reason);
+    return rejection;
 }
 
 reject.prototype = create(Promise.prototype, {

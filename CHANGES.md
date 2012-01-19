@@ -12,6 +12,8 @@
  - Renamed ``Method`` export to ``sender``.  ``Method``
    remains as deprecated and will be removed in the next
    major version since I expect it has very little usage.
+ - Added browser console message indicating a live list of
+   unhandled errors.
 
 ## 0.8.2
 
