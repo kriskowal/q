@@ -270,11 +270,10 @@ reduce.call(
         "post", "invoke",
         "keys",
         "apply", "call",
-        "all", "wait", "join",
-        "fail", "fin",
+        "all",
         "view", "viewInfo",
         "timeout", "delay",
-        "end"
+        "fail", "fin", "end"
     ],
     function (prev, name) {
         Promise.prototype[name] = function () {
