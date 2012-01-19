@@ -362,7 +362,7 @@ reject.prototype = create(Promise.prototype, {
  * @param value immediate reference
  */
 exports.resolve = resolve;
-exports.ref = resolve; // XXX Deprecated
+exports.ref = resolve; // XXX deprecated
 function resolve(object) {
     // If the object is already a Promise, return it directly.  This enables
     // the resolve function to both be used to created references from objects,
@@ -606,10 +606,11 @@ function async(makeGenerator) {
  * Constructs a promise method that can be used to safely observe resolution of
  * a promise for an arbitrarily named method like "propfind" in a future turn.
  *
- * "Method" constructs methods like "get(promise, name)" and "put(promise)".
+ * "sender" constructs methods like "get(promise, name)" and "put(promise)".
  */
-exports.Method = Method;
-function Method (op) {
+exports.sender = sender;
+exports.Method = sender; // XXX deprecated
+function sender (op) {
     return function (object) {
         var args = slice.call(arguments, 1);
         return send.apply(void 0, [object, op].concat(args));
@@ -643,7 +644,7 @@ function send(object, op) {
  * @param name      name of property to get
  * @return promise for the property value
  */
-exports.get = Method("get");
+exports.get = sender("get");
 
 /**
  * Sets the value of a property in a future turn.
@@ -652,7 +653,7 @@ exports.get = Method("get");
  * @param value     new value of property
  * @return promise for the return value
  */
-exports.put = Method("put");
+exports.put = sender("put");
 
 /**
  * Deletes a property in a future turn.
@@ -660,7 +661,7 @@ exports.put = Method("put");
  * @param name      name of property to delete
  * @return promise for the return value
  */
-exports.del = Method("del");
+exports.del = sender("del");
 
 /**
  * Invokes a method in a future turn.
@@ -674,7 +675,7 @@ exports.del = Method("del");
  *                  JSON serializable object.
  * @return promise for the return value
  */
-var post = exports.post = Method("post");
+var post = exports.post = sender("post");
 
 /**
  * Invokes a method in a future turn.
@@ -694,7 +695,7 @@ exports.invoke = function (value, name) {
  * @param context   the context object (this) for the call
  * @param args      array of application arguments
  */
-var apply = exports.apply = Method("apply");
+var apply = exports.apply = sender("apply");
 
 /**
  * Calls the promised function in a future turn.
@@ -713,7 +714,7 @@ var call = exports.call = function (value, context) {
  * @param object    promise or immediate reference for target object
  * @return promise for the keys of the eventually resolved object
  */
-exports.keys = Method("keys");
+exports.keys = sender("keys");
 
 /**
  * Turns an array of promises into a promise for an array.  If any of

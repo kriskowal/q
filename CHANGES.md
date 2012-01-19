@@ -1,9 +1,17 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
+## Next major
+
+ - WARNING: The undocumented ``Method`` export will be
+   removed.  Use ``sender(op)``.
+
 ## Next minor
 
  - Added ``isFulfilled``, ``isRejected``, and ``isResolved``
    to the promise prototype.
+ - Renamed ``Method`` export to ``sender``.  ``Method``
+   remains as deprecated and will be removed in the next
+   major version since I expect it has very little usage.
 
 ## 0.8.2
 
