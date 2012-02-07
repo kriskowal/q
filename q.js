@@ -178,7 +178,6 @@ function defer() {
     };
 
     var become = function (resolvedValue) {
-        var i, ii, task;
         if (!pending)
             return;
         value = resolve(resolvedValue);
