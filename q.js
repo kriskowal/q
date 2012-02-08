@@ -419,11 +419,14 @@ function resolve(object) {
         "viewInfo": function () {
             var on = object;
             var properties = {};
+
+            function fixFalsyProperty(name) {
+                if (!properties[name])
+                    properties[name] = typeof on[name];
+            }
+
             while (on) {
-                Object.getOwnPropertyNames(on).forEach(function (name) {
-                    if (!properties[name])
-                        properties[name] = typeof on[name];
-                });
+                Object.getOwnPropertyNames(on).forEach(fixFalsyProperty);
                 on = Object.getPrototypeOf(on);
             }
             return {
