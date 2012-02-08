@@ -70,7 +70,7 @@ try {
 }
 
 // useful for an identity stub and default resolvers
-function identity (x) {return x;}
+function identity(x) { return x; }
 
 // shims
 var shim = function (object, name, shim) {
@@ -234,7 +234,6 @@ defer.prototype.node = function () {
  */
 exports.makePromise = makePromise;
 function makePromise(descriptor, fallback, valueOf) {
-
     if (fallback === void 0) {
         fallback = function (op) {
             return reject("Promise does not support operation: " + op);
@@ -649,7 +648,7 @@ function async(makeGenerator) {
  */
 exports.sender = sender;
 exports.Method = sender; // XXX deprecated
-function sender (op) {
+function sender(op) {
     return function (object) {
         var args = slice.call(arguments, 1);
         return send.apply(void 0, [object, op].concat(args));
