@@ -1,6 +1,6 @@
 // vim:ts=4:sts=4:sw=4:
 /*jshint browser: true, node: true,
-  eqeqeq: true, noarg: true, nonew: true, trailing: true, undef: true
+  curly: true, eqeqeq: true, noarg: true, nonew: true, trailing: true, undef: true
  */
 /*global define: false, Q: true */
 /*!
@@ -74,8 +74,9 @@ function identity (x) {return x;}
 
 // shims
 var shim = function (object, name, shim) {
-    if (!object[name])
+    if (!object[name]) {
         object[name] = shim;
+    }
     return object[name];
 };
 
@@ -89,8 +90,9 @@ var create = shim(Object, "create", function (prototype) {
 
 var keys = shim(Object, "keys", function (object) {
     var keys = [];
-    for (var key in object)
+    for (var key in object) {
         keys.push(key);
+    }
     return keys;
 });
 
@@ -106,8 +108,9 @@ var reduce = Array.prototype.reduce || function (callback, basis) {
                 basis = this[i++];
                 break;
             }
-            if (++i >= ii)
+            if (++i >= ii) {
                 throw new TypeError();
+            }
         } while (1);
     }
     // reduce
@@ -176,14 +179,16 @@ function defer() {
     };
 
     promise.valueOf = function () {
-        if (pending)
+        if (pending) {
             return promise;
+        }
         return value.valueOf();
     };
 
     var become = function (resolvedValue) {
-        if (!pending)
+        if (!pending) {
             return;
+        }
         value = resolve(resolvedValue);
         reduce.call(pending, function (undefined, pending) {
             nextTick(function () {
@@ -253,8 +258,9 @@ function Promise(descriptor, fallback, valueOf) {
         return (resolved || identity)(result);
     };
 
-    if (valueOf)
+    if (valueOf) {
         promise.valueOf = valueOf;
+    }
 
     return freeze(promise);
 }
@@ -331,8 +337,9 @@ function isFulfilled(object) {
 exports.isRejected = isRejected;
 function isRejected(object) {
     object = valueOf(object);
-    if (object === void 0 || object === null)
+    if (object === void 0 || object === null) {
         return false;
+    }
     return !!object.promiseRejected;
 }
 
@@ -392,8 +399,9 @@ function resolve(object) {
     // If the object is already a Promise, return it directly.  This enables
     // the resolve function to both be used to created references from objects,
     // but to tolerably coerce non-promises to promises.
-    if (isPromise(object))
+    if (isPromise(object)) {
         return object;
+    }
     // assimilate thenables, CommonJS/Promises/A
     if (object && typeof object.then === "function") {
         var result = defer();
@@ -424,8 +432,9 @@ function resolve(object) {
             var properties = {};
 
             function fixFalsyProperty(name) {
-                if (!properties[name])
+                if (!properties[name]) {
                     properties[name] = typeof on[name];
+                }
             }
 
             while (on) {
@@ -547,16 +556,18 @@ function when(value, fulfilled, rejected) {
 
     nextTick(function () {
         resolve(value).promiseSend("when", function (value) {
-            if (done)
+            if (done) {
                 return;
+            }
             done = true;
             deferred.resolve(
                 resolve(value)
                 .promiseSend("when", _fulfilled, _rejected)
             );
         }, function (reason) {
-            if (done)
+            if (done) {
                 return;
+            }
             done = true;
             deferred.resolve(_rejected(reason));
         });
@@ -757,14 +768,16 @@ exports.all = all;
 function all(promises) {
     return when(promises, function (promises) {
         var countDown = promises.length;
-        if (countDown === 0)
+        if (countDown === 0) {
             return resolve(promises);
+        }
         var deferred = defer();
         reduce.call(promises, function (undefined, promise, index) {
             when(promise, function (value) {
                 promises[index] = value;
-                if (--countDown === 0)
+                if (--countDown === 0) {
                     deferred.resolve(promises);
+                }
             })
             .fail(deferred.reject);
         }, void 0);
