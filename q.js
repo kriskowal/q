@@ -1,6 +1,6 @@
 // vim:ts=4:sts=4:sw=4:
 /*jshint browser: true, node: true,
-  eqeqeq: true, noarg: true, nonew: true
+  eqeqeq: true, noarg: true, nonew: true, trailing: true
  */
 /*!
  *
@@ -790,7 +790,7 @@ function fail(promise, rejected) {
  * regardless of whether the promise is fulfilled or rejected.  Forwards
  * the resolution to the returned promise when the callback is done.
  * The callback can return a promise to defer completion.
- * @param {Any*} promise 
+ * @param {Any*} promise
  * @param {Function} callback to observe the resolution of the given
  * promise, takes no arguments.
  * @returns a promise for the resolution of the given promise when
