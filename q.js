@@ -1,5 +1,7 @@
 // vim:ts=4:sts=4:sw=4:
-/*jshint browser: true, node: true */
+/*jshint browser: true, node: true,
+  eqeqeq: true
+ */
 /*!
  *
  * Copyright 2007-2009 Tyler Close under the terms of the MIT X license found
@@ -95,7 +97,7 @@ var reduce = Array.prototype.reduce || function (callback, basis) {
     var i = 0,
         ii = this.length;
     // concerning the initial value, if one is not provided
-    if (arguments.length == 1) {
+    if (arguments.length === 1) {
         // seek to the first value in the array, accounting
         // for the possibility that is is a sparse array
         do {
