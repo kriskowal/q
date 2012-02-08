@@ -165,7 +165,7 @@ function defer() {
     var pending = [], value;
 
     var deferred = create(defer.prototype);
-    var promise = create(Promise.prototype);
+    var promise = create(makePromise.prototype);
 
     promise.promiseSend = function () {
         var args = slice.call(arguments);
@@ -232,8 +232,8 @@ defer.prototype.node = function () {
  * of the returned object, apart from that it is usable whereever promises are
  * bought and sold.
  */
-exports.makePromise = Promise;
-function Promise(descriptor, fallback, valueOf) {
+exports.makePromise = makePromise;
+function makePromise(descriptor, fallback, valueOf) {
 
     if (fallback === void 0) {
         fallback = function (op) {
@@ -241,7 +241,7 @@ function Promise(descriptor, fallback, valueOf) {
         };
     }
 
-    var promise = create(Promise.prototype);
+    var promise = create(makePromise.prototype);
 
     promise.promiseSend = function (op, resolved /* ...args */) {
         var args = slice.call(arguments, 2);
@@ -266,7 +266,7 @@ function Promise(descriptor, fallback, valueOf) {
 }
 
 // provide thenables, CommonJS/Promises/A
-Promise.prototype.then = function (fulfilled, rejected) {
+makePromise.prototype.then = function (fulfilled, rejected) {
     return when(this, fulfilled, rejected);
 };
 
@@ -285,7 +285,7 @@ reduce.call(
         "fail", "fin", "end"
     ],
     function (prev, name) {
-        Promise.prototype[name] = function () {
+        makePromise.prototype[name] = function () {
             return exports[name].apply(
                 exports,
                 [this].concat(slice.call(arguments))
@@ -295,15 +295,15 @@ reduce.call(
     void 0
 );
 
-Promise.prototype.toSource = function () {
+makePromise.prototype.toSource = function () {
     return this.toString();
 };
 
-Promise.prototype.toString = function () {
+makePromise.prototype.toString = function () {
     return '[object Promise]';
 };
 
-freeze(Promise.prototype);
+freeze(makePromise.prototype);
 
 /**
  * @returns whether the given object is a promise.
@@ -359,7 +359,7 @@ if (typeof window !== "undefined") {
  */
 exports.reject = reject;
 function reject(reason) {
-    var rejection = Promise({
+    var rejection = makePromise({
         "when": function (rejected) {
             // note that the error has been handled
             if (rejected) {
@@ -385,7 +385,7 @@ function reject(reason) {
     return rejection;
 }
 
-reject.prototype = create(Promise.prototype, {
+reject.prototype = create(makePromise.prototype, {
     constructor: { value: reject }
 });
 
@@ -408,7 +408,7 @@ function resolve(object) {
         object.then(result.resolve, result.reject);
         return result.promise;
     }
-    return Promise({
+    return makePromise({
         "when": function (rejected) {
             return object;
         },
@@ -465,7 +465,7 @@ function resolve(object) {
  */
 exports.master = master;
 function master(object) {
-    return Promise({
+    return makePromise({
         "isDef": function () {}
     }, function fallback(op) {
         var args = slice.call(arguments);
@@ -479,7 +479,7 @@ exports.viewInfo = viewInfo;
 function viewInfo(object, info) {
     object = resolve(object);
     if (info) {
-        return Promise({
+        return makePromise({
             "viewInfo": function () {
                 return info;
             }
