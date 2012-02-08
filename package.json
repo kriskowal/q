@@ -31,7 +31,8 @@
         "event-queue": "0.2.0"
     },
     "devDependencies": {
-        "test": ">=0.3.0"
+        "test": ">=0.3.0",
+        "jshint": "*"
     },
     "scripts": {
         "test": "node test/all.js"
