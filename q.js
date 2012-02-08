@@ -829,12 +829,12 @@ function end(promise) {
  * fulfilled before the timeout, otherwise rejected.
  */
 exports.timeout = timeout;
-function timeout(promise, timeout) {
+function timeout(promise, ms) {
     var deferred = defer();
     when(promise, deferred.resolve, deferred.reject);
     setTimeout(function () {
         deferred.reject("Timed out");
-    }, timeout);
+    }, ms);
     return deferred.promise;
 }
 
