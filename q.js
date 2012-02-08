@@ -73,17 +73,17 @@ try {
 function identity(x) { return x; }
 
 // shims
-var shim = function (object, name, shim) {
+function shim(object, name, shimmed) {
     if (!object[name]) {
-        object[name] = shim;
+        object[name] = shimmed;
     }
     return object[name];
-};
+}
 
 var freeze = shim(Object, "freeze", identity);
 
 var create = shim(Object, "create", function (prototype) {
-    var Type = function () {};
+    function Type() { }
     Type.prototype = prototype;
     return new Type();
 });
@@ -123,20 +123,20 @@ var reduce = Array.prototype.reduce || function (callback, basis) {
     return basis;
 };
 
-var isStopIteration = function (exception) {
+function isStopIteration(exception) {
     return Object.prototype.toString.call(exception) ===
         "[object StopIteration]";
-};
+}
 
 // Abbreviations for performance and minification
 var slice = Array.prototype.slice;
-var valueOf = function (value) {
+function valueOf(value) {
     if (value === void 0 || value === null) {
         return value;
     } else {
         return value.valueOf();
     }
-};
+}
 
 /**
  * Performs a task in a future turn of the event loop.
@@ -185,7 +185,7 @@ function defer() {
         return value.valueOf();
     };
 
-    var become = function (resolvedValue) {
+    function become(resolvedValue) {
         if (!pending) {
             return;
         }
@@ -197,7 +197,7 @@ function defer() {
         }, void 0);
         pending = void 0;
         return value;
-    };
+    }
 
     deferred.promise = freeze(promise);
     deferred.resolve = become;
@@ -620,7 +620,7 @@ function async(makeGenerator) {
     return function () {
         // when verb is "send", arg is a value
         // when verb is "throw", arg is a reason/error
-        var continuer = function (verb, arg) {
+        function continuer(verb, arg) {
             var result;
             try {
                 result = generator[verb](arg);
@@ -632,7 +632,7 @@ function async(makeGenerator) {
                 }
             }
             return when(result, callback, errback);
-        };
+        }
         var generator = makeGenerator.apply(this, arguments);
         var callback = continuer.bind(continuer, "send");
         var errback = continuer.bind(continuer, "throw");
@@ -741,10 +741,11 @@ var apply = exports.apply = sender("apply");
  * @param context   the context object (this) for the call
  * @param ...args   array of application arguments
  */
-var call = exports.call = function (value, context) {
+exports.call = call;
+function call(value, context) {
     var args = slice.call(arguments, 2);
     return apply(value, context, args);
-};
+}
 
 /**
  * Requests the names of the owned properties of a promised
