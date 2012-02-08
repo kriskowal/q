@@ -1,7 +1,8 @@
 // vim:ts=4:sts=4:sw=4:
 /*jshint browser: true, node: true,
-  eqeqeq: true, noarg: true, nonew: true, trailing: true
+  eqeqeq: true, noarg: true, nonew: true, trailing: true, undef: true
  */
+/*global define: false, Q: true */
 /*!
  *
  * Copyright 2007-2009 Tyler Close under the terms of the MIT X license found
