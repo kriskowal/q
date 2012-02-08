@@ -253,7 +253,7 @@ function Promise(descriptor, fallback, valueOf) {
         promise.valueOf = valueOf;
 
     return freeze(promise);
-};
+}
 
 // provide thenables, CommonJS/Promises/A
 Promise.prototype.then = function (fulfilled, rejected) {
@@ -283,7 +283,7 @@ reduce.call(
         };
     },
     void 0
-)
+);
 
 Promise.prototype.toSource = function () {
     return this.toString();
@@ -302,7 +302,7 @@ freeze(Promise.prototype);
 exports.isPromise = isPromise;
 function isPromise(object) {
     return object && typeof object.promiseSend === "function";
-};
+}
 
 /**
  * @returns whether the given object is a resolved promise.
@@ -310,7 +310,7 @@ function isPromise(object) {
 exports.isResolved = isResolved;
 function isResolved(object) {
     return !isPromise(valueOf(object));
-};
+}
 
 /**
  * @returns whether the given object is a value or fulfilled
@@ -319,7 +319,7 @@ function isResolved(object) {
 exports.isFulfilled = isFulfilled;
 function isFulfilled(object) {
     return !isPromise(valueOf(object)) && !isRejected(object);
-};
+}
 
 /**
  * @returns whether the given object is a rejected promise.
@@ -428,7 +428,7 @@ function resolve(object) {
             return {
                 "type": typeof object,
                 "properties": properties
-            }
+            };
         },
         "keys": function () {
             return keys(object);
@@ -474,7 +474,7 @@ function viewInfo(object, info) {
             return valueOf(object);
         });
     } else {
-        return send(object, "viewInfo")
+        return send(object, "viewInfo");
     }
 }
 
@@ -759,7 +759,7 @@ function all(promises) {
                 if (--countDown === 0)
                     deferred.resolve(promises);
             })
-            .fail(deferred.reject)
+            .fail(deferred.reject);
         }, void 0);
         return deferred.promise;
     });
