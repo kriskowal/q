@@ -1,6 +1,6 @@
 // vim:ts=4:sts=4:sw=4:
 /*jshint browser: true, node: true,
-  eqeqeq: true
+  eqeqeq: true, noarg: true, nonew: true
  */
 /*!
  *
