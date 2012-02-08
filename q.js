@@ -117,8 +117,8 @@ var reduce = Array.prototype.reduce || function (callback, basis) {
 };
 
 var isStopIteration = function (exception) {
-    return Object.prototype.toString.call(exception)
-        === "[object StopIteration]";
+    return Object.prototype.toString.call(exception) ===
+        "[object StopIteration]";
 };
 
 // Abbreviations for performance and minification
