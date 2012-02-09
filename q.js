@@ -1,4 +1,8 @@
 // vim:ts=4:sts=4:sw=4:
+/*jshint browser: true, node: true,
+  curly: true, eqeqeq: true, noarg: true, nonew: true, trailing: true, undef: true
+ */
+/*global define: false, Q: true */
 /*!
  *
  * Copyright 2007-2009 Tyler Close under the terms of the MIT X license found
@@ -66,27 +70,29 @@ try {
 }
 
 // useful for an identity stub and default resolvers
-function identity (x) {return x;}
+function identity(x) { return x; }
 
 // shims
-var shim = function (object, name, shim) {
-    if (!object[name])
-        object[name] = shim;
+function shim(object, name, shimmed) {
+    if (!object[name]) {
+        object[name] = shimmed;
+    }
     return object[name];
-};
+}
 
 var freeze = shim(Object, "freeze", identity);
 
 var create = shim(Object, "create", function (prototype) {
-    var Type = function () {};
+    function Type() { }
     Type.prototype = prototype;
     return new Type();
 });
 
 var keys = shim(Object, "keys", function (object) {
     var keys = [];
-    for (var key in object)
+    for (var key in object) {
         keys.push(key);
+    }
     return keys;
 });
 
@@ -94,7 +100,7 @@ var reduce = Array.prototype.reduce || function (callback, basis) {
     var i = 0,
         ii = this.length;
     // concerning the initial value, if one is not provided
-    if (arguments.length == 1) {
+    if (arguments.length === 1) {
         // seek to the first value in the array, accounting
         // for the possibility that is is a sparse array
         do {
@@ -102,8 +108,9 @@ var reduce = Array.prototype.reduce || function (callback, basis) {
                 basis = this[i++];
                 break;
             }
-            if (++i >= ii)
+            if (++i >= ii) {
                 throw new TypeError();
+            }
         } while (1);
     }
     // reduce
@@ -116,20 +123,20 @@ var reduce = Array.prototype.reduce || function (callback, basis) {
     return basis;
 };
 
-var isStopIteration = function (exception) {
-    return Object.prototype.toString.call(exception)
-        === "[object StopIteration]";
-};
+function isStopIteration(exception) {
+    return Object.prototype.toString.call(exception) ===
+        "[object StopIteration]";
+}
 
 // Abbreviations for performance and minification
 var slice = Array.prototype.slice;
-var valueOf = function (value) {
+function valueOf(value) {
     if (value === void 0 || value === null) {
         return value;
     } else {
         return value.valueOf();
     }
-};
+}
 
 /**
  * Performs a task in a future turn of the event loop.
@@ -158,7 +165,7 @@ function defer() {
     var pending = [], value;
 
     var deferred = create(defer.prototype);
-    var promise = create(Promise.prototype);
+    var promise = create(makePromise.prototype);
 
     promise.promiseSend = function () {
         var args = slice.call(arguments);
@@ -172,14 +179,16 @@ function defer() {
     };
 
     promise.valueOf = function () {
-        if (pending)
+        if (pending) {
             return promise;
+        }
         return value.valueOf();
     };
 
-    var become = function (resolvedValue) {
-        if (!pending)
+    function become(resolvedValue) {
+        if (!pending) {
             return;
+        }
         value = resolve(resolvedValue);
         reduce.call(pending, function (undefined, pending) {
             nextTick(function () {
@@ -188,7 +197,7 @@ function defer() {
         }, void 0);
         pending = void 0;
         return value;
-    };
+    }
 
     deferred.promise = freeze(promise);
     deferred.resolve = become;
@@ -223,16 +232,15 @@ defer.prototype.node = function () {
  * of the returned object, apart from that it is usable whereever promises are
  * bought and sold.
  */
-exports.makePromise = Promise;
-function Promise(descriptor, fallback, valueOf) {
-
+exports.makePromise = makePromise;
+function makePromise(descriptor, fallback, valueOf) {
     if (fallback === void 0) {
         fallback = function (op) {
             return reject("Promise does not support operation: " + op);
         };
     }
 
-    var promise = create(Promise.prototype);
+    var promise = create(makePromise.prototype);
 
     promise.promiseSend = function (op, resolved /* ...args */) {
         var args = slice.call(arguments, 2);
@@ -249,14 +257,15 @@ function Promise(descriptor, fallback, valueOf) {
         return (resolved || identity)(result);
     };
 
-    if (valueOf)
+    if (valueOf) {
         promise.valueOf = valueOf;
+    }
 
     return freeze(promise);
-};
+}
 
 // provide thenables, CommonJS/Promises/A
-Promise.prototype.then = function (fulfilled, rejected) {
+makePromise.prototype.then = function (fulfilled, rejected) {
     return when(this, fulfilled, rejected);
 };
 
@@ -275,7 +284,7 @@ reduce.call(
         "fail", "fin", "end"
     ],
     function (prev, name) {
-        Promise.prototype[name] = function () {
+        makePromise.prototype[name] = function () {
             return exports[name].apply(
                 exports,
                 [this].concat(slice.call(arguments))
@@ -283,17 +292,17 @@ reduce.call(
         };
     },
     void 0
-)
+);
 
-Promise.prototype.toSource = function () {
+makePromise.prototype.toSource = function () {
     return this.toString();
 };
 
-Promise.prototype.toString = function () {
+makePromise.prototype.toString = function () {
     return '[object Promise]';
 };
 
-freeze(Promise.prototype);
+freeze(makePromise.prototype);
 
 /**
  * @returns whether the given object is a promise.
@@ -302,7 +311,7 @@ freeze(Promise.prototype);
 exports.isPromise = isPromise;
 function isPromise(object) {
     return object && typeof object.promiseSend === "function";
-};
+}
 
 /**
  * @returns whether the given object is a resolved promise.
@@ -310,7 +319,7 @@ function isPromise(object) {
 exports.isResolved = isResolved;
 function isResolved(object) {
     return !isPromise(valueOf(object));
-};
+}
 
 /**
  * @returns whether the given object is a value or fulfilled
@@ -319,7 +328,7 @@ function isResolved(object) {
 exports.isFulfilled = isFulfilled;
 function isFulfilled(object) {
     return !isPromise(valueOf(object)) && !isRejected(object);
-};
+}
 
 /**
  * @returns whether the given object is a rejected promise.
@@ -327,8 +336,9 @@ function isFulfilled(object) {
 exports.isRejected = isRejected;
 function isRejected(object) {
     object = valueOf(object);
-    if (object === void 0 || object === null)
+    if (object === void 0 || object === null) {
         return false;
+    }
     return !!object.promiseRejected;
 }
 
@@ -348,7 +358,7 @@ if (typeof window !== "undefined") {
  */
 exports.reject = reject;
 function reject(reason) {
-    var rejection = Promise({
+    var rejection = makePromise({
         "when": function (rejected) {
             // note that the error has been handled
             if (rejected) {
@@ -374,7 +384,7 @@ function reject(reason) {
     return rejection;
 }
 
-reject.prototype = create(Promise.prototype, {
+reject.prototype = create(makePromise.prototype, {
     constructor: { value: reject }
 });
 
@@ -388,15 +398,16 @@ function resolve(object) {
     // If the object is already a Promise, return it directly.  This enables
     // the resolve function to both be used to created references from objects,
     // but to tolerably coerce non-promises to promises.
-    if (isPromise(object))
+    if (isPromise(object)) {
         return object;
+    }
     // assimilate thenables, CommonJS/Promises/A
     if (object && typeof object.then === "function") {
         var result = defer();
         object.then(result.resolve, result.reject);
         return result.promise;
     }
-    return Promise({
+    return makePromise({
         "when": function (rejected) {
             return object;
         },
@@ -418,17 +429,21 @@ function resolve(object) {
         "viewInfo": function () {
             var on = object;
             var properties = {};
+
+            function fixFalsyProperty(name) {
+                if (!properties[name]) {
+                    properties[name] = typeof on[name];
+                }
+            }
+
             while (on) {
-                Object.getOwnPropertyNames(on).forEach(function (name) {
-                    if (!properties[name])
-                        properties[name] = typeof on[name];
-                });
+                Object.getOwnPropertyNames(on).forEach(fixFalsyProperty);
                 on = Object.getPrototypeOf(on);
             }
             return {
                 "type": typeof object,
                 "properties": properties
-            }
+            };
         },
         "keys": function () {
             return keys(object);
@@ -449,7 +464,7 @@ function resolve(object) {
  */
 exports.master = master;
 function master(object) {
-    return Promise({
+    return makePromise({
         "isDef": function () {}
     }, function fallback(op) {
         var args = slice.call(arguments);
@@ -463,7 +478,7 @@ exports.viewInfo = viewInfo;
 function viewInfo(object, info) {
     object = resolve(object);
     if (info) {
-        return Promise({
+        return makePromise({
             "viewInfo": function () {
                 return info;
             }
@@ -474,7 +489,7 @@ function viewInfo(object, info) {
             return valueOf(object);
         });
     } else {
-        return send(object, "viewInfo")
+        return send(object, "viewInfo");
     }
 }
 
@@ -540,16 +555,18 @@ function when(value, fulfilled, rejected) {
 
     nextTick(function () {
         resolve(value).promiseSend("when", function (value) {
-            if (done)
+            if (done) {
                 return;
+            }
             done = true;
             deferred.resolve(
                 resolve(value)
                 .promiseSend("when", _fulfilled, _rejected)
             );
         }, function (reason) {
-            if (done)
+            if (done) {
                 return;
+            }
             done = true;
             deferred.resolve(_rejected(reason));
         });
@@ -603,7 +620,7 @@ function async(makeGenerator) {
     return function () {
         // when verb is "send", arg is a value
         // when verb is "throw", arg is a reason/error
-        var continuer = function (verb, arg) {
+        function continuer(verb, arg) {
             var result;
             try {
                 result = generator[verb](arg);
@@ -615,7 +632,7 @@ function async(makeGenerator) {
                 }
             }
             return when(result, callback, errback);
-        };
+        }
         var generator = makeGenerator.apply(this, arguments);
         var callback = continuer.bind(continuer, "send");
         var errback = continuer.bind(continuer, "throw");
@@ -631,7 +648,7 @@ function async(makeGenerator) {
  */
 exports.sender = sender;
 exports.Method = sender; // XXX deprecated
-function sender (op) {
+function sender(op) {
     return function (object) {
         var args = slice.call(arguments, 1);
         return send.apply(void 0, [object, op].concat(args));
@@ -724,10 +741,11 @@ var apply = exports.apply = sender("apply");
  * @param context   the context object (this) for the call
  * @param ...args   array of application arguments
  */
-var call = exports.call = function (value, context) {
+exports.call = call;
+function call(value, context) {
     var args = slice.call(arguments, 2);
     return apply(value, context, args);
-};
+}
 
 /**
  * Requests the names of the owned properties of a promised
@@ -750,16 +768,18 @@ exports.all = all;
 function all(promises) {
     return when(promises, function (promises) {
         var countDown = promises.length;
-        if (countDown === 0)
+        if (countDown === 0) {
             return resolve(promises);
+        }
         var deferred = defer();
         reduce.call(promises, function (undefined, promise, index) {
             when(promise, function (value) {
                 promises[index] = value;
-                if (--countDown === 0)
+                if (--countDown === 0) {
                     deferred.resolve(promises);
+                }
             })
-            .fail(deferred.reject)
+            .fail(deferred.reject);
         }, void 0);
         return deferred.promise;
     });
@@ -784,7 +804,7 @@ function fail(promise, rejected) {
  * regardless of whether the promise is fulfilled or rejected.  Forwards
  * the resolution to the returned promise when the callback is done.
  * The callback can return a promise to defer completion.
- * @param {Any*} promise 
+ * @param {Any*} promise
  * @param {Function} callback to observe the resolution of the given
  * promise, takes no arguments.
  * @returns a promise for the resolution of the given promise when
@@ -829,12 +849,12 @@ function end(promise) {
  * fulfilled before the timeout, otherwise rejected.
  */
 exports.timeout = timeout;
-function timeout(promise, timeout) {
+function timeout(promise, ms) {
     var deferred = defer();
     when(promise, deferred.resolve, deferred.reject);
     setTimeout(function () {
         deferred.reject("Timed out");
-    }, timeout);
+    }, ms);
     return deferred.promise;
 }
 
