@@ -748,6 +748,39 @@ function call(value, context) {
 }
 
 /**
+ * Binds the promised function, transforming return values into a fulfilled
+ * promise and thrown errors into a rejected one.
+ * @param object    promise or immediate reference for target function
+ * @param context   the context object (this) for the call
+ * @param ...args   array of application arguments
+ */
+exports.bind = bind;
+function bind(value, context) {
+    var args = slice.call(arguments, 2);
+
+    return function bound() {
+        var allArgs = args.concat(slice.call(arguments));
+
+        if (this instanceof bound) {
+            var F = function () { };
+            F.prototype = value.prototype;
+            var self = new F();
+
+            var result = apply(value, self, allArgs);
+
+            return result.then(function (fulfilledValue) {
+                if (Object(fulfilledValue) === fulfilledValue) {
+                    return fulfilledValue;
+                }
+                return self;
+            });
+        } else {
+            return apply(value, context, allArgs);
+        }
+    };
+}
+
+/**
  * Requests the names of the owned properties of a promised
  * object in a future turn.
  * @param object    promise or immediate reference for target object
