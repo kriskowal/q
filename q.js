@@ -277,7 +277,7 @@ reduce.call(
         "get", "put", "del",
         "post", "invoke",
         "keys",
-        "apply", "call",
+        "apply", "call", "bind",
         "all",
         "view", "viewInfo",
         "timeout", "delay",
