@@ -187,7 +187,7 @@ return foo()
     return bar(fooValue)
     .then(function (barValue) {
         // if we get here without an error,
-        // the value retuned here
+        // the value returned here
         // or the exception thrown here
         // resolves the promise returned
         // by the first line
@@ -202,7 +202,7 @@ return foo()
 })
 .then(function (barValue) {
     // if we get here without an error,
-    // the value retuned here
+    // the value returned here
     // or the exception thrown here
     // resolves the promise returned
     // by the first line
