@@ -57,8 +57,7 @@ rest and spread arguments.
 [IOC]: http://www.slideshare.net/domenicdenicola/callbacks-promises-and-coroutines-oh-my-the-evolution-of-asynchronicity-in-javascript
 
 
-Getting Started
-===============
+## Getting Started
 
 The Q module can be loaded as:
 
@@ -86,8 +85,7 @@ internally or provide Q promises.
 Please join the Q-Continuum [mailing list](https://groups.google.com/forum/#!forum/q-continuum).
 
 
-Tutorial
-========
+## Tutorial
 
 Promises have a ``then`` method, which you can use to get the eventual
 return value (fulfillment) or thrown exception (rejection).
@@ -106,7 +104,7 @@ thrown exception, the second function (the error handler) will be
 called with the error.
 
 
-## Propagation
+### Propagation
 
 The ``then`` method returns a promise, which in this example, I’m
 assigning to ``bar``.
@@ -177,7 +175,7 @@ var bar = foo()
     value or thrown error: a value would be ignored, an error would be
     forwarded.
 
-## Chaining
+### Chaining
 
 There are two ways to chain promises.  You can chain promises either
 inside or outside handlers.  The next two examples are equivalent.
@@ -225,7 +223,7 @@ function eventualAdd(a, b) {
 ```
 
 
-## Combination
+### Combination
 
 You can turn an array of promises into a promise for the whole,
 fulfilled array using ``all``.
@@ -294,7 +292,7 @@ Q.allResolved(promises)
 ```
 
 
-## Handling Errors
+### Handling Errors
 
 One sometimes-unintuive aspect of promises is that if you throw an
 exception in the value handler, it will not be be caught by the error
@@ -328,7 +326,7 @@ foo()
 ```
 
 
-## The End
+### The End
 
 When you get to the end of a chain of promises, you should either
 return the last promise or end the chain.  Since handlers catch
@@ -361,7 +359,7 @@ This is a stopgap. We are exploring ways to make unhandled errors
 visible without any explicit handling.
 
 
-## The Beginning
+### The Beginning
 
 Everything above assumes you get a promise from somewhere else.  This
 is the common case.  Every once in a while, you will need to create a
@@ -443,7 +441,7 @@ function timeout(promise, ms) {
 ```
 
 
-## The Middle
+### The Middle
 
 If you are using a function that may return a promise, but just might
 return a value if it doesn’t need to defer, you can use the “static”
@@ -496,7 +494,7 @@ return Q.call($.ajax, $, ...)
 ```
 
 
-## Over the Wire
+### Over the Wire
 
 A promise can serve as a proxy for another object, even a remote
 object.  There are methods that allow you to optimistically manipulate
@@ -547,7 +545,7 @@ return Q.call(function () {
 ```
 
 
-## Adapting Node
+### Adapting Node
 
 There is a ``node`` method on deferreds that is handy for the NodeJS
 callback pattern.
@@ -573,8 +571,7 @@ return readFile("foo.txt", "utf-8");
 ```
 
 
-Reference
-=========
+## Reference
 
 A method-by-method [Q API reference][reference] is available on the wiki.
 
