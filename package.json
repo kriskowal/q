@@ -38,9 +38,7 @@
         "node": ">=0.2.0",
         "teleport": ">=0.2.0"
     },
-    "dependencies": {
-        "event-queue": "0.2.0"
-    },
+    "dependencies": {},
     "devDependencies": {
         "test": ">=0.3.0",
         "jshint": "*"
@@ -51,7 +49,6 @@
     "overlay": {
         "teleport": {
             "dependencies": {
-                "event-queue": ">=0.2.0",
                 "system": ">=0.0.4"
             }
         }
