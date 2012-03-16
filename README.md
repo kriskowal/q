@@ -257,9 +257,21 @@ But ``spread`` calls ``all`` initially, so you can skip it in chains.
 return foo()
 .then(function (name, location) {
     return [name, FS.read(location, "utf-8")];
+    // FS.read returns a promise, so this array
+    // mixes values and promises
 })
 .spread(function (name, text) {
 })
+```
+
+And you can use ``Q.spread`` directly on an array of promises.
+
+```javascript
+function eventualAdd(a, b) {
+    return Q.spread([a, b], function (a, b) {
+        return a + b;
+    })
+}
 ```
 
 The ``all`` function returns a promise for an array of values.  If one
