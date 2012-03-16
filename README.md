@@ -262,6 +262,24 @@ return foo()
 })
 ```
 
+The ``all`` function returns a promise for an array of values.  If one
+of the given promise fails, the whole returned promise fails, not
+waiting for the rest of the batch.  If you want to wait for all of the
+promises to either be fulfilled or rejected, you can use
+``allResolved``.
+
+```javascript
+Q.allResolved(promises)
+.then(function (promises) {
+    promises.forEach(function (promise) {
+        if (promise.isFulfilled()) {
+            var value = promise.valueOf();
+        } else {
+        }
+    })
+})
+```
+
 
 ## Handling Errors
 

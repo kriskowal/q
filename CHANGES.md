@@ -9,6 +9,8 @@
 
  - Added ``isFulfilled``, ``isRejected``, and ``isResolved``
    to the promise prototype.
+ - Added ``allResolved`` for waiting for every promise to either be
+   fulfilled or rejected, without propagating an error.
  - Renamed ``Method`` export to ``sender``.  ``Method``
    remains as deprecated and will be removed in the next
    major version since I expect it has very little usage.

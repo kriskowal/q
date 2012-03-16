@@ -269,7 +269,7 @@ reduce.call(
         "post", "invoke",
         "keys",
         "apply", "call",
-        "all",
+        "all", "allResolved",
         "view", "viewInfo",
         "timeout", "delay",
         "fail", "fin", "end"
@@ -762,6 +762,17 @@ function all(promises) {
             .fail(deferred.reject)
         }, void 0);
         return deferred.promise;
+    });
+}
+
+exports.allResolved = allResolved;
+function allResolved(promises) {
+    return when(promises, function (promises) {
+        return when(all(promises.map(function (promise) {
+            return when(promise, identity, identity);
+        })), function () {
+            return promises.map(resolve);
+        });
     });
 }
 
