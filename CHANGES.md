@@ -10,7 +10,7 @@
  - Added ``isFulfilled``, ``isRejected``, and ``isResolved``
    to the promise prototype.
  - Added ``allResolved`` for waiting for every promise to either be
-   fulfilled or rejected, without propagating an error.
+   fulfilled or rejected, without propagating an error. @utvara #53
  - Added ``Q.bind`` as a method to transform functions that
    return and throw into promise-returning functions. See
    [an example](https://gist.github.com/1782808). @domenic
