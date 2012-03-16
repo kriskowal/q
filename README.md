@@ -964,6 +964,6 @@ from breaking the invariants like not applying callbacks
 multiple times or in the same turn of the event loop.
 
 
-Copyright 2009-2011 Kristopher Michael Kowal
+Copyright 2009-2012 Kristopher Michael Kowal
 MIT License (enclosed)
 
