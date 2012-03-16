@@ -272,7 +272,7 @@ reduce.call(
         "all", "allResolved",
         "view", "viewInfo",
         "timeout", "delay",
-        "fail", "fin", "end"
+        "catch", "finally", "fail", "fin", "end"
     ],
     function (prev, name) {
         Promise.prototype[name] = function () {
@@ -682,7 +682,7 @@ exports.put = sender("put");
  * @param name      name of property to delete
  * @return promise for the return value
  */
-exports.del = sender("del");
+exports.del = exports['delete'] = sender("del");
 
 /**
  * Invokes a method in a future turn.
@@ -724,7 +724,7 @@ var apply = exports.apply = sender("apply");
  * @param context   the context object (this) for the call
  * @param ...args   array of application arguments
  */
-var call = exports.call = function (value, context) {
+var call = exports['try'] = exports.call = function (value, context) {
     var args = slice.call(arguments, 2);
     return apply(value, context, args);
 };
@@ -785,6 +785,7 @@ function allResolved(promises) {
  * given promise is rejected
  * @returns a promise for the return value of the callback
  */
+exports['catch'] =
 exports.fail = fail;
 function fail(promise, rejected) {
     return when(promise, void 0, rejected);
@@ -795,12 +796,13 @@ function fail(promise, rejected) {
  * regardless of whether the promise is fulfilled or rejected.  Forwards
  * the resolution to the returned promise when the callback is done.
  * The callback can return a promise to defer completion.
- * @param {Any*} promise 
+ * @param {Any*} promise
  * @param {Function} callback to observe the resolution of the given
  * promise, takes no arguments.
  * @returns a promise for the resolution of the given promise when
  * ``fin`` is done.
  */
+exports['finally'] =
 exports.fin = fin;
 function fin(promise, callback) {
     return when(promise, function (value) {

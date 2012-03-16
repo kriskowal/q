@@ -16,6 +16,11 @@
    major version since I expect it has very little usage.
  - Added browser console message indicating a live list of
    unhandled errors.
+ - WARNING: EXPERIMENTAL: added ``finally`` alias for ``fin``, ``catch``
+   alias for ``fail``, ``try`` alias for ``call``, and ``delete`` alias
+   for ``del``.  These properties are enquoted in the library for
+   cross-browser compatibility, but may be used as property names in
+   modern engines.
 
 ## 0.8.2
 

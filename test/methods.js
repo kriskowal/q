@@ -125,7 +125,7 @@ exports['test delete resolved'] = function (ASSERT, done) {
     var d = Q.defer();
     var value = { a: {} }
 
-    Q.when(Q.del(d.promise, 'a'), function (result) {
+    Q.when(Q.delete(d.promise, 'a'), function (result) {
         ASSERT.ok(result, 'delete returned `true`');
         ASSERT.ok(!('a' in value), 'property was deleted');
         done();
@@ -146,7 +146,6 @@ exports['test delete rejected'] = function (ASSERT, done) {
         ASSERT.pass(reason);
         done();
     });
-
     d.resolve();
 };
 
