@@ -11,6 +11,9 @@
    to the promise prototype.
  - Added ``allResolved`` for waiting for every promise to either be
    fulfilled or rejected, without propagating an error.
+ - Added ``Q.bind`` as a method to transform functions that
+   return and throw into promise-returning functions. See
+   [an example](https://gist.github.com/1782808). @domenic
  - Renamed ``Method`` export to ``sender``.  ``Method``
    remains as deprecated and will be removed in the next
    major version since I expect it has very little usage.
@@ -25,13 +28,13 @@
 ## 0.8.2
 
  - Deprecated ``ref`` in favor of ``resolve`` as recommended by
-   @domenicdenicola.
+   @domenic.
  - Update event-queue dependency.
 
 ## 0.8.1
 
- - Fixed opera bug. #35 @cadorn
- - Fixed ``Q.all([])`` #32 @domenicdenicola
+ - Fixed Opera bug. #35 @cadorn
+ - Fixed ``Q.all([])`` #32 @domenic
 
 ## 0.8.0
 
@@ -42,7 +45,7 @@
    term ``def`` was too confusing to new users.
  - WARNING: ``spy`` removed in favor of ``fin``.
  - WARNING: ``wait`` removed. Do ``all(args).get(0)`` instead.
- - WARNING: ``join`` removed. Do ``all(args).spread(callback) instead.
+ - WARNING: ``join`` removed. Do ``all(args).spread(callback)`` instead.
  - WARNING: Removed the ``Q`` function module.exports alias
    for ``Q.ref``. It conflicts with ``Q.apply`` in weird
    ways, making it uncallable.
