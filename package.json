@@ -16,7 +16,8 @@
     ],
     "contributors": [
         "Kris Kowal <kris@cixar.com> (http://github.com/kriskowal/)",
-        "Irakli Gozalishvili <rfobic@gmail.com> (http://jeditoolkit.com)"
+        "Irakli Gozalishvili <rfobic@gmail.com> (http://jeditoolkit.com)",
+        "Domenic Denicola <domenic@domenicdenicola.com> (http://domenicdenicola.com)"
     ],
     "bugs": {
         "mail": "kris@cixar.com",
