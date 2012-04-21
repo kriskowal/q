@@ -36,10 +36,12 @@
 "use strict";
 
 var nextTick;
-// node
 if (typeof process !== "undefined") {
+    // node
     nextTick = process.nextTick;
-// browsers
+} else if (typeof setImmediate === "function") {
+    // https://github.com/NobleJS/setImmediate
+    nextTick = setImmediate;
 } else if (typeof MessageChannel !== "undefined") {
     // modern browsers
     // http://www.nonblocking.io/2011/06/windownexttick.html
