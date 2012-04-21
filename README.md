@@ -103,6 +103,12 @@ value.  However, if the ``foo`` function gets rejected later by a
 thrown exception, the second function (the error handler) will be
 called with the error.
 
+Note that resolution of a promise is always asynchronous: that is, the
+value or error handler will always be called in the next turn of the
+event loop (i.e. `process.nextTick` in Node). This gives you a nice
+guarantee when mentally tracing the flow of your code, namely that
+``then`` will always return before either handler is executed.
+
 
 ### Propagation
 
@@ -601,6 +607,16 @@ var readFile = Q.node(FS.readFile, FS)
 return readFile("foo.txt", "utf-8");
 ```
 
+Note that, since promises are always resolved in the next turn of the
+event loop, working with streams [can be tricky][streams]. The
+essential problem is that, since Node does not buffer input, it is
+necessary to attach your ``"data"`` event listeners immediately,
+before this next turn comes around. There are a variety of solutions
+to this problem, and even some hope that in future versions of Node it
+will [be ameliorated][streamsnext].
+
+[streams]: https://groups.google.com/d/topic/q-continuum/xr8znxc_K5E/discussion
+[streamsnext]: http://maxogden.com/node-streams#streams.next
 
 ## Reference
 
