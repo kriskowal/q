@@ -292,6 +292,37 @@ Q.allResolved(promises)
 ```
 
 
+### Sequences
+
+If you have a number of promise-producing functions that need
+to be run sequentially, you can of course do so manually:
+
+```javascript
+return foo(initialVal).then(bar).then(baz).then(quux);
+```
+
+However, if you want to run a dynamically constructed sequence of
+functions, you'll want something like this:
+
+```javascript
+var funcs = [foo, bar, baz, quux];
+
+var result = Q.resolve(initialVal);
+funcs.forEach(function (f) {
+    result = result.then(f);
+});
+return result;
+```
+
+You can make this slightly more compact using `reduce`:
+
+```javascript
+return funcs.reduce(function (soFar, f) {
+    return soFar.then(f);
+}, Q.resolve(initialVal));
+```
+
+
 ### Handling Errors
 
 One sometimes-unintuive aspect of promises is that if you throw an
