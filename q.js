@@ -929,7 +929,7 @@ function delay(promise, timeout) {
  * Wraps a NodeJS continuation passing function and returns an equivalent
  * version that returns a promise.
  *
- *      Q.nbind(FS.readFile)(__filename)
+ *      Q.nbind(FS.readFile, FS)(__filename)
  *      .then(console.log)
  *      .end()
  *
@@ -957,7 +957,7 @@ function nbind(callback /* thisp, ...args*/) {
  * Passes a continuation to a Node function and returns a promise.
  *
  *      var FS = require("fs");
- *      Q.ncall(FS.readFile, __filename)
+ *      Q.ncall(FS.readFile, FS, __filename)
  *      .then(function (content) {
  *      })
  *
