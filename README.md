@@ -599,11 +599,11 @@ And there’s a ``Q.ncall`` function for shorter.
 return Q.ncall(FS.readFile, FS, "foo.txt", "utf-8");
 ```
 
-There is also a ``Q.node`` function that that creates a reusable
+There is also a ``Q.nbind`` function that that creates a reusable
 wrapper.
 
 ```javascript
-var readFile = Q.node(FS.readFile, FS)
+var readFile = Q.nbind(FS.readFile, FS)
 return readFile("foo.txt", "utf-8");
 ```
 

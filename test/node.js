@@ -3,8 +3,8 @@
 var Q = require("../q");
 var FS = require("fs"); // node
 
-exports['test node'] = function (ASSERT, done) {
-    var readFile = Q.node(FS.readFile);
+exports['test nbind (no arguments)'] = function (ASSERT, done) {
+    var readFile = Q.nbind(FS.readFile);
     readFile(module.path || __filename, 'utf-8')
     .then(function (content) {
         ASSERT.equal(typeof content, "string", "readFile content");
@@ -26,9 +26,9 @@ exports['test ncall'] = function (ASSERT, done) {
     .fin(done)
 };
 
-exports['test node bind'] = function (ASSERT, done) {
+exports['test nbind (thisp only)'] = function (ASSERT, done) {
     var that = {};
-    var artificial = Q.node(function (callback) {
+    var artificial = Q.nbind(function (callback) {
         callback(void 0, this);
     }, that);
     artificial()
@@ -41,8 +41,8 @@ exports['test node bind'] = function (ASSERT, done) {
     .fin(done)
 };
 
-exports['test node bind partial apply'] = function (ASSERT, done) {
-    var artificial = Q.node(function (value, callback) {
+exports['test nbind (thisp plus arguments)'] = function (ASSERT, done) {
+    var artificial = Q.nbind(function (value, callback) {
         callback(void 0, value);
     }, void 0, 10);
     artificial()
@@ -55,8 +55,8 @@ exports['test node bind partial apply'] = function (ASSERT, done) {
     .fin(done)
 };
 
-exports['test node error'] = function (ASSERT, done) {
-    var artificial = Q.node(function (callback) {
+exports['test nbind error'] = function (ASSERT, done) {
+    var artificial = Q.nbind(function (callback) {
         callback(new Error("bad"));
     });
     artificial()

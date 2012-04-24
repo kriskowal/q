@@ -929,13 +929,14 @@ function delay(promise, timeout) {
  * Wraps a NodeJS continuation passing function and returns an equivalent
  * version that returns a promise.
  *
- *      Q.node(FS.readFile)(__filename)
+ *      Q.nbind(FS.readFile)(__filename)
  *      .then(console.log)
  *      .end()
  *
  */
-exports.node = node;
-function node(callback /* thisp, ...args*/) {
+exports.nbind = nbind;
+exports.node = nbind; // XXX deprecated
+function nbind(callback /* thisp, ...args*/) {
     if (arguments.length > 1) {
         var args = Array.prototype.slice.call(arguments, 1);
         callback = callback.bind.apply(callback, args);
@@ -964,7 +965,7 @@ function node(callback /* thisp, ...args*/) {
 exports.ncall = ncall;
 function ncall(callback, thisp /*, ...args*/) {
     var args = slice.call(arguments, 2);
-    return node(callback).apply(thisp, args);
+    return nbind(callback).apply(thisp, args);
 }
 
 });
