@@ -954,7 +954,23 @@ function nbind(callback /* thisp, ...args*/) {
 }
 
 /**
- * Passes a continuation to a Node function and returns a promise.
+ * Passes a continuation to a Node function, which is called with a given
+ * `this` value and arguments provided as an array, and returns a promise.
+ *
+ *      var FS = require("fs");
+ *      Q.napply(FS.readFile, FS, [__filename])
+ *      .then(function (content) {
+ *      })
+ *
+ */
+exports.napply = napply;
+function napply(callback, thisp, args) {
+    return nbind(callback).apply(thisp, args);
+}
+
+/**
+ * Passes a continuation to a Node function, which is called with a given
+ * `this` value and arguments provided individually, and returns a promise.
  *
  *      var FS = require("fs");
  *      Q.ncall(FS.readFile, FS, __filename)
@@ -965,7 +981,7 @@ function nbind(callback /* thisp, ...args*/) {
 exports.ncall = ncall;
 function ncall(callback, thisp /*, ...args*/) {
     var args = slice.call(arguments, 2);
-    return nbind(callback).apply(thisp, args);
+    return napply(callback, thisp, args);
 }
 
 });

@@ -15,17 +15,6 @@ exports['test nbind (no arguments)'] = function (ASSERT, done) {
     .fin(done)
 };
 
-exports['test ncall'] = function (ASSERT, done) {
-    Q.ncall(FS.readFile, FS, module.path || __filename, 'utf-8')
-    .then(function (content) {
-        ASSERT.equal(typeof content, "string", "readFile content");
-    })
-    .fail(function (reason) {
-        ASSERT.ok(false, reason);
-    })
-    .fin(done)
-};
-
 exports['test nbind (thisp only)'] = function (ASSERT, done) {
     var that = {};
     var artificial = Q.nbind(function (callback) {
@@ -65,6 +54,28 @@ exports['test nbind error'] = function (ASSERT, done) {
     })
     .fail(function (reason) {
         ASSERT.strictEqual(reason.message, "bad", "error forwarded");
+    })
+    .fin(done)
+};
+
+exports['test ncall'] = function (ASSERT, done) {
+    Q.ncall(FS.readFile, FS, module.path || __filename, 'utf-8')
+    .then(function (content) {
+        ASSERT.equal(typeof content, "string", "readFile content");
+    })
+    .fail(function (reason) {
+        ASSERT.ok(false, reason);
+    })
+    .fin(done)
+};
+
+exports['test napply'] = function (ASSERT, done) {
+    Q.napply(FS.readFile, FS, [module.path || __filename, 'utf-8'])
+    .then(function (content) {
+        ASSERT.equal(typeof content, "string", "readFile content");
+    })
+    .fail(function (reason) {
+        ASSERT.ok(false, reason);
     })
     .fin(done)
 };
