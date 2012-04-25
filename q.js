@@ -35,6 +35,14 @@
 })(function (exports) {
 "use strict";
 
+var taskQueue = [];
+function runQueuedTasks() {
+    var task;
+    while ((task = taskQueue.shift())) {
+        task();
+    }
+}
+
 var nextTick;
 if (typeof process !== "undefined") {
     // node
@@ -49,22 +57,23 @@ if (typeof process !== "undefined") {
     // modern browsers
     // http://www.nonblocking.io/2011/06/windownexttick.html
     var channel = new MessageChannel();
-    // linked list of tasks (single, with head node)
-    var head = {}, tail = head;
-    channel.port1.onmessage = function () {
-        var next = head.next;
-        var task = next.task;
-        head = next;
-        task();
-    };
+    channel.port1.onmessage = runQueuedTasks;
+
     nextTick = function (task) {
-        tail = tail.next = {task: task};
-        channel.port2.postMessage(0);
+        taskQueue.push(task);
+
+        if (taskQueue.length === 1) {
+            channel.port2.postMessage(0);
+        }
     };
 } else {
-    // old browsers
+    // old browsers, with a trick to batch tasks if called multiple times in the same turn
     nextTick = function (task) {
-        setTimeout(task, 0);
+        taskQueue.push(task);
+
+        if (taskQueue.length === 1) {
+            setTimeout(runQueuedTasks, 0);
+        }
     };
 }
 
