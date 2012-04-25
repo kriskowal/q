@@ -39,6 +39,9 @@ var nextTick;
 if (typeof process !== "undefined") {
     // node
     nextTick = process.nextTick;
+} else if (typeof msSetImmediate === "function") {
+    // IE 10 only, at the moment
+    nextTick = msSetImmediate;
 } else if (typeof setImmediate === "function") {
     // https://github.com/NobleJS/setImmediate
     nextTick = setImmediate;
