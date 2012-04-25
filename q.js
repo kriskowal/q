@@ -23,50 +23,58 @@
 
     // RequireJS
     if (typeof define === "function") {
-        define(definition);
+        define(["exports"], definition);
     // CommonJS
     } else if (typeof exports === "object") {
-        definition(require, exports);
+        definition(exports);
     // <script>
     } else {
-        definition(void 0, Q = {});
+        definition(Q = {});
     }
 
-})(function (serverSideRequire, exports) {
+})(function (exports) {
 "use strict";
 
+var taskQueue = [];
+function runQueuedTasks() {
+    var task;
+    while ((task = taskQueue.shift())) {
+        task();
+    }
+}
 
 var nextTick;
-try {
-    // Narwhal, Node (with a package, wraps process.nextTick)
-    // "require" is renamed to "serverSideRequire" so
-    // client-side scrapers do not try to load
-    // "event-queue".
-    nextTick = serverSideRequire("event-queue").enqueue;
-} catch (e) {
-    // browsers
-    if (typeof MessageChannel !== "undefined") {
-        // modern browsers
-        // http://www.nonblocking.io/2011/06/windownexttick.html
-        var channel = new MessageChannel();
-        // linked list of tasks (single, with head node)
-        var head = {}, tail = head;
-        channel.port1.onmessage = function () {
-            var next = head.next;
-            var task = next.task;
-            head = next;
-            task();
-        };
-        nextTick = function (task) {
-            tail = tail.next = {task: task};
+if (typeof process !== "undefined") {
+    // node
+    nextTick = process.nextTick;
+} else if (typeof msSetImmediate === "function") {
+    // IE 10 only, at the moment
+    nextTick = msSetImmediate;
+} else if (typeof setImmediate === "function") {
+    // https://github.com/NobleJS/setImmediate
+    nextTick = setImmediate;
+} else if (typeof MessageChannel !== "undefined") {
+    // modern browsers
+    // http://www.nonblocking.io/2011/06/windownexttick.html
+    var channel = new MessageChannel();
+    channel.port1.onmessage = runQueuedTasks;
+
+    nextTick = function (task) {
+        taskQueue.push(task);
+
+        if (taskQueue.length === 1) {
             channel.port2.postMessage(0);
-        };
-    } else {
-        // old browsers
-        nextTick = function (task) {
-            setTimeout(task, 0);
-        };
-    }
+        }
+    };
+} else {
+    // old browsers, with a trick to batch tasks if called multiple times in the same turn
+    nextTick = function (task) {
+        taskQueue.push(task);
+
+        if (taskQueue.length === 1) {
+            setTimeout(runQueuedTasks, 0);
+        }
+    };
 }
 
 // useful for an identity stub and default resolvers

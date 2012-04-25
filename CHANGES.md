@@ -23,6 +23,11 @@
    major version since I expect it has very little usage.
  - Added browser console message indicating a live list of
    unhandled errors.
+ - Added support for ``msSetImmediate`` (IE10) or ``setImmediate``
+   (available via [polyfill](https://github.com/NobleJS/setImmediate))
+   as a browser-side ``nextTick`` implementation. #44 #50 #59
+ - Stopped using the event-queue dependency, which was in place for
+   Narwhal support: now directly using ``process.nextTick``.
  - WARNING: EXPERIMENTAL: added ``finally`` alias for ``fin``, ``catch``
    alias for ``fail``, ``try`` alias for ``call``, and ``delete`` alias
    for ``del``.  These properties are enquoted in the library for
