@@ -47,9 +47,9 @@ if (typeof process !== "undefined") {
     // linked list of tasks (single, with head node)
     var head = {}, tail = head;
     channel.port1.onmessage = function () {
-        var next = head.next;
-        var task = next.task;
-        head = next;
+        head = head.next;
+        var task = head.task;
+        head.task = null;
         task();
     };
     nextTick = function (task) {
