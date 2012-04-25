@@ -4,6 +4,8 @@
 
  - WARNING: The undocumented ``Method`` export will be
    removed.  Use ``sender(op)``.
+ - WARNING: The deprecated ``node`` export will be removed.
+   Use ``nbind``.
 
 ## Next minor
 
@@ -14,6 +16,8 @@
  - Added ``Q.bind`` as a method to transform functions that
    return and throw into promise-returning functions. See
    [an example](https://gist.github.com/1782808). @domenic
+ - Renamed ``node`` export to ``nbind``, and added ``napply`` to
+   complete the set. ``node`` remains as deprecated. @domenic #58
  - Renamed ``Method`` export to ``sender``.  ``Method``
    remains as deprecated and will be removed in the next
    major version since I expect it has very little usage.
