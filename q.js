@@ -281,7 +281,7 @@ function makePromise(descriptor, fallback, valueOf, rejected) {
         } catch (exception) {
             result = reject(exception);
         }
-        return (resolved || identity)(result);
+        resolved(result);
     };
 
     if (valueOf) {
@@ -581,10 +581,11 @@ function when(value, fulfilled, rejected) {
                 return;
             }
             done = true;
-            deferred.resolve(
-                resolve(value)
-                .promiseSend("when", _fulfilled, _rejected)
-            );
+            resolve(value).promiseSend("when", function (value) {
+                deferred.resolve(_fulfilled(value));
+            }, function (exception) {
+                deferred.resolve(_rejected(exception));
+            });
         }, function (exception) {
             if (done) {
                 return;
