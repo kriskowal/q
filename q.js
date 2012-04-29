@@ -201,8 +201,8 @@ function defer() {
 
     deferred.promise = freeze(promise);
     deferred.resolve = become;
-    deferred.reject = function (reason) {
-        return become(reject(reason));
+    deferred.reject = function (exception) {
+        return become(reject(exception));
     };
 
     return deferred;
@@ -355,10 +355,10 @@ if (typeof window !== "undefined") {
 
 /**
  * Constructs a rejected promise.
- * @param reason value describing the failure
+ * @param exception value describing the failure
  */
 exports.reject = reject;
-function reject(reason) {
+function reject(exception) {
     var rejection = makePromise({
         "when": function (rejected) {
             // note that the error has been handled
@@ -369,16 +369,16 @@ function reject(reason) {
                     rejections.splice(at, 1);
                 }
             }
-            return rejected ? rejected(reason) : reject(reason);
+            return rejected ? rejected(exception) : reject(exception);
         }
     }, function fallback(op) {
-        return reject(reason);
+        return reject(exception);
     }, function valueOf() {
-        return reject(reason);
+        return reject(exception);
     }, true);
     // note that the error has not been handled
     rejections.push(rejection);
-    errors.push(reason);
+    errors.push(exception);
     return rejection;
 }
 
@@ -522,7 +522,7 @@ function view(object) {
  *
  * @param value     promise or immediate reference to observe
  * @param fulfilled function to be called with the fulfilled value
- * @param rejected  function to be called with the rejection reason
+ * @param rejected  function to be called with the rejection exception
  * @return promise for the return value from the invoked callback
  */
 exports.when = when;
@@ -539,9 +539,9 @@ function when(value, fulfilled, rejected) {
         }
     }
 
-    function _rejected(reason) {
+    function _rejected(exception) {
         try {
-            return rejected ? rejected(reason) : reject(reason);
+            return rejected ? rejected(exception) : reject(exception);
         } catch (exception) {
             return reject(exception);
         }
@@ -557,12 +557,12 @@ function when(value, fulfilled, rejected) {
                 resolve(value)
                 .promiseSend("when", _fulfilled, _rejected)
             );
-        }, function (reason) {
+        }, function (exception) {
             if (done) {
                 return;
             }
             done = true;
-            deferred.resolve(_rejected(reason));
+            deferred.resolve(_rejected(exception));
         });
     });
 
@@ -613,7 +613,7 @@ exports.async = async;
 function async(makeGenerator) {
     return function () {
         // when verb is "send", arg is a value
-        // when verb is "throw", arg is a reason/error
+        // when verb is "throw", arg is an exception
         function continuer(verb, arg) {
             var result;
             try {
@@ -857,9 +857,9 @@ function fin(promise, callback) {
         return when(callback(), function () {
             return value;
         });
-    }, function (reason) {
+    }, function (exception) {
         return when(callback(), function () {
-            return reject(reason);
+            return reject(exception);
         });
     });
 }
@@ -894,7 +894,7 @@ function timeout(promise, ms) {
     var deferred = defer();
     when(promise, deferred.resolve, deferred.reject);
     setTimeout(function () {
-        deferred.reject("Timed out");
+        deferred.reject(new Error("Timed out after " + ms + "ms"));
     }, ms);
     return deferred.promise;
 }

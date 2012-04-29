@@ -471,7 +471,7 @@ function timeout(promise, ms) {
     var deferred = Q.defer();
     Q.when(promise, deferred.resolve);
     Q.when(delay(ms), function () {
-        deferred.reject("Timed out");
+        deferred.reject(new Error("Timed out"));
     });
     return deferred.promise;
 }
