@@ -19,6 +19,12 @@
    exception being a string, you will need to revise your code.
  - Added ``deferred.makeNodeResolver()`` to replace the more cryptic
    ``deferred.node()`` method.
+ - Added experimental ``Q.promise(maker(resolve, reject))`` to make a
+   promise inside a callback, such that thrown exceptions in the
+   callback are converted and the resolver and rejecter are arguments.
+   This is a shorthand for making a deferred directly and inspired by
+   @gozala’s stream constructor pattern and the Microsoft Windows Metro
+   Promise constructor interface.
 
 ## 0.8.3
 

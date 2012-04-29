@@ -222,6 +222,19 @@ defer.prototype.makeNodeResolver = function () {
     };
 };
 
+exports.promise = promise;
+function promise(makePromise) {
+    var deferred = defer();
+    call(
+        makePromise,
+        void 0,
+        deferred.resolve,
+        deferred.reject,
+        deferred.progress
+    ).fail(deferred.reject);
+    return deferred.promise;
+}
+
 /**
  * Constructs a Promise with a promise descriptor object and optional fallback
  * function.  The descriptor contains methods like when(rejected), get(name),
