@@ -29,6 +29,22 @@
    of ``.then`` so that each of these can be reordered without having to
    edit the new and former first step.
 
+## Next minor
+
+ - Added ``promise.cancel()``, ``Q.defer(canceler)``
+   argument and ``promise.cancelable(canceler)`` interface
+   for making it possible to support per-promise
+   unregistration of interest in a promise resolution.
+   Cancelation is ignored by default.  Cancelation does not
+   reject the promise.  A cancelable promise should be
+   constructed for each independent receiver of a promise to
+   guarantee that cancelation is not observable and will not
+   interfere with other receivers of a promise.
+   WARNING: Because cancelation must be handled with care in
+   security-concious situations, this feature may be removed
+   for the good of us all in a future major version.  Be
+   excellent to each other.
+
 ## 0.8.3
 
  - Added ``isFulfilled``, ``isRejected``, and ``isResolved``
