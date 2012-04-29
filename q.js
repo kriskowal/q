@@ -1,15 +1,17 @@
 // vim:ts=4:sts=4:sw=4:
 /*jshint browser: true, node: true,
-  curly: true, eqeqeq: true, noarg: true, nonew: true, trailing: true, undef: true
+  curly: true, eqeqeq: true, noarg: true, nonew: true, trailing: true,
+  undef: true
  */
-/*global define: false, Q: true */
+/*global define: false, Q: true, msSetImmediate: true, setImmediate: true,
+  MessageChannel: true */
 /*!
  *
  * Copyright 2007-2009 Tyler Close under the terms of the MIT X license found
  * at http://www.opensource.org/licenses/mit-license.html
  * Forked at ref_send.js version: 2009-05-11
  *
- * Copyright 2009-2011 Kris Kowal under the terms of the MIT
+ * Copyright 2009-2012 Kris Kowal under the terms of the MIT
  * license found at http://github.com/kriskowal/q/raw/master/LICENSE
  *
  */
@@ -54,7 +56,7 @@ if (typeof process !== "undefined") {
     channel.port1.onmessage = function () {
         head = head.next;
         var task = head.task;
-        head.task = null;
+        delete head.task;
         task();
     };
     nextTick = function (task) {
@@ -96,27 +98,27 @@ var keys = shim(Object, "keys", function (object) {
 });
 
 var reduce = Array.prototype.reduce || function (callback, basis) {
-    var i = 0,
-        ii = this.length;
+    var index = 0,
+        length = this.length;
     // concerning the initial value, if one is not provided
     if (arguments.length === 1) {
         // seek to the first value in the array, accounting
         // for the possibility that is is a sparse array
         do {
-            if (i in this) {
-                basis = this[i++];
+            if (index in this) {
+                basis = this[index++];
                 break;
             }
-            if (++i >= ii) {
+            if (++index >= length) {
                 throw new TypeError();
             }
         } while (1);
     }
     // reduce
-    for (; i < ii; i++) {
+    for (; index < length; index++) {
         // account for the possibility that the array is sparse
-        if (i in this) {
-            basis = callback(basis, this[i], i);
+        if (index in this) {
+            basis = callback(basis, this[index], index);
         }
     }
     return basis;
@@ -129,6 +131,7 @@ function isStopIteration(exception) {
 
 // Abbreviations for performance and minification
 var slice = Array.prototype.slice;
+
 function valueOf(value) {
     // if !Object.isObject(value)
     if (Object(value) !== value) {
@@ -208,6 +211,11 @@ function defer() {
     return deferred;
 }
 
+/**
+ * Creates a Node-style callback that will resolve or reject the deferred
+ * promise.
+ * @returns a nodeback
+ */
 defer.prototype.node = // XXX deprecated
 defer.prototype.makeNodeResolver = function () {
     var self = this;
@@ -222,6 +230,12 @@ defer.prototype.makeNodeResolver = function () {
     };
 };
 
+/**
+ * @param makePromise {Function} a function that returns nothing and accepts
+ * the resolve and reject functions for a deferred.
+ * @returns a promise that may be resolved with the given resolve and reject
+ * functions, or rejected by a thrown exception in makePromise
+ */
 exports.promise = promise;
 function promise(makePromise) {
     var deferred = defer();

@@ -1,8 +1,8 @@
 
 var Q = require('../q');
 
-exports['test ref assimilation'] = function (ASSERT, done) {
-    Q.ref({
+exports['test resolve assimilation'] = function (ASSERT, done) {
+    Q.resolve({
         "then": function (resolved, rejected) {
             resolved(10);
         }
@@ -40,8 +40,8 @@ exports['test when assimilation'] = function (ASSERT, done) {
     .fin(done);
 }
 
-exports['test ref assimilation and piplining'] = function (ASSERT, done) {
-    Q.ref({
+exports['test resolve assimilation and piplining'] = function (ASSERT, done) {
+    Q.resolve({
         "then": function (resolved, rejected) {
             resolved([10]);
         }
