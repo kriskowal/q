@@ -29,7 +29,7 @@ step1(function (value1) {
 With a promise library, you can flatten the pyramid.
 
 ```javascript
-Q.call(step1)
+Q.fcall(step1)
 .then(step2)
 .then(step3)
 .then(step4)
@@ -406,7 +406,7 @@ You can create a promise from a value using ``Q.call``.  This returns a
 promise for 10.
 
 ```javascript
-return Q.call(function () {
+return Q.fcall(function () {
     return 10;
 });
 ```
@@ -414,7 +414,7 @@ return Q.call(function () {
 You can also use ``call`` to get a promise for an exception.
 
 ```javascript
-return Q.call(function () {
+return Q.fcall(function () {
     throw new Error("Can't do it");
 })
 ```
@@ -425,7 +425,7 @@ numbers.  The second argument is the ``this`` object to pass into the
 function.
 
 ```javascript
-return Q.call(eventualAdd, null, 2, 2);
+return Q.fcall(eventualAdd, null, 2, 2);
 ```
 
 When nothing else will do the job, you can use ``defer``, which is
@@ -448,7 +448,7 @@ Note that a deferred can be resolved with a value or a promise.  The
 promise.
 
 ```javascript
-var rejection = Q.call(function () {
+var rejection = Q.fcall(function () {
     throw new Error("Can't do it");
 });
 deferred.resolve(rejection);
@@ -502,7 +502,7 @@ return Q.all([a, b]);
 ```
 
 ```javascript
-return Q.call(function () {
+return Q.fcall(function () {
     return [a, b];
 })
 .all();
@@ -522,10 +522,10 @@ return Q.when($.ajax(...))
 
 If there is any chance that the promise you receive is not a Q promise
 as provided by your library, you should wrap it using a Q function.
-You can even use ``Q.call`` as a shorthand.
+You can even use ``Q.invoke`` as a shorthand.
 
 ```javascript
-return Q.call($.ajax, $, ...)
+return Q.invoke($, 'ajax', ...)
 .then(function () {
 })
 ```
@@ -546,10 +546,8 @@ value.foo = value           promise.put("foo", value)
 delete value.foo            promise.del("foo")
 value.foo(...args)          promise.post("foo", [args])
 value.foo(...args)          promise.invoke("foo", ...args)
-value(...args)              promise.apply(null, [args])
-value(...args)              promise.call(null, ...args)
-value.call(thisp, ...args)  promise.apply(thisp, [args])
-value.apply(thisp, [args])  promise.call(thisp, ...args)
+value(...args)              promise.fapply([args])
+value(...args)              promise.fcall(...args)
 ```
 
 If the promise is a proxy for a remote object, you can shave
@@ -563,7 +561,7 @@ shorthand for particularly-simple value handlers. For example, you
 can replace
 
 ```javascript
-return Q.call(function () {
+return Q.fcall(function () {
     return [{ foo: "bar" }, { foo: "baz" }];
 })
 .then(function (value) {
@@ -574,7 +572,7 @@ return Q.call(function () {
 with
 
 ```javascript
-return Q.call(function () {
+return Q.fcall(function () {
     return [{ foo: "bar" }, { foo: "baz" }];
 })
 .get(0)

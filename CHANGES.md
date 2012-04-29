@@ -8,6 +8,15 @@
    Use ``nbind``.
  - WARNING: The deprecated ``deferred.node()`` interface will be
    removed.  Use ``deferred.makeNodeResolver()``.
+ - WARNING: The deprecated ``call``, ``apply``, and ``bind`` are
+   replaced with ``fcall``, ``fapply``, and ``fbind``.  Use of a
+   ``thisp`` is discouraged.  For calling methods, use ``post`` or
+   ``invoke``.
+
+## Next minor
+
+ - Added ``fapply``, ``fcall``, ``fbind`` for non-thisp promised
+   function calls.
 
 ## 0.8.4
 

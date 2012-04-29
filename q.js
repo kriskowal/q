@@ -309,6 +309,7 @@ reduce.call(
         "post", "invoke",
         "keys",
         "apply", "call", "bind",
+        "fapply", "fcall", "fbind",
         "all", "allResolved",
         "view", "viewInfo",
         "timeout", "delay",
@@ -466,6 +467,9 @@ function resolve(object) {
                 "type": typeof object,
                 "properties": properties
             };
+        },
+        "fapply": function (args) {
+            return object.apply(void 0, args);
         },
         "keys": function () {
             return keys(object);
@@ -759,15 +763,33 @@ exports.invoke = function (value, name) {
 var apply = exports.apply = sender("apply");
 
 /**
+ * Applies the promised function in a future turn.
+ * @param object    promise or immediate reference for target function
+ * @param args      array of application arguments
+ */
+var fapply = exports.fapply = sender("fapply");
+
+/**
  * Calls the promised function in a future turn.
  * @param object    promise or immediate reference for target function
  * @param context   the context object (this) for the call
  * @param ...args   array of application arguments
  */
-exports.call = exports['try'] = call;
+exports.call = call;
 function call(value, context) {
     var args = slice.call(arguments, 2);
     return apply(value, context, args);
+}
+
+/**
+ * Calls the promised function in a future turn.
+ * @param object    promise or immediate reference for target function
+ * @param ...args   array of application arguments
+ */
+exports.fcall = exports['try'] = fcall;
+function fcall(value) {
+    var args = slice.call(arguments, 1);
+    return fapply(value, args);
 }
 
 /**
@@ -801,6 +823,21 @@ function bind(value, context) {
         } else {
             return apply(value, context, allArgs);
         }
+    };
+}
+
+/**
+ * Binds the promised function, transforming return values into a fulfilled
+ * promise and thrown errors into a rejected one.
+ * @param object    promise or immediate reference for target function
+ * @param ...args   array of application arguments
+ */
+exports.fbind = fbind;
+function fbind(value) {
+    var args = slice.call(arguments, 1);
+    return function fbound() {
+        var allArgs = args.concat(slice.call(arguments));
+        return fapply(value, allArgs);
     };
 }
 
