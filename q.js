@@ -23,16 +23,16 @@
 
     // RequireJS
     if (typeof define === "function") {
-        define(["exports"], definition);
+        define(definition);
     // CommonJS
     } else if (typeof exports === "object") {
-        definition(exports);
+        definition(void 0, exports);
     // <script>
     } else {
-        definition(Q = {});
+        definition(void 0, Q = {});
     }
 
-})(function (exports) {
+})(function (require, exports) {
 "use strict";
 
 var nextTick;
