@@ -7,7 +7,7 @@
  - WARNING: The deprecated ``node`` export will be removed.
    Use ``nbind``.
 
-## Next minor
+## 0.8.3
 
  - Added ``isFulfilled``, ``isRejected``, and ``isResolved``
    to the promise prototype.
