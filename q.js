@@ -400,6 +400,7 @@ function reject(exception) {
  * Constructs a promise for an immediate reference.
  * @param value immediate reference
  */
+exports.begin = resolve;
 exports.resolve = resolve;
 exports.ref = resolve; // XXX deprecated
 function resolve(object) {

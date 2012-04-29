@@ -25,6 +25,9 @@
    This is a shorthand for making a deferred directly and inspired by
    @gozala’s stream constructor pattern and the Microsoft Windows Metro
    Promise constructor interface.
+ - Added experimental ``Q.begin()`` that is intended to kick off chains
+   of ``.then`` so that each of these can be reordered without having to
+   edit the new and former first step.
 
 ## 0.8.3
 
