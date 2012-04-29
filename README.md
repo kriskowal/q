@@ -584,12 +584,12 @@ return Q.call(function () {
 
 ### Adapting Node
 
-There is a ``node`` method on deferreds that is handy for the NodeJS
-callback pattern.
+There is a ``makeNodeResolver`` method on deferreds that is handy for
+the NodeJS callback pattern.
 
 ```javascript
 var deferred = Q.defer();
-FS.readFile("foo.txt", "utf-8", deferred.node());
+FS.readFile("foo.txt", "utf-8", deferred.makeNodeResolver());
 return deferred.promise;
 ```
 

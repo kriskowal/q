@@ -208,7 +208,8 @@ function defer() {
     return deferred;
 }
 
-defer.prototype.node = function () {
+defer.prototype.node = // XXX deprecated
+defer.prototype.makeNodeResolver = function () {
     var self = this;
     return function (error, value) {
         if (error) {

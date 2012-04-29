@@ -6,6 +6,8 @@
    removed.  Use ``sender(op)``.
  - WARNING: The deprecated ``node`` export will be removed.
    Use ``nbind``.
+ - WARNING: The deprecated ``deferred.node()`` interface will be
+   removed.  Use ``deferred.makeNodeResolver()``.
 
 ## Next minor
 
@@ -15,6 +17,8 @@
    backward-incompatibility since it is a change of an undocumented and
    unspecified public behavior, but if you happened to depend on the
    exception being a string, you will need to revise your code.
+ - Added ``deferred.makeNodeResolver()`` to replace the more cryptic
+   ``deferred.node()`` method.
 
 ## 0.8.3
 
