@@ -70,6 +70,7 @@ if (typeof process !== "undefined") {
 
 // useful for an identity stub and default resolvers
 function identity(x) { return x; }
+function noop() {}
 
 // shims
 function shim(object, name, shimmed) {
@@ -155,7 +156,7 @@ exports.nextTick = nextTick;
  */
 exports.defer = defer;
 
-function defer() {
+function defer(cancel) {
     // if "pending" is an "Array", that indicates that the promise has not yet
     // been resolved.  If it is "undefined", it has been resolved.  Each
     // element of the pending array is itself an array of complete arguments to
@@ -176,6 +177,11 @@ function defer() {
                 value.promiseSend.apply(value, args);
             });
         }
+    };
+
+    promise.cancel = function () {
+        cancel && cancel();
+        return promise;
     };
 
     promise.valueOf = function () {
@@ -273,6 +279,8 @@ makePromise.prototype.then = function (fulfilled, rejected) {
     return when(this, fulfilled, rejected);
 };
 
+makePromise.prototype.cancel = noop;
+
 // Chainable methods
 reduce.call(
     [
@@ -285,7 +293,8 @@ reduce.call(
         "all", "allResolved",
         "view", "viewInfo",
         "timeout", "delay",
-        "catch", "finally", "fail", "fin", "end"
+        "catch", "finally", "fail", "fin", "end",
+        "cancelable"
     ],
     function (prev, name) {
         makePromise.prototype[name] = function () {
@@ -879,6 +888,16 @@ function end(promise) {
             throw error;
         });
     });
+}
+
+exports.cancelable = cancelable;
+function cancelable(promise, cancel) {
+    var cancelable = Object.create(makePromise.prototype);
+    cancelable.promiseSend = function (op) {
+        promise.promiseSend.apply(promise, arguments);
+    };
+    cancelable.cancel = cancel;
+    return cancelable;
 }
 
 /**

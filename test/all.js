@@ -11,6 +11,7 @@ exports['test spread'] = require('./spread');
 exports['test allResolved'] = require("./all-resolved");
 exports['test node'] = require('./node');
 exports['test bind'] = require('./bind');
+exports['test cancel'] = require("./cancel");
 
 exports['test GH issue 9'] = require('./issue/9');
 exports['test GH issue 22'] = require('./issue/22');
