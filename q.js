@@ -229,8 +229,7 @@ function promise(makePromise) {
         makePromise,
         void 0,
         deferred.resolve,
-        deferred.reject,
-        deferred.progress
+        deferred.reject
     ).fail(deferred.reject);
     return deferred.promise;
 }
