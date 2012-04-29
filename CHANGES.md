@@ -9,7 +9,7 @@
  - WARNING: The deprecated ``deferred.node()`` interface will be
    removed.  Use ``deferred.makeNodeResolver()``.
 
-## Next minor
+## 0.8.4
 
  - WARNING: ``promise.timeout`` is now rejected with an ``Error`` object
    and the message now includes the duration of the timeout in
