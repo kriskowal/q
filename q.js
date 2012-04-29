@@ -130,7 +130,8 @@ function isStopIteration(exception) {
 // Abbreviations for performance and minification
 var slice = Array.prototype.slice;
 function valueOf(value) {
-    if (value === void 0 || value === null) {
+    // if !Object.isObject(value)
+    if (Object(value) !== value) {
         return value;
     } else {
         return value.valueOf();
@@ -232,7 +233,7 @@ defer.prototype.node = function () {
  * bought and sold.
  */
 exports.makePromise = makePromise;
-function makePromise(descriptor, fallback, valueOf) {
+function makePromise(descriptor, fallback, valueOf, rejected) {
     if (fallback === void 0) {
         fallback = function (op) {
             return reject("Promise does not support operation: " + op);
@@ -258,6 +259,10 @@ function makePromise(descriptor, fallback, valueOf) {
 
     if (valueOf) {
         promise.valueOf = valueOf;
+    }
+
+    if (rejected) {
+        promise.promiseRejected = true;
     }
 
     return freeze(promise);
@@ -317,7 +322,7 @@ function isPromise(object) {
  */
 exports.isResolved = isResolved;
 function isResolved(object) {
-    return !isPromise(valueOf(object));
+    return isFulfilled(object) || isRejected(object);
 }
 
 /**
@@ -326,7 +331,7 @@ function isResolved(object) {
  */
 exports.isFulfilled = isFulfilled;
 function isFulfilled(object) {
-    return !isPromise(valueOf(object)) && !isRejected(object);
+    return !isPromise(valueOf(object));
 }
 
 /**
@@ -335,10 +340,7 @@ function isFulfilled(object) {
 exports.isRejected = isRejected;
 function isRejected(object) {
     object = valueOf(object);
-    if (object === void 0 || object === null) {
-        return false;
-    }
-    return !!object.promiseRejected;
+    return object && !!object.promiseRejected;
 }
 
 var rejections = [];
@@ -372,20 +374,13 @@ function reject(reason) {
     }, function fallback(op) {
         return reject(reason);
     }, function valueOf() {
-        var rejection = create(reject.prototype);
-        rejection.promiseRejected = true;
-        rejection.reason = reason;
-        return rejection;
-    });
+        return reject(reason);
+    }, true);
     // note that the error has not been handled
     rejections.push(rejection);
     errors.push(reason);
     return rejection;
 }
-
-reject.prototype = create(makePromise.prototype, {
-    constructor: { value: reject }
-});
 
 /**
  * Constructs a promise for an immediate reference.
@@ -768,6 +763,7 @@ function bind(value, context) {
             var result = apply(value, self, allArgs);
 
             return result.then(function (fulfilledValue) {
+                // if Object.isObject(fulfilledValue)
                 if (Object(fulfilledValue) === fulfilledValue) {
                     return fulfilledValue;
                 }

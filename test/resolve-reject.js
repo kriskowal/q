@@ -111,4 +111,9 @@ exports['test resolve/reject rejected promise'] = function(assert, done) {
   nextTurn = true
 }
 
+exports['test isPromise true'] = function (assert) {
+  assert.ok(!Q.isPromise(true), 'true is not a promise')
+  assert.ok(!Q.isPromise(false), 'false is not a promise')
+}
+
 if (module == require.main) require('test').run(exports)
