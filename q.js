@@ -263,7 +263,7 @@ exports.makePromise = makePromise;
 function makePromise(descriptor, fallback, valueOf, rejected) {
     if (fallback === void 0) {
         fallback = function (op) {
-            return reject("Promise does not support operation: " + op);
+            return reject(new Error("Promise does not support operation: " + op));
         };
     }
 
