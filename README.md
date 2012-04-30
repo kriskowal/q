@@ -591,10 +591,15 @@ FS.readFile("foo.txt", "utf-8", deferred.makeNodeResolver());
 return deferred.promise;
 ```
 
-And there’s a ``Q.ncall`` function for shorter.
+And there are ``Q.ncall`` and ``Q.ninvoke`` for even shorter
+expression.
 
 ```javascript
 return Q.ncall(FS.readFile, FS, "foo.txt", "utf-8");
+```
+
+```javascript
+return Q.ninvoke(FS, 'readFile', "foo.txt", "utf-8");
 ```
 
 There is also a ``Q.nbind`` function that that creates a reusable

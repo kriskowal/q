@@ -12,6 +12,7 @@
    replaced with ``fcall``, ``fapply``, and ``fbind``.  Use of a
    ``thisp`` is discouraged.  For calling methods, use ``post`` or
    ``invoke``.
+ - WARNING: The undocumented ``view`` and ``viewInfo`` will be removed.
 
 ## Next minor
 

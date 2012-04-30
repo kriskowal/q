@@ -263,7 +263,7 @@ exports.makePromise = makePromise;
 function makePromise(descriptor, fallback, valueOf, rejected) {
     if (fallback === void 0) {
         fallback = function (op) {
-            return reject("Promise does not support operation: " + op);
+            return reject(new Error("Promise does not support operation: " + op));
         };
     }
 
@@ -608,8 +608,6 @@ function async(makeGenerator) {
 /**
  * Constructs a promise method that can be used to safely observe resolution of
  * a promise for an arbitrarily named method like "propfind" in a future turn.
- *
- * "sender" constructs methods like "get(promise, name)" and "put(promise)".
  */
 exports.sender = sender;
 exports.Method = sender; // XXX deprecated
@@ -642,12 +640,45 @@ function send(object, op) {
 }
 
 /**
+ * sends a message to a value in a future turn
+ * @param object* the recipient
+ * @param op the name of the message operation, e.g., "when",
+ * @param args further arguments to be forwarded to the operation
+ * @returns result {Promise} a promise for the result of the operation
+ */
+exports.dispatch = dispatch;
+function dispatch(object, op, args) {
+    var deferred = defer();
+    object = resolve(object);
+    nextTick(function () {
+        object.promiseSend.apply(
+            object,
+            [op, deferred.resolve].concat(args)
+        );
+    });
+    return deferred.promise;
+}
+
+/**
+ * Constructs a promise method that can be used to safely observe resolution of
+ * a promise for an arbitrarily named method like "propfind" in a future turn.
+ *
+ * "dispatcher" constructs methods like "get(promise, name)" and "put(promise)".
+ */
+exports.dispatcher = dispatcher;
+function dispatcher(op) {
+    return function (object) {
+        var args = slice.call(arguments, 1);
+        return dispatch(object, op, args);
+    };
+}
+/**
  * Gets the value of a property in a future turn.
  * @param object    promise or immediate reference for target object
  * @param name      name of property to get
  * @return promise for the property value
  */
-exports.get = sender("get");
+exports.get = dispatcher("get");
 
 /**
  * Sets the value of a property in a future turn.
@@ -656,7 +687,7 @@ exports.get = sender("get");
  * @param value     new value of property
  * @return promise for the return value
  */
-exports.put = sender("put");
+exports.put = dispatcher("put");
 
 /**
  * Deletes a property in a future turn.
@@ -664,7 +695,7 @@ exports.put = sender("put");
  * @param name      name of property to delete
  * @return promise for the return value
  */
-exports.del = exports['delete'] = sender("del");
+exports.del = exports['delete'] = dispatcher("del");
 
 /**
  * Invokes a method in a future turn.
@@ -678,7 +709,7 @@ exports.del = exports['delete'] = sender("del");
  *                  JSON serializable object.
  * @return promise for the return value
  */
-var post = exports.post = sender("post");
+var post = exports.post = dispatcher("post");
 
 /**
  * Invokes a method in a future turn.
@@ -695,28 +726,28 @@ exports.invoke = function (value, name) {
 /**
  * Applies the promised function in a future turn.
  * @param object    promise or immediate reference for target function
- * @param context   the context object (this) for the call
+ * @param thisp     the `this` object for the call
  * @param args      array of application arguments
  */
-var apply = exports.apply = sender("apply");
+var apply = exports.apply = dispatcher("apply");
 
 /**
  * Applies the promised function in a future turn.
  * @param object    promise or immediate reference for target function
  * @param args      array of application arguments
  */
-var fapply = exports.fapply = sender("fapply");
+var fapply = exports.fapply = dispatcher("fapply");
 
 /**
  * Calls the promised function in a future turn.
  * @param object    promise or immediate reference for target function
- * @param context   the context object (this) for the call
+ * @param thisp     the `this` object for the call
  * @param ...args   array of application arguments
  */
 exports.call = call;
-function call(value, context) {
+function call(value, thisp) {
     var args = slice.call(arguments, 2);
-    return apply(value, context, args);
+    return apply(value, thisp, args);
 }
 
 /**
@@ -734,33 +765,15 @@ function fcall(value) {
  * Binds the promised function, transforming return values into a fulfilled
  * promise and thrown errors into a rejected one.
  * @param object    promise or immediate reference for target function
- * @param context   the context object (this) for the call
+ * @param thisp   the `this` object for the call
  * @param ...args   array of application arguments
  */
 exports.bind = bind;
-function bind(value, context) {
+function bind(value, thisp) {
     var args = slice.call(arguments, 2);
-
     return function bound() {
         var allArgs = args.concat(slice.call(arguments));
-
-        if (this instanceof bound) {
-            var F = function () { };
-            F.prototype = value.prototype;
-            var self = new F();
-
-            var result = apply(value, self, allArgs);
-
-            return result.then(function (fulfilledValue) {
-                // if Object.isObject(fulfilledValue)
-                if (Object(fulfilledValue) === fulfilledValue) {
-                    return fulfilledValue;
-                }
-                return self;
-            });
-        } else {
-            return apply(value, context, allArgs);
-        }
+        return apply(value, thisp, allArgs);
     };
 }
 
@@ -785,7 +798,7 @@ function fbind(value) {
  * @param object    promise or immediate reference for target object
  * @return promise for the keys of the eventually resolved object
  */
-exports.keys = sender("keys");
+exports.keys = dispatcher("keys");
 
 /**
  * Turns an array of promises into a promise for an array.  If any of
@@ -925,34 +938,6 @@ function delay(promise, timeout) {
 }
 
 /**
- * Wraps a NodeJS continuation passing function and returns an equivalent
- * version that returns a promise.
- *
- *      Q.nbind(FS.readFile, FS)(__filename)
- *      .then(console.log)
- *      .end()
- *
- */
-exports.nbind = nbind;
-exports.node = nbind; // XXX deprecated
-function nbind(callback /* thisp, ...args*/) {
-    if (arguments.length > 1) {
-        var args = Array.prototype.slice.call(arguments, 1);
-        callback = callback.bind.apply(callback, args);
-    }
-    return function () {
-        var deferred = defer();
-        var args = slice.call(arguments);
-        // add a continuation that resolves the promise
-        args.push(deferred.node());
-        // trap exceptions thrown by the callback
-        apply(callback, this, args)
-        .fail(deferred.reject);
-        return deferred.promise;
-    };
-}
-
-/**
  * Passes a continuation to a Node function, which is called with a given
  * `this` value and arguments provided as an array, and returns a promise.
  *
@@ -981,6 +966,45 @@ exports.ncall = ncall;
 function ncall(callback, thisp /*, ...args*/) {
     var args = slice.call(arguments, 2);
     return napply(callback, thisp, args);
+}
+
+/**
+ * Wraps a NodeJS continuation passing function and returns an equivalent
+ * version that returns a promise.
+ *
+ *      Q.nbind(FS.readFile, FS)(__filename)
+ *      .then(console.log)
+ *      .end()
+ *
+ */
+exports.nbind = nbind;
+exports.node = nbind; // XXX deprecated
+function nbind(callback /* thisp, ...args*/) {
+    if (arguments.length > 1) {
+        var args = Array.prototype.slice.call(arguments, 1);
+        callback = callback.bind.apply(callback, args);
+    }
+    return function () {
+        var deferred = defer();
+        var args = slice.call(arguments);
+        // add a continuation that resolves the promise
+        args.push(deferred.node());
+        // trap exceptions thrown by the callback
+        apply(callback, this, args)
+        .fail(deferred.reject);
+        return deferred.promise;
+    };
+}
+
+exports.npost = npost;
+function npost(object, name, args) {
+    return napply(object[name], name, args);
+}
+
+exports.ninvoke = ninvoke;
+function ninvoke(object, name /*, ...args*/) {
+    var args = slice.call(arguments, 2);
+    return napply(object[name], name, args);
 }
 
 });
