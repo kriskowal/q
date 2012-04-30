@@ -7,13 +7,28 @@
   MessageChannel: true */
 /*!
  *
+ * Copyright 2009-2012 Kris Kowal under the terms of the MIT
+ * license found at http://github.com/kriskowal/q/raw/master/LICENSE
+ *
+ * With parts by Tyler Close
  * Copyright 2007-2009 Tyler Close under the terms of the MIT X license found
  * at http://www.opensource.org/licenses/mit-license.html
  * Forked at ref_send.js version: 2009-05-11
  *
- * Copyright 2009-2012 Kris Kowal under the terms of the MIT
- * license found at http://github.com/kriskowal/q/raw/master/LICENSE
+ * With parts by Mark Miller
+ * Copyright (C) 2011 Google Inc.
  *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 (function (definition) {
@@ -26,9 +41,22 @@
     // RequireJS
     if (typeof define === "function") {
         define(definition);
+
     // CommonJS
     } else if (typeof exports === "object") {
         definition(void 0, exports);
+
+    // SES (Secure EcmaScript)
+    } else if (typeof ses !== "undefined") {
+        if (!ses.ok()) {
+            return;
+        } else {
+            ses.makeQ = function () {
+                var Q = {};
+                return definition(void 0, Q);
+            };
+        }
+
     // <script>
     } else {
         definition(void 0, Q = {});
@@ -37,6 +65,23 @@
 })(function (require, exports) {
 "use strict";
 
+// shims
+
+// used for default "defend" and in "allResolved"
+var noop = function () {};
+
+// for the security conscious, defend may be a deep freeze as provided
+// by cajaVM.  Otherwise we try to provide a shallow freeze just to
+// discourage promise changes that are not compatible with secure
+// usage.  If Object.freeze does not exist, fall back to doing nothing
+// (no op).
+var defend = Object.freeze || noop;
+if (typeof cajaVM !== "undefined") {
+    defend = cajaVM.def;
+}
+
+// use the fastest possible means to execute a task in a future turn
+// of the event loop.
 var nextTick;
 if (typeof process !== "undefined") {
     // node
@@ -70,34 +115,34 @@ if (typeof process !== "undefined") {
     };
 }
 
-// useful for an identity stub and default resolvers
-function identity(x) { return x; }
-
-// shims
-function shim(object, name, shimmed) {
-    if (!object[name]) {
-        object[name] = shimmed;
-    }
-    return object[name];
+// Attempt to make generics safe in the face of downstream
+// modifications.
+// There is no situation where this is necessary.
+// If you need a security guarantee, these primordials need to be
+// deeply frozen anyway, and if you don’t need a security guarantee,
+// this is just plain paranoid.
+// However, this does have the nice side-effect of reducing the size
+// of the code by reducing x.call() to merely x(), eliminating many
+// hard-to-minify characters.
+// See Mark Miller’s explanation of what this does.
+// http://wiki.ecmascript.org/doku.php?id=conventions:safe_meta_programming
+var uncurryThis;
+// I have kept both variations because the first is theoretically
+// faster, if bind is available.
+if (Function.prototype.bind) {
+    var Function_bind = Function.prototype.bind;
+    uncurryThis = Function_bind.bind(Function_bind.call);
+} else {
+    uncurryThis = function (f) {
+        return function (thisp) {
+            return f.call.apply(f, arguments);
+        };
+    };
 }
 
-var freeze = shim(Object, "freeze", identity);
+var Array_slice = uncurryThis(Array.prototype.slice);
 
-var create = shim(Object, "create", function (prototype) {
-    function Type() { }
-    Type.prototype = prototype;
-    return new Type();
-});
-
-var keys = shim(Object, "keys", function (object) {
-    var keys = [];
-    for (var key in object) {
-        keys.push(key);
-    }
-    return keys;
-});
-
-var reduce = Array.prototype.reduce || function (callback, basis) {
+var Array_reduce = uncurryThis(Array.prototype.reduce || function (callback, basis) {
     var index = 0,
         length = this.length;
     // concerning the initial value, if one is not provided
@@ -122,23 +167,26 @@ var reduce = Array.prototype.reduce || function (callback, basis) {
         }
     }
     return basis;
+});
+
+var Object_create = Object.create || function (prototype) {
+    function Type() { }
+    Type.prototype = prototype;
+    return new Type();
 };
 
-function isStopIteration(exception) {
-    return Object.prototype.toString.call(exception) ===
-        "[object StopIteration]";
-}
-
-// Abbreviations for performance and minification
-var slice = Array.prototype.slice;
-
-function valueOf(value) {
-    // if !Object.isObject(value)
-    if (Object(value) !== value) {
-        return value;
-    } else {
-        return value.valueOf();
+var Object_keys = Object.keys || function (object) {
+    var keys = [];
+    for (var key in object) {
+        keys.push(key);
     }
+    return keys;
+};
+
+var Object_toString = Object.prototype.toString;
+
+function isStopIteration(exception) {
+    return Object_toString(exception) === "[object StopIteration]";
 }
 
 /**
@@ -157,7 +205,6 @@ exports.nextTick = nextTick;
  * resolver with that other promise.
  */
 exports.defer = defer;
-
 function defer() {
     // if "pending" is an "Array", that indicates that the promise has not yet
     // been resolved.  If it is "undefined", it has been resolved.  Each
@@ -167,11 +214,11 @@ function defer() {
     // resolved values and other promises gracefully.
     var pending = [], value;
 
-    var deferred = create(defer.prototype);
-    var promise = create(makePromise.prototype);
+    var deferred = Object_create(defer.prototype);
+    var promise = Object_create(makePromise.prototype);
 
     promise.promiseSend = function () {
-        var args = slice.call(arguments);
+        var args = Array_slice(arguments);
         if (pending) {
             pending.push(args);
         } else {
@@ -193,7 +240,7 @@ function defer() {
             return;
         }
         value = resolve(resolvedValue);
-        reduce.call(pending, function (undefined, pending) {
+        Array_reduce(pending, function (undefined, pending) {
             nextTick(function () {
                 value.promiseSend.apply(value, pending);
             });
@@ -202,7 +249,9 @@ function defer() {
         return value;
     }
 
-    deferred.promise = freeze(promise);
+    defend(promise);
+
+    deferred.promise = promise;
     deferred.resolve = become;
     deferred.reject = function (exception) {
         return become(reject(exception));
@@ -216,14 +265,13 @@ function defer() {
  * promise.
  * @returns a nodeback
  */
-defer.prototype.node = // XXX deprecated
 defer.prototype.makeNodeResolver = function () {
     var self = this;
     return function (error, value) {
         if (error) {
             self.reject(error);
         } else if (arguments.length > 2) {
-            self.resolve(Array.prototype.slice.call(arguments, 1));
+            self.resolve(Array_slice(arguments, 1));
         } else {
             self.resolve(value);
         }
@@ -267,10 +315,10 @@ function makePromise(descriptor, fallback, valueOf, rejected) {
         };
     }
 
-    var promise = create(makePromise.prototype);
+    var promise = Object_create(makePromise.prototype);
 
     promise.promiseSend = function (op, resolved /* ...args */) {
-        var args = slice.call(arguments, 2);
+        var args = Array_slice(arguments, 2);
         var result;
         try {
             if (descriptor[op]) {
@@ -292,7 +340,9 @@ function makePromise(descriptor, fallback, valueOf, rejected) {
         promise.promiseRejected = true;
     }
 
-    return freeze(promise);
+    defend(promise);
+
+    return promise;
 }
 
 // provide thenables, CommonJS/Promises/A
@@ -301,7 +351,7 @@ makePromise.prototype.then = function (fulfilled, rejected) {
 };
 
 // Chainable methods
-reduce.call(
+Array_reduce(
     [
         "isResolved", "isFulfilled", "isRejected",
         "when", "spread", "send",
@@ -319,7 +369,7 @@ reduce.call(
         makePromise.prototype[name] = function () {
             return exports[name].apply(
                 exports,
-                [this].concat(slice.call(arguments))
+                [this].concat(Array_slice(arguments))
             );
         };
     },
@@ -334,7 +384,26 @@ makePromise.prototype.toString = function () {
     return '[object Promise]';
 };
 
-freeze(makePromise.prototype);
+defend(makePromise.prototype);
+
+/**
+ * If an object is not a promise, it is as "near" as possible.
+ * If a promise is rejected, it is as "near" as possible too.
+ * If it’s a fulfilled promise, the fulfillment value is nearer.
+ * If it’s a deferred promise and the deferred has been resolved, the
+ * resolution is "nearer".
+ * @param object
+ * @returns most resolved (nearest) form of the object
+ */
+exports.nearer = valueOf;
+function valueOf(value) {
+    // if !Object.isObject(value)
+    if (Object(value) !== value) {
+        return value;
+    } else {
+        return value.valueOf();
+    }
+}
 
 /**
  * @returns whether the given object is a promise.
@@ -493,7 +562,7 @@ function master(object) {
     return makePromise({
         "isDef": function () {}
     }, function fallback(op) {
-        var args = slice.call(arguments);
+        var args = Array_slice(arguments);
         return send.apply(void 0, [object].concat(args));
     }, function () {
         return valueOf(object);
@@ -509,7 +578,7 @@ function viewInfo(object, info) {
                 return info;
             }
         }, function fallback(op) {
-            var args = slice.call(arguments);
+            var args = Array_slice(arguments);
             return send.apply(void 0, [object].concat(args));
         }, function () {
             return valueOf(object);
@@ -531,7 +600,7 @@ function view(object) {
             view = {};
         }
         var properties = info.properties || {};
-        Object.keys(properties).forEach(function (name) {
+        Object_keys(properties).forEach(function (name) {
             if (properties[name] === "function") {
                 view[name] = function () {
                     return post(object, name, arguments);
@@ -675,7 +744,7 @@ exports.sender = sender;
 exports.Method = sender; // XXX deprecated
 function sender(op) {
     return function (object) {
-        var args = slice.call(arguments, 1);
+        var args = Array_slice(arguments, 1);
         return send.apply(void 0, [object, op].concat(args));
     };
 }
@@ -690,7 +759,7 @@ function sender(op) {
 exports.send = send;
 function send(object, op) {
     var deferred = defer();
-    var args = slice.call(arguments, 2);
+    var args = Array_slice(arguments, 2);
     object = resolve(object);
     nextTick(function () {
         object.promiseSend.apply(
@@ -730,7 +799,7 @@ function dispatch(object, op, args) {
 exports.dispatcher = dispatcher;
 function dispatcher(op) {
     return function (object) {
-        var args = slice.call(arguments, 1);
+        var args = Array_slice(arguments, 1);
         return dispatch(object, op, args);
     };
 }
@@ -781,7 +850,7 @@ var post = exports.post = dispatcher("post");
  * @return promise for the return value
  */
 exports.invoke = function (value, name) {
-    var args = slice.call(arguments, 2);
+    var args = Array_slice(arguments, 2);
     return post(value, name, args);
 };
 
@@ -808,7 +877,7 @@ var fapply = exports.fapply = dispatcher("fapply");
  */
 exports.call = call;
 function call(value, thisp) {
-    var args = slice.call(arguments, 2);
+    var args = Array_slice(arguments, 2);
     return apply(value, thisp, args);
 }
 
@@ -819,7 +888,7 @@ function call(value, thisp) {
  */
 exports.fcall = exports['try'] = fcall;
 function fcall(value) {
-    var args = slice.call(arguments, 1);
+    var args = Array_slice(arguments, 1);
     return fapply(value, args);
 }
 
@@ -832,9 +901,9 @@ function fcall(value) {
  */
 exports.bind = bind;
 function bind(value, thisp) {
-    var args = slice.call(arguments, 2);
+    var args = Array_slice(arguments, 2);
     return function bound() {
-        var allArgs = args.concat(slice.call(arguments));
+        var allArgs = args.concat(Array_slice(arguments));
         return apply(value, thisp, allArgs);
     };
 }
@@ -847,9 +916,9 @@ function bind(value, thisp) {
  */
 exports.fbind = fbind;
 function fbind(value) {
-    var args = slice.call(arguments, 1);
+    var args = Array_slice(arguments, 1);
     return function fbound() {
-        var allArgs = args.concat(slice.call(arguments));
+        var allArgs = args.concat(Array_slice(arguments));
         return fapply(value, allArgs);
     };
 }
@@ -879,7 +948,7 @@ function all(promises) {
             return resolve(promises);
         }
         var deferred = defer();
-        reduce.call(promises, function (undefined, promise, index) {
+        Array_reduce(promises, function (undefined, promise, index) {
             when(promise, function (value) {
                 promises[index] = value;
                 if (--countDown === 0) {
@@ -896,7 +965,7 @@ exports.allResolved = allResolved;
 function allResolved(promises) {
     return when(promises, function (promises) {
         return when(all(promises.map(function (promise) {
-            return when(promise, identity, identity);
+            return when(promise, noop, noop);
         })), function () {
             return promises.map(resolve);
         });
@@ -1026,7 +1095,7 @@ function napply(callback, thisp, args) {
  */
 exports.ncall = ncall;
 function ncall(callback, thisp /*, ...args*/) {
-    var args = slice.call(arguments, 2);
+    var args = Array_slice(arguments, 2);
     return napply(callback, thisp, args);
 }
 
@@ -1040,17 +1109,16 @@ function ncall(callback, thisp /*, ...args*/) {
  *
  */
 exports.nbind = nbind;
-exports.node = nbind; // XXX deprecated
 function nbind(callback /* thisp, ...args*/) {
     if (arguments.length > 1) {
-        var args = Array.prototype.slice.call(arguments, 1);
+        var args = Array_slice(arguments, 1);
         callback = callback.bind.apply(callback, args);
     }
     return function () {
         var deferred = defer();
-        var args = slice.call(arguments);
+        var args = Array_slice(arguments);
         // add a continuation that resolves the promise
-        args.push(deferred.node());
+        args.push(deferred.makeNodeResolver());
         // trap exceptions thrown by the callback
         apply(callback, this, args)
         .fail(deferred.reject);
@@ -1065,8 +1133,10 @@ function npost(object, name, args) {
 
 exports.ninvoke = ninvoke;
 function ninvoke(object, name /*, ...args*/) {
-    var args = slice.call(arguments, 2);
+    var args = Array_slice(arguments, 2);
     return napply(object[name], name, args);
 }
+
+defend(exports);
 
 });

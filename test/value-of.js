@@ -18,15 +18,15 @@ exports['test defer defer'] = function (ASSERT) {
     ASSERT.ok(Q.isResolved(d.promise), 'resolved');
 };
 
-exports['test ref undefined'] = function (ASSERT) {
-    var r = Q.ref();
+exports['test resolve undefined'] = function (ASSERT) {
+    var r = Q.resolve();
     ASSERT.ok(Q.isResolved(r), 'isResolved');
     ASSERT.equal(r.valueOf(), undefined, 'valueOf');
 };
 
-exports['test ref defined'] = function (ASSERT) {
+exports['test resolve defined'] = function (ASSERT) {
     var o = {};
-    var r = Q.ref(o);
+    var r = Q.resolve(o);
     ASSERT.ok(Q.isResolved(r), 'isResolved');
     ASSERT.ok(r.valueOf() === o, 'valueOf');
 };
