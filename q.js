@@ -170,13 +170,13 @@ function defer() {
     var deferred = create(defer.prototype);
     var promise = create(makePromise.prototype);
 
-    promise.promiseSend = function () {
+    promise.promiseDispatch = function () {
         var args = slice.call(arguments);
         if (pending) {
             pending.push(args);
         } else {
             nextTick(function () {
-                value.promiseSend.apply(value, args);
+                value.promiseDispatch.apply(value, args);
             });
         }
     };
@@ -195,7 +195,7 @@ function defer() {
         value = resolve(resolvedValue);
         reduce.call(pending, function (undefined, pending) {
             nextTick(function () {
-                value.promiseSend.apply(value, pending);
+                value.promiseDispatch.apply(value, pending);
             });
         }, void 0);
         pending = void 0;
@@ -269,19 +269,16 @@ function makePromise(descriptor, fallback, valueOf, rejected) {
 
     var promise = create(makePromise.prototype);
 
-    promise.promiseSend = function (op, resolved /* ...args */) {
-        var args = slice.call(arguments, 2);
-        var result;
+    promise.promiseDispatch = function (resolve, op, args) {
         try {
             if (descriptor[op]) {
-                result = descriptor[op].apply(promise, args);
+                resolve(descriptor[op].apply(promise, args));
             } else {
-                result = fallback.call(promise, op, args);
+                resolve(fallback.call(promise, op, args));
             }
         } catch (exception) {
-            result = reject(exception);
+            resolve(reject(exception));
         }
-        resolved(result);
     };
 
     if (valueOf) {
@@ -342,7 +339,7 @@ freeze(makePromise.prototype);
  */
 exports.isPromise = isPromise;
 function isPromise(object) {
-    return object && typeof object.promiseSend === "function";
+    return object && typeof object.promiseDispatch === "function";
 }
 
 /**
@@ -518,23 +515,35 @@ function when(value, fulfilled, rejected) {
     }
 
     nextTick(function () {
-        resolve(value).promiseSend("when", function (value) {
-            if (done) {
-                return;
-            }
-            done = true;
-            resolve(value).promiseSend("when", function (value) {
-                deferred.resolve(_fulfilled(value));
-            }, function (exception) {
-                deferred.resolve(_rejected(exception));
-            });
-        }, function (exception) {
-            if (done) {
-                return;
-            }
-            done = true;
-            deferred.resolve(_rejected(exception));
-        });
+        resolve(value).promiseDispatch(
+            function (value) {
+                if (done) {
+                    return;
+                }
+                done = true;
+                resolve(value).promiseDispatch(
+                    function (value) {
+                        deferred.resolve(_fulfilled(value));
+                    },
+                    "when",
+                    [
+                        function (exception) {
+                            deferred.resolve(_rejected(exception));
+                        }
+                    ]
+                );
+            },
+            "when",
+            [
+                function (exception) {
+                    if (done) {
+                        return;
+                    }
+                    done = true;
+                    deferred.resolve(_rejected(exception));
+                }
+            ]
+        );
     });
 
     return deferred.promise;
@@ -615,12 +624,8 @@ function async(makeGenerator) {
 exports.dispatch = dispatch;
 function dispatch(object, op, args) {
     var deferred = defer();
-    object = resolve(object);
     nextTick(function () {
-        object.promiseSend.apply(
-            object,
-            [op, deferred.resolve].concat(args)
-        );
+        resolve(object).promiseDispatch(deferred.resolve, op, args);
     });
     return deferred.promise;
 }
