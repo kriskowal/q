@@ -381,7 +381,7 @@ makePromise.prototype.toSource = function () {
 };
 
 makePromise.prototype.toString = function () {
-    return '[object Promise]';
+    return "[object Promise]";
 };
 
 defend(makePromise.prototype);
@@ -554,7 +554,7 @@ function resolve(object) {
  * communication channel.
  * @param object
  * @returns promise a wrapping of that object that
- * additionally responds to the 'isDef' message
+ * additionally responds to the "isDef" message
  * without a rejection.
  */
 exports.master = master;
@@ -671,6 +671,8 @@ function when(value, fulfilled, rejected) {
     return deferred.promise;
 }
 
+/**
+ */
 exports.spread = spread;
 function spread(promise, fulfilled, rejected) {
     return when(promise, function (values) {
@@ -826,7 +828,7 @@ exports.put = dispatcher("put");
  * @param name      name of property to delete
  * @return promise for the return value
  */
-exports.del = exports['delete'] = dispatcher("del");
+exports.del = exports["delete"] = dispatcher("del");
 
 /**
  * Invokes a method in a future turn.
@@ -886,7 +888,7 @@ function call(value, thisp) {
  * @param object    promise or immediate reference for target function
  * @param ...args   array of application arguments
  */
-exports.fcall = exports['try'] = fcall;
+exports.fcall = exports["try"] = fcall;
 function fcall(value) {
     var args = Array_slice(arguments, 1);
     return fapply(value, args);
@@ -961,6 +963,8 @@ function all(promises) {
     });
 }
 
+/**
+ */
 exports.allResolved = allResolved;
 function allResolved(promises) {
     return when(promises, function (promises) {
@@ -981,7 +985,7 @@ function allResolved(promises) {
  * given promise is rejected
  * @returns a promise for the return value of the callback
  */
-exports['catch'] =
+exports["catch"] =
 exports.fail = fail;
 function fail(promise, rejected) {
     return when(promise, void 0, rejected);
@@ -998,7 +1002,7 @@ function fail(promise, rejected) {
  * @returns a promise for the resolution of the given promise when
  * ``fin`` is done.
  */
-exports['finally'] =
+exports["finally"] =
 exports.fin = fin;
 function fin(promise, callback) {
     return when(promise, function (value) {
@@ -1120,17 +1124,21 @@ function nbind(callback /* thisp, ...args*/) {
         // add a continuation that resolves the promise
         args.push(deferred.makeNodeResolver());
         // trap exceptions thrown by the callback
-        apply(callback, this, args)
+        fapply(callback, args)
         .fail(deferred.reject);
         return deferred.promise;
     };
 }
 
+/**
+ */
 exports.npost = npost;
 function npost(object, name, args) {
     return napply(object[name], name, args);
 }
 
+/**
+ */
 exports.ninvoke = ninvoke;
 function ninvoke(object, name /*, ...args*/) {
     var args = Array_slice(arguments, 2);
