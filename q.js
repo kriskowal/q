@@ -356,7 +356,6 @@ Array_reduce(
         "get", "put", "del",
         "post", "invoke",
         "keys",
-        "apply", "call", "bind",
         "fapply", "fcall", "fbind",
         "all", "allResolved",
         "timeout", "delay",
@@ -511,10 +510,7 @@ function resolve(object) {
         "post": function (name, value) {
             return object[name].apply(object, value);
         },
-        "apply": function (self, args) {
-            return object.apply(self, args);
-        },
-        "fapply": function (args) {
+        "apply": function (args) {
             return object.apply(void 0, args);
         },
         "keys": function () {
@@ -765,29 +761,9 @@ exports.invoke = function (value, name) {
 /**
  * Applies the promised function in a future turn.
  * @param object    promise or immediate reference for target function
- * @param thisp     the `this` object for the call
  * @param args      array of application arguments
  */
-var apply = exports.apply = dispatcher("apply");
-
-/**
- * Applies the promised function in a future turn.
- * @param object    promise or immediate reference for target function
- * @param args      array of application arguments
- */
-var fapply = exports.fapply = dispatcher("fapply");
-
-/**
- * Calls the promised function in a future turn.
- * @param object    promise or immediate reference for target function
- * @param thisp     the `this` object for the call
- * @param ...args   array of application arguments
- */
-exports.call = call;
-function call(value, thisp) {
-    var args = Array_slice(arguments, 2);
-    return apply(value, thisp, args);
-}
+var fapply = exports.fapply = dispatcher("apply");
 
 /**
  * Calls the promised function in a future turn.
@@ -798,22 +774,6 @@ exports.fcall = exports['try'] = fcall;
 function fcall(value) {
     var args = Array_slice(arguments, 1);
     return fapply(value, args);
-}
-
-/**
- * Binds the promised function, transforming return values into a fulfilled
- * promise and thrown errors into a rejected one.
- * @param object    promise or immediate reference for target function
- * @param thisp   the `this` object for the call
- * @param ...args   array of application arguments
- */
-exports.bind = bind;
-function bind(value, thisp) {
-    var args = Array_slice(arguments, 2);
-    return function bound() {
-        var allArgs = args.concat(Array_slice(arguments));
-        return apply(value, thisp, allArgs);
-    };
 }
 
 /**

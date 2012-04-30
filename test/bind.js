@@ -5,7 +5,7 @@ var Q = require("../q");
 exports['test transforms return into fulfill'] = function (ASSERT, done) {
     var returnVal = {};
 
-    var bound = Q.bind(function () {
+    var bound = Q.fbind(function () {
         return returnVal;
     });
 
@@ -24,7 +24,7 @@ exports['test transforms return into fulfill'] = function (ASSERT, done) {
 exports['test transforms throw into reject'] = function (ASSERT, done) {
     var throwMe = new Error("boo!");
 
-    var bound = Q.bind(function () {
+    var bound = Q.fbind(function () {
         throw throwMe;
     });
 
@@ -44,7 +44,7 @@ exports['test passes through arguments'] = function (ASSERT, done) {
     var x = {};
     var y = {};
 
-    var bound = Q.bind(function (a, b) {
+    var bound = Q.fbind(function (a, b) {
         ASSERT.strictEqual(a, x, "first argument correct");
         ASSERT.strictEqual(b, y, "second argument correct");
     });
@@ -63,10 +63,10 @@ exports['test combining bound and free arguments'] = function (ASSERT, done) {
     var x = {};
     var y = {};
 
-    var bound = Q.bind(function (a, b) {
+    var bound = Q.fbind(function (a, b) {
         ASSERT.strictEqual(a, x, "first argument correct");
         ASSERT.strictEqual(b, y, "second argument correct");
-    }, null, x);
+    }, x);
 
     bound(y)
     .then(function () {
@@ -78,25 +78,8 @@ exports['test combining bound and free arguments'] = function (ASSERT, done) {
     .fin(done);
 };
 
-exports['test invokes with correct context'] = function (ASSERT, done) {
-    var context = {};
-
-    var bound = Q.bind(function () {
-        ASSERT.strictEqual(this, context, "context correct");
-    }, context);
-
-    bound()
-    .then(function () {
-        ASSERT.ok(true, "fulfilled");
-    })
-    .fail(function (reason) {
-        ASSERT.ok(false, reason);
-    })
-    .fin(done);
-};
-
-exports['test uses existing context if none given'] = function (ASSERT, done) {
-    var bound = Q.bind(function () {
+exports['test uses existing context'] = function (ASSERT, done) {
+    var bound = Q.fbind(function () {
         return this;
     });
 
