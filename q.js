@@ -987,34 +987,6 @@ function delay(promise, timeout) {
 }
 
 /**
- * Wraps a NodeJS continuation passing function and returns an equivalent
- * version that returns a promise.
- *
- *      Q.nbind(FS.readFile, FS)(__filename)
- *      .then(console.log)
- *      .end()
- *
- */
-exports.nbind = nbind;
-exports.node = nbind; // XXX deprecated
-function nbind(callback /* thisp, ...args*/) {
-    if (arguments.length > 1) {
-        var args = Array.prototype.slice.call(arguments, 1);
-        callback = callback.bind.apply(callback, args);
-    }
-    return function () {
-        var deferred = defer();
-        var args = slice.call(arguments);
-        // add a continuation that resolves the promise
-        args.push(deferred.node());
-        // trap exceptions thrown by the callback
-        apply(callback, this, args)
-        .fail(deferred.reject);
-        return deferred.promise;
-    };
-}
-
-/**
  * Passes a continuation to a Node function, which is called with a given
  * `this` value and arguments provided as an array, and returns a promise.
  *
@@ -1043,6 +1015,45 @@ exports.ncall = ncall;
 function ncall(callback, thisp /*, ...args*/) {
     var args = slice.call(arguments, 2);
     return napply(callback, thisp, args);
+}
+
+/**
+ * Wraps a NodeJS continuation passing function and returns an equivalent
+ * version that returns a promise.
+ *
+ *      Q.nbind(FS.readFile, FS)(__filename)
+ *      .then(console.log)
+ *      .end()
+ *
+ */
+exports.nbind = nbind;
+exports.node = nbind; // XXX deprecated
+function nbind(callback /* thisp, ...args*/) {
+    if (arguments.length > 1) {
+        var args = Array.prototype.slice.call(arguments, 1);
+        callback = callback.bind.apply(callback, args);
+    }
+    return function () {
+        var deferred = defer();
+        var args = slice.call(arguments);
+        // add a continuation that resolves the promise
+        args.push(deferred.node());
+        // trap exceptions thrown by the callback
+        apply(callback, this, args)
+        .fail(deferred.reject);
+        return deferred.promise;
+    };
+}
+
+exports.npost = npost;
+function npost(object, name, args) {
+    return napply(object[name], name, args);
+}
+
+exports.ninvoke = ninvoke;
+function ninvoke(object, name /*, ...args*/) {
+    var args = slice.call(arguments, 2);
+    return napply(object[name], name, args);
 }
 
 });
