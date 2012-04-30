@@ -311,7 +311,6 @@ reduce.call(
         "apply", "call", "bind",
         "fapply", "fcall", "fbind",
         "all", "allResolved",
-        "view", "viewInfo",
         "timeout", "delay",
         "catch", "finally", "fail", "fin", "end"
     ],
@@ -449,25 +448,6 @@ function resolve(object) {
         "apply": function (self, args) {
             return object.apply(self, args);
         },
-        "viewInfo": function () {
-            var on = object;
-            var properties = {};
-
-            function fixFalsyProperty(name) {
-                if (!properties[name]) {
-                    properties[name] = typeof on[name];
-                }
-            }
-
-            while (on) {
-                Object.getOwnPropertyNames(on).forEach(fixFalsyProperty);
-                on = Object.getPrototypeOf(on);
-            }
-            return {
-                "type": typeof object,
-                "properties": properties
-            };
-        },
         "fapply": function (args) {
             return object.apply(void 0, args);
         },
@@ -497,48 +477,6 @@ function master(object) {
         return send.apply(void 0, [object].concat(args));
     }, function () {
         return valueOf(object);
-    });
-}
-
-exports.viewInfo = viewInfo;
-function viewInfo(object, info) {
-    object = resolve(object);
-    if (info) {
-        return makePromise({
-            "viewInfo": function () {
-                return info;
-            }
-        }, function fallback(op) {
-            var args = slice.call(arguments);
-            return send.apply(void 0, [object].concat(args));
-        }, function () {
-            return valueOf(object);
-        });
-    } else {
-        return send(object, "viewInfo");
-    }
-}
-
-exports.view = view;
-function view(object) {
-    return viewInfo(object).when(function (info) {
-        var view;
-        if (info.type === "function") {
-            view = function () {
-                return apply(object, void 0, arguments);
-            };
-        } else {
-            view = {};
-        }
-        var properties = info.properties || {};
-        Object.keys(properties).forEach(function (name) {
-            if (properties[name] === "function") {
-                view[name] = function () {
-                    return post(object, name, arguments);
-                };
-            }
-        });
-        return resolve(view);
     });
 }
 
