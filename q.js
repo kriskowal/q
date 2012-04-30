@@ -670,8 +670,6 @@ function async(makeGenerator) {
 /**
  * Constructs a promise method that can be used to safely observe resolution of
  * a promise for an arbitrarily named method like "propfind" in a future turn.
- *
- * "sender" constructs methods like "get(promise, name)" and "put(promise)".
  */
 exports.sender = sender;
 exports.Method = sender; // XXX deprecated
@@ -704,12 +702,45 @@ function send(object, op) {
 }
 
 /**
+ * sends a message to a value in a future turn
+ * @param object* the recipient
+ * @param op the name of the message operation, e.g., "when",
+ * @param args further arguments to be forwarded to the operation
+ * @returns result {Promise} a promise for the result of the operation
+ */
+exports.dispatch = dispatch;
+function dispatch(object, op, args) {
+    var deferred = defer();
+    object = resolve(object);
+    nextTick(function () {
+        object.promiseSend.apply(
+            object,
+            [op, deferred.resolve].concat(args)
+        );
+    });
+    return deferred.promise;
+}
+
+/**
+ * Constructs a promise method that can be used to safely observe resolution of
+ * a promise for an arbitrarily named method like "propfind" in a future turn.
+ *
+ * "dispatcher" constructs methods like "get(promise, name)" and "put(promise)".
+ */
+exports.dispatcher = dispatcher;
+function dispatcher(op) {
+    return function (object) {
+        var args = slice.call(arguments, 1);
+        return dispatch(object, op, args);
+    };
+}
+/**
  * Gets the value of a property in a future turn.
  * @param object    promise or immediate reference for target object
  * @param name      name of property to get
  * @return promise for the property value
  */
-exports.get = sender("get");
+exports.get = dispatcher("get");
 
 /**
  * Sets the value of a property in a future turn.
@@ -718,7 +749,7 @@ exports.get = sender("get");
  * @param value     new value of property
  * @return promise for the return value
  */
-exports.put = sender("put");
+exports.put = dispatcher("put");
 
 /**
  * Deletes a property in a future turn.
@@ -726,7 +757,7 @@ exports.put = sender("put");
  * @param name      name of property to delete
  * @return promise for the return value
  */
-exports.del = exports['delete'] = sender("del");
+exports.del = exports['delete'] = dispatcher("del");
 
 /**
  * Invokes a method in a future turn.
@@ -740,7 +771,7 @@ exports.del = exports['delete'] = sender("del");
  *                  JSON serializable object.
  * @return promise for the return value
  */
-var post = exports.post = sender("post");
+var post = exports.post = dispatcher("post");
 
 /**
  * Invokes a method in a future turn.
@@ -760,14 +791,14 @@ exports.invoke = function (value, name) {
  * @param context   the context object (this) for the call
  * @param args      array of application arguments
  */
-var apply = exports.apply = sender("apply");
+var apply = exports.apply = dispatcher("apply");
 
 /**
  * Applies the promised function in a future turn.
  * @param object    promise or immediate reference for target function
  * @param args      array of application arguments
  */
-var fapply = exports.fapply = sender("fapply");
+var fapply = exports.fapply = dispatcher("fapply");
 
 /**
  * Calls the promised function in a future turn.
@@ -847,7 +878,7 @@ function fbind(value) {
  * @param object    promise or immediate reference for target object
  * @return promise for the keys of the eventually resolved object
  */
-exports.keys = sender("keys");
+exports.keys = dispatcher("keys");
 
 /**
  * Turns an array of promises into a promise for an array.  If any of
