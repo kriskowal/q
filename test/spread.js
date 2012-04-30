@@ -3,7 +3,7 @@
 var Q = require("../q");
 
 exports['test spread'] = function (ASSERT, done) {
-    Q.ref([1,2,3])
+    Q.resolve([1,2,3])
     .spread(function (a, b, c) {
         ASSERT.equal(a, 1, 'spread 1');
         ASSERT.equal(b, 2, 'spread 2');
@@ -17,7 +17,7 @@ exports['test spread'] = function (ASSERT, done) {
 };
 
 exports['test spread all'] = function (ASSERT, done) {
-    Q.ref([1,2,3].map(Q.ref))
+    Q.resolve([1,2,3].map(Q.resolve))
     .all()
     .spread(function (a, b, c) {
         ASSERT.equal(a, 1, 'spread 1');
