@@ -276,7 +276,7 @@ function makePromise(descriptor, fallback, valueOf, rejected) {
             if (descriptor[op]) {
                 result = descriptor[op].apply(promise, args);
             } else {
-                result = fallback.apply(promise, [op].concat(args));
+                result = fallback.call(promise, op, args);
             }
         } catch (exception) {
             result = reject(exception);
@@ -304,7 +304,8 @@ makePromise.prototype.then = function (fulfilled, rejected) {
 reduce.call(
     [
         "isResolved", "isFulfilled", "isRejected",
-        "when", "spread", "send",
+        "dispatch",
+        "when", "spread",
         "get", "put", "del",
         "post", "invoke",
         "keys",
@@ -472,9 +473,8 @@ exports.master = master;
 function master(object) {
     return makePromise({
         "isDef": function () {}
-    }, function fallback(op) {
-        var args = slice.call(arguments);
-        return send.apply(void 0, [object].concat(args));
+    }, function fallback(op, args) {
+        return dispatch(object, op, args);
     }, function () {
         return valueOf(object);
     });
@@ -603,40 +603,6 @@ function async(makeGenerator) {
         var errback = continuer.bind(continuer, "throw");
         return callback();
     };
-}
-
-/**
- * Constructs a promise method that can be used to safely observe resolution of
- * a promise for an arbitrarily named method like "propfind" in a future turn.
- */
-exports.sender = sender;
-exports.Method = sender; // XXX deprecated
-function sender(op) {
-    return function (object) {
-        var args = slice.call(arguments, 1);
-        return send.apply(void 0, [object, op].concat(args));
-    };
-}
-
-/**
- * sends a message to a value in a future turn
- * @param object* the recipient
- * @param op the name of the message operation, e.g., "when",
- * @param ...args further arguments to be forwarded to the operation
- * @returns result {Promise} a promise for the result of the operation
- */
-exports.send = send;
-function send(object, op) {
-    var deferred = defer();
-    var args = slice.call(arguments, 2);
-    object = resolve(object);
-    nextTick(function () {
-        object.promiseSend.apply(
-            object,
-            [op, deferred.resolve].concat(args)
-        );
-    });
-    return deferred.promise;
 }
 
 /**
