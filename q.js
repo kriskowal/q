@@ -413,7 +413,6 @@ function reject(exception) {
  */
 exports.begin = resolve;
 exports.resolve = resolve;
-exports.ref = resolve; // XXX deprecated
 function resolve(object) {
     // If the object is already a Promise, return it directly.  This enables
     // the resolve function to both be used to created references from objects,
