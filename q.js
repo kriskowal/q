@@ -788,7 +788,7 @@ exports.invoke = function (value, name) {
 /**
  * Applies the promised function in a future turn.
  * @param object    promise or immediate reference for target function
- * @param context   the context object (this) for the call
+ * @param thisp     the `this` object for the call
  * @param args      array of application arguments
  */
 var apply = exports.apply = dispatcher("apply");
@@ -803,13 +803,13 @@ var fapply = exports.fapply = dispatcher("fapply");
 /**
  * Calls the promised function in a future turn.
  * @param object    promise or immediate reference for target function
- * @param context   the context object (this) for the call
+ * @param thisp     the `this` object for the call
  * @param ...args   array of application arguments
  */
 exports.call = call;
-function call(value, context) {
+function call(value, thisp) {
     var args = slice.call(arguments, 2);
-    return apply(value, context, args);
+    return apply(value, thisp, args);
 }
 
 /**
@@ -827,33 +827,15 @@ function fcall(value) {
  * Binds the promised function, transforming return values into a fulfilled
  * promise and thrown errors into a rejected one.
  * @param object    promise or immediate reference for target function
- * @param context   the context object (this) for the call
+ * @param thisp   the `this` object for the call
  * @param ...args   array of application arguments
  */
 exports.bind = bind;
-function bind(value, context) {
+function bind(value, thisp) {
     var args = slice.call(arguments, 2);
-
     return function bound() {
         var allArgs = args.concat(slice.call(arguments));
-
-        if (this instanceof bound) {
-            var F = function () { };
-            F.prototype = value.prototype;
-            var self = new F();
-
-            var result = apply(value, self, allArgs);
-
-            return result.then(function (fulfilledValue) {
-                // if Object.isObject(fulfilledValue)
-                if (Object(fulfilledValue) === fulfilledValue) {
-                    return fulfilledValue;
-                }
-                return self;
-            });
-        } else {
-            return apply(value, context, allArgs);
-        }
+        return apply(value, thisp, allArgs);
     };
 }
 
