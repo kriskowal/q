@@ -67,7 +67,7 @@
 
 // shims
 
-// used for default "defend" and in "allResolved"
+// used for fallback "defend" and in "allResolved"
 var noop = function () {};
 
 // for the security conscious, defend may be a deep freeze as provided
@@ -142,32 +142,34 @@ if (Function.prototype.bind) {
 
 var Array_slice = uncurryThis(Array.prototype.slice);
 
-var Array_reduce = uncurryThis(Array.prototype.reduce || function (callback, basis) {
-    var index = 0,
-        length = this.length;
-    // concerning the initial value, if one is not provided
-    if (arguments.length === 1) {
-        // seek to the first value in the array, accounting
-        // for the possibility that is is a sparse array
-        do {
-            if (index in this) {
-                basis = this[index++];
-                break;
-            }
-            if (++index >= length) {
-                throw new TypeError();
-            }
-        } while (1);
-    }
-    // reduce
-    for (; index < length; index++) {
-        // account for the possibility that the array is sparse
-        if (index in this) {
-            basis = callback(basis, this[index], index);
+var Array_reduce = uncurryThis(
+    Array.prototype.reduce || function (callback, basis) {
+        var index = 0,
+            length = this.length;
+        // concerning the initial value, if one is not provided
+        if (arguments.length === 1) {
+            // seek to the first value in the array, accounting
+            // for the possibility that is is a sparse array
+            do {
+                if (index in this) {
+                    basis = this[index++];
+                    break;
+                }
+                if (++index >= length) {
+                    throw new TypeError();
+                }
+            } while (1);
         }
+        // reduce
+        for (; index < length; index++) {
+            // account for the possibility that the array is sparse
+            if (index in this) {
+                basis = callback(basis, this[index], index);
+            }
+        }
+        return basis;
     }
-    return basis;
-});
+);
 
 var Object_create = Object.create || function (prototype) {
     function Type() { }
@@ -186,7 +188,16 @@ var Object_keys = Object.keys || function (object) {
 var Object_toString = Object.prototype.toString;
 
 function isStopIteration(exception) {
-    return Object_toString(exception) === "[object StopIteration]";
+    return (
+        Object_toString(exception) === "[object StopIteration]" ||
+        exception instanceof ReturnValue
+    );
+}
+
+if (typeof ReturnValue === "undefined") {
+    new Function("return this")().ReturnValue = function (value) {
+        this.value = value;
+    };
 }
 
 /**
@@ -265,6 +276,7 @@ function defer() {
  * promise.
  * @returns a nodeback
  */
+defer.prototype.node = // XXX deprecated
 defer.prototype.makeNodeResolver = function () {
     var self = this;
     return function (error, value) {
@@ -479,7 +491,7 @@ function reject(exception) {
  * Constructs a promise for an immediate reference.
  * @param value immediate reference
  */
-exports.begin = resolve;
+exports.begin = resolve; // XXX experimental
 exports.resolve = resolve;
 function resolve(object) {
     // If the object is already a Promise, return it directly.  This enables
@@ -614,6 +626,14 @@ function when(value, fulfilled, rejected) {
 }
 
 /**
+ * Spreads the values of a promised array of arguments into the
+ * fulfillment callback.
+ * @param fulfilled callback that receives variadic arguments from the
+ * promised array
+ * @param rejected callback that receives the exception if the promise
+ * is rejected.
+ * @returns a promise for the return value or thrown exception of
+ * either callback.
  */
 exports.spread = spread;
 function spread(promise, fulfilled, rejected) {
@@ -681,6 +701,24 @@ function async(makeGenerator) {
 }
 
 /**
+ * Throws a ReturnValue exception to stop an asynchronous generator.
+ * Only useful presently in Firefox/SpiderMonkey since generators are
+ * implemented.
+ * @param value the return value for the surrounding generator
+ * @throws ReturnValue exception with the value.
+ * @example
+ * Q.async(function () {
+ *      var foo = yield getFooPromise();
+ *      var bar = yield getBarPromise();
+ *      Q.return(foo + bar);
+ * })
+ */
+exports['return'] = _return;
+function _return(value) {
+    throw new ReturnValue(value);
+}
+
+/**
  * sends a message to a value in a future turn
  * @param object* the recipient
  * @param op the name of the message operation, e.g., "when",
@@ -709,6 +747,7 @@ function dispatcher(op) {
         return dispatch(object, op, args);
     };
 }
+
 /**
  * Gets the value of a property in a future turn.
  * @param object    promise or immediate reference for target object
@@ -732,7 +771,8 @@ exports.put = dispatcher("put");
  * @param name      name of property to delete
  * @return promise for the return value
  */
-exports.del = exports["delete"] = dispatcher("del");
+exports["delete"] = // XXX experimental
+exports.del = dispatcher("del");
 
 /**
  * Invokes a method in a future turn.
@@ -746,6 +786,7 @@ exports.del = exports["delete"] = dispatcher("del");
  *                  JSON serializable object.
  * @return promise for the return value
  */
+// bound locally because it is used by other methods
 var post = exports.post = dispatcher("post");
 
 /**
@@ -772,7 +813,8 @@ var fapply = exports.fapply = dispatcher("apply");
  * @param object    promise or immediate reference for target function
  * @param ...args   array of application arguments
  */
-exports.fcall = exports["try"] = fcall;
+exports["try"] = fcall; // XXX experimental
+exports.fcall = fcall;
 function fcall(value) {
     var args = Array_slice(arguments, 1);
     return fapply(value, args);
@@ -832,6 +874,13 @@ function all(promises) {
 }
 
 /**
+ * Waits for all promises to be resolved, either fulfilled or
+ * rejected.  This is distinct from `all` since that would stop
+ * waiting at the first rejection.  The promise returned by
+ * `allResolved` will never be rejected.
+ * @param promises a promise for an array (or an array) of promises
+ * (or values)
+ * @return a promise for an array of promises
  */
 exports.allResolved = allResolved;
 function allResolved(promises) {
@@ -853,7 +902,7 @@ function allResolved(promises) {
  * given promise is rejected
  * @returns a promise for the return value of the callback
  */
-exports["catch"] =
+exports["catch"] = // XXX experimental
 exports.fail = fail;
 function fail(promise, rejected) {
     return when(promise, void 0, rejected);
@@ -870,7 +919,7 @@ function fail(promise, rejected) {
  * @returns a promise for the resolution of the given promise when
  * ``fin`` is done.
  */
-exports["finally"] =
+exports["finally"] = // XXX experimental
 exports.fin = fin;
 function fin(promise, callback) {
     return when(promise, function (value) {
@@ -890,7 +939,7 @@ function fin(promise, callback) {
  * @param {Any*} promise at the end of a chain of promises
  * @returns nothing
  */
-exports.end = end;
+exports.end = end; // XXX stopgap
 function end(promise) {
     when(promise, void 0, function (error) {
         // forward to a future turn so that ``when``
@@ -999,6 +1048,13 @@ function nbind(callback /* thisp, ...args*/) {
 }
 
 /**
+ * Calls a method of a Node-style object that accepts a Node-style
+ * callback with a given array of arguments, plus a provided callback.
+ * @param object an object that has the named method
+ * @param {String} name name of the method of object
+ * @param {Array} args arguments to pass to the method; the callback
+ * will be provided by Q and appended to these arguments.
+ * @returns a promise for the value or error
  */
 exports.npost = npost;
 function npost(object, name, args) {
@@ -1006,6 +1062,14 @@ function npost(object, name, args) {
 }
 
 /**
+ * Calls a method of a Node-style object that accepts a Node-style
+ * callback, forwarding the given variadic arguments, plus a provided
+ * callback argument.
+ * @param object an object that has the named method
+ * @param {String} name name of the method of object
+ * @param ...args arguments to pass to the method; the callback will
+ * be provided by Q and appended to these arguments.
+ * @returns a promise for the value or error
  */
 exports.ninvoke = ninvoke;
 function ninvoke(object, name /*, ...args*/) {
