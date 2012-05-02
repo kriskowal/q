@@ -142,32 +142,34 @@ if (Function.prototype.bind) {
 
 var Array_slice = uncurryThis(Array.prototype.slice);
 
-var Array_reduce = uncurryThis(Array.prototype.reduce || function (callback, basis) {
-    var index = 0,
-        length = this.length;
-    // concerning the initial value, if one is not provided
-    if (arguments.length === 1) {
-        // seek to the first value in the array, accounting
-        // for the possibility that is is a sparse array
-        do {
-            if (index in this) {
-                basis = this[index++];
-                break;
-            }
-            if (++index >= length) {
-                throw new TypeError();
-            }
-        } while (1);
-    }
-    // reduce
-    for (; index < length; index++) {
-        // account for the possibility that the array is sparse
-        if (index in this) {
-            basis = callback(basis, this[index], index);
+var Array_reduce = uncurryThis(
+    Array.prototype.reduce || function (callback, basis) {
+        var index = 0,
+            length = this.length;
+        // concerning the initial value, if one is not provided
+        if (arguments.length === 1) {
+            // seek to the first value in the array, accounting
+            // for the possibility that is is a sparse array
+            do {
+                if (index in this) {
+                    basis = this[index++];
+                    break;
+                }
+                if (++index >= length) {
+                    throw new TypeError();
+                }
+            } while (1);
         }
+        // reduce
+        for (; index < length; index++) {
+            // account for the possibility that the array is sparse
+            if (index in this) {
+                basis = callback(basis, this[index], index);
+            }
+        }
+        return basis;
     }
-    return basis;
-});
+);
 
 var Object_create = Object.create || function (prototype) {
     function Type() { }
