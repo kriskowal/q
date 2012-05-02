@@ -276,7 +276,6 @@ function defer() {
  * promise.
  * @returns a nodeback
  */
-defer.prototype.node = // XXX deprecated
 defer.prototype.makeNodeResolver = function () {
     var self = this;
     return function (error, value) {
