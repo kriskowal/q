@@ -20,8 +20,8 @@
                 return thrity + 10;
             });
 
-            Q.when(eventuallyFourty(), function (fourty) {
-                console.log(fourty, 40);
+            Q.when(eventuallyFourty(), function (forty) {
+                console.log(forty, 40);
             }, function (reason) {
                 console.log("error", reason);
             });

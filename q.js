@@ -186,7 +186,16 @@ var Object_keys = Object.keys || function (object) {
 var Object_toString = Object.prototype.toString;
 
 function isStopIteration(exception) {
-    return Object_toString(exception) === "[object StopIteration]";
+    return (
+        Object_toString(exception) === "[object StopIteration]" ||
+        exception instanceof ReturnValue
+    );
+}
+
+if (typeof ReturnValue === "undefined") {
+    new Function("return this")().ReturnValue = function (value) {
+        this.value = value;
+    };
 }
 
 /**
@@ -736,6 +745,24 @@ function async(makeGenerator) {
         var errback = continuer.bind(continuer, "throw");
         return callback();
     };
+}
+
+/**
+ * Throws a ReturnValue exception to stop an asynchronous generator.
+ * Only useful presently in Firefox/SpiderMonkey since generators are
+ * implemented.
+ * @param value the return value for the surrounding generator
+ * @throws ReturnValue exception with the value.
+ * @example
+ * Q.async(function () {
+ *      var foo = yield getFooPromise();
+ *      var bar = yield getBarPromise();
+ *      Q.return(foo + bar);
+ * })
+ */
+exports['return'] = _return;
+function _return(value) {
+    throw new ReturnValue(value);
 }
 
 /**

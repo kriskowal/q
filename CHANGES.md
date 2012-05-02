@@ -18,6 +18,8 @@
 
  - Added ``fapply``, ``fcall``, ``fbind`` for non-thisp promised
    function calls.
+ - Added ``return`` for async generators, where generators are
+   implemented.
 
 ## 0.8.4
 

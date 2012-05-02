@@ -16,11 +16,11 @@
                 console.log(twenty, 20);
                 var thirty = yield twenty + 10;
                 console.log(thirty, 30);
-                StopIteration.value = thirty + 10;
-                throw StopIteration;
+                Q.return(thirty + 10);
             });
 
-            Q.when(generator(), function (forty) {
+            generator()
+            .then(function (forty) {
                 console.log(forty, 40);
             }, function (reason) {
                 console.log("error", reason);
