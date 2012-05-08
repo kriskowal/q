@@ -355,9 +355,25 @@ function getStackFrames(objWithStack) {
     return stack;
 }
 
-var qFileName = typeof __filename !== "undefined" ? __filename :
-                Error.captureStackTrace ? new Error().stack.split("\n")[1]
-                    .match(/^    at ((?:\w+:\/\/)?[^:]+)/)[1] : null;
+var qFileName = typeof __filename !== "undefined" ? __filename : (function () {
+    if (!Error.captureStackTrace) {
+        return null;
+    }
+
+    var oldPrepareStackTrace = Error.prepareStackTrace;
+
+    var theFileName;
+    Error.prepareStackTrace = function (error, frames) {
+        theFileName = frames[0].getFileName();
+    };
+
+    var dummy = {};
+    Error.captureStackTrace(dummy);
+    dummy.stack;
+    Error.prepareStackTrace = oldPrepareStackTrace;
+
+    return theFileName;
+}());
 
 /**
  * Performs a task in a future turn of the event loop.
