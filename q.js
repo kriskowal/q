@@ -1,10 +1,9 @@
 // vim:ts=4:sts=4:sw=4:
 /*jshint browser: true, node: true,
   curly: true, eqeqeq: true, noarg: true, nonew: true, trailing: true,
-  undef: true
- */
+  undef: true */
 /*global define: false, Q: true, msSetImmediate: true, setImmediate: true,
-  MessageChannel: true */
+  MessageChannel: true, ReturnValue: true, cajaVM: true, ses: true */
 /*!
  *
  * Copyright 2009-2012 Kris Kowal under the terms of the MIT
@@ -29,6 +28,34 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * With formatStackTrace and formatSourcePosition functions
+ * Copyright 2006-2008 the V8 project authors. All rights reserved.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above
+ *       copyright notice, this list of conditions and the following
+ *       disclaimer in the documentation and/or other materials provided
+ *       with the distribution.
+ *     * Neither the name of Google Inc. nor the names of its
+ *       contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 (function (definition) {
@@ -140,9 +167,9 @@ if (Function.prototype.bind) {
     };
 }
 
-var Array_slice = uncurryThis(Array.prototype.slice);
+var array_slice = uncurryThis(Array.prototype.slice);
 
-var Array_reduce = uncurryThis(
+var array_reduce = uncurryThis(
     Array.prototype.reduce || function (callback, basis) {
         var index = 0,
             length = this.length;
@@ -171,13 +198,13 @@ var Array_reduce = uncurryThis(
     }
 );
 
-var Object_create = Object.create || function (prototype) {
+var object_create = Object.create || function (prototype) {
     function Type() { }
     Type.prototype = prototype;
     return new Type();
 };
 
-var Object_keys = Object.keys || function (object) {
+var object_keys = Object.keys || function (object) {
     var keys = [];
     for (var key in object) {
         keys.push(key);
@@ -185,55 +212,27 @@ var Object_keys = Object.keys || function (object) {
     return keys;
 };
 
-var Object_toString = Object.prototype.toString;
+var object_toString = Object.prototype.toString;
+
+// generator related shims
 
 function isStopIteration(exception) {
     return (
-        Object_toString(exception) === "[object StopIteration]" ||
-        exception instanceof ReturnValue
+        object_toString(exception) === "[object StopIteration]" ||
+        exception instanceof QReturnValue
     );
 }
 
-if (typeof ReturnValue === "undefined") {
-    new Function("return this")().ReturnValue = function (value) {
+var QReturnValue;
+if (typeof ReturnValue !== "undefined") {
+    QReturnValue = ReturnValue;
+} else {
+    QReturnValue = function (value) {
         this.value = value;
     };
 }
 
 // long stack traces
-
-// The following license covers the ``formatStackTrace`` and
-// ``formatSourcePosition`` functions:
-
-// Copyright 2006-2008 the V8 project authors. All rights reserved.
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above
-//       copyright notice, this list of conditions and the following
-//       disclaimer in the documentation and/or other materials provided
-//       with the distribution.
-//     * Neither the name of Google Inc. nor the names of its
-//       contributors may be used to endorse or promote products derived
-//       from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-// Stylistic modifications were made to keep with the Q style guidelines.
-// Insertions are noted inline.
 
 function formatStackTrace(error, frames) {
     var lines = [];
@@ -253,21 +252,20 @@ function formatStackTrace(error, frames) {
         // <Inserted by @domenic>
         if (typeof frame === "string") {
             lines.push(frame);
-            continue;
-        }
         // </Inserted by @domenic>
-
-        try {
-            line = formatSourcePosition(frame);
-        } catch (e) {
+        } else {
             try {
-                line = "<error: " + e + ">";
-            } catch (ee) {
-                // Any code that reaches this point is seriously nasty!
-                line = "<error>";
+                line = formatSourcePosition(frame);
+            } catch (e) {
+                try {
+                    line = "<error: " + e + ">";
+                } catch (ee) {
+                    // Any code that reaches this point is seriously nasty!
+                    line = "<error>";
+                }
             }
+            lines.push("    at " + line);
         }
-        lines.push("    at " + line);
     }
     return lines.join("\n");
 }
@@ -329,51 +327,59 @@ function formatSourcePosition(frame) {
  * Retrieves an array of structured stack frames parsed from the ``stack``
  * property of a given object.
  *
- * @param objWithStack {Object} an object with a ``stack`` property: usually
+ * @param objectWithStack {Object} an object with a ``stack`` property: usually
  * an error or promise.
  *
  * @returns an array of stack frame objects. For more information, see
  * [V8's JavaScript stack trace API documentation](http://code.google.com/p/v8/wiki/JavaScriptStackTraceApi).
  */
-function getStackFrames(objWithStack) {
+function getStackFrames(objectWithStack) {
     var oldPrepareStackTrace = Error.prepareStackTrace;
 
     Error.prepareStackTrace = function (error, frames) {
         // Filter out frames from the innards of Node and Q.
         return frames.filter(function (frame) {
             var fileName = frame.getFileName();
-            return fileName !== "module.js" &&
-                   fileName !== "node.js" &&
-                   fileName !== qFileName;
+            return (
+                fileName !== "module.js" &&
+                fileName !== "node.js" &&
+                fileName !== qFileName
+            );
         });
     };
 
-    var stack = objWithStack.stack;
+    var stack = objectWithStack.stack;
 
     Error.prepareStackTrace = oldPrepareStackTrace;
 
     return stack;
 }
 
-var qFileName = typeof __filename !== "undefined" ? __filename : (function () {
-    if (!Error.captureStackTrace) {
-        return null;
-    }
+// discover own file name for filtering stack traces
+var qFileName;
+if (Error.captureStackTrace) {
+    qFileName = (function () {
+        var fileName;
 
-    var oldPrepareStackTrace = Error.prepareStackTrace;
+        var oldPrepareStackTrace = Error.prepareStackTrace;
 
-    var theFileName;
-    Error.prepareStackTrace = function (error, frames) {
-        theFileName = frames[0].getFileName();
-    };
+        Error.prepareStackTrace = function (error, frames) {
+            fileName = frames[0].getFileName();
+        };
 
-    var dummy = {};
-    Error.captureStackTrace(dummy);
-    dummy.stack;
-    Error.prepareStackTrace = oldPrepareStackTrace;
+        // teases call of temporary prepareStackTrace
+        // JSHint and Closure Compiler generate known warnings here
+        new Error().stack;
 
-    return theFileName;
-}());
+        Error.prepareStackTrace = oldPrepareStackTrace;
+
+        return fileName;
+    })();
+}
+
+
+// end of shims
+// beginning of real work
 
 /**
  * Performs a task in a future turn of the event loop.
@@ -400,11 +406,11 @@ function defer() {
     // resolved values and other promises gracefully.
     var pending = [], value;
 
-    var deferred = Object_create(defer.prototype);
-    var promise = Object_create(makePromise.prototype);
+    var deferred = object_create(defer.prototype);
+    var promise = object_create(makePromise.prototype);
 
     promise.promiseSend = function () {
-        var args = Array_slice(arguments);
+        var args = array_slice(arguments);
         if (pending) {
             pending.push(args);
         } else {
@@ -430,7 +436,7 @@ function defer() {
             return;
         }
         value = resolve(resolvedValue);
-        Array_reduce(pending, function (undefined, pending) {
+        array_reduce(pending, function (undefined, pending) {
             nextTick(function () {
                 value.promiseSend.apply(value, pending);
             });
@@ -462,7 +468,7 @@ defer.prototype.makeNodeResolver = function () {
         if (error) {
             self.reject(error);
         } else if (arguments.length > 2) {
-            self.resolve(Array_slice(arguments, 1));
+            self.resolve(array_slice(arguments, 1));
         } else {
             self.resolve(value);
         }
@@ -506,10 +512,10 @@ function makePromise(descriptor, fallback, valueOf, rejected) {
         };
     }
 
-    var promise = Object_create(makePromise.prototype);
+    var promise = object_create(makePromise.prototype);
 
     promise.promiseSend = function (op, resolved /* ...args */) {
-        var args = Array_slice(arguments, 2);
+        var args = array_slice(arguments, 2);
         var result;
         try {
             if (descriptor[op]) {
@@ -542,7 +548,7 @@ makePromise.prototype.then = function (fulfilled, rejected) {
 };
 
 // Chainable methods
-Array_reduce(
+array_reduce(
     [
         "isResolved", "isFulfilled", "isRejected",
         "when", "spread", "send",
@@ -560,7 +566,7 @@ Array_reduce(
         makePromise.prototype[name] = function () {
             return exports[name].apply(
                 exports,
-                [this].concat(Array_slice(arguments))
+                [this].concat(array_slice(arguments))
             );
         };
     },
@@ -589,6 +595,7 @@ defend(makePromise.prototype);
 exports.nearer = valueOf;
 function valueOf(value) {
     // if !Object.isObject(value)
+    // generates a known JSHint "constructor invocation without new" warning
     if (Object(value) !== value) {
         return value;
     } else {
@@ -732,7 +739,7 @@ function resolve(object) {
             };
         },
         "keys": function () {
-            return keys(object);
+            return object_keys(object);
         }
     }, void 0, function valueOf() {
         return object;
@@ -753,7 +760,7 @@ function master(object) {
     return makePromise({
         "isDef": function () {}
     }, function fallback(op) {
-        var args = Array_slice(arguments);
+        var args = array_slice(arguments);
         return send.apply(void 0, [object].concat(args));
     }, function () {
         return valueOf(object);
@@ -769,7 +776,7 @@ function viewInfo(object, info) {
                 return info;
             }
         }, function fallback(op) {
-            var args = Array_slice(arguments);
+            var args = array_slice(arguments);
             return send.apply(void 0, [object].concat(args));
         }, function () {
             return valueOf(object);
@@ -791,7 +798,7 @@ function view(object) {
             view = {};
         }
         var properties = info.properties || {};
-        Object_keys(properties).forEach(function (name) {
+        object_keys(properties).forEach(function (name) {
             if (properties[name] === "function") {
                 view[name] = function () {
                     return post(object, name, arguments);
@@ -952,7 +959,7 @@ function async(makeGenerator) {
  */
 exports['return'] = _return;
 function _return(value) {
-    throw new ReturnValue(value);
+    throw new QReturnValue(value);
 }
 
 /**
@@ -963,7 +970,7 @@ exports.sender = sender; // XXX deprecated, use dispatcher
 exports.Method = sender; // XXX deprecated, use dispatcher
 function sender(op) {
     return function (object) {
-        var args = Array_slice(arguments, 1);
+        var args = array_slice(arguments, 1);
         return send.apply(void 0, [object, op].concat(args));
     };
 }
@@ -978,7 +985,7 @@ function sender(op) {
 exports.send = send; // XXX deprecated, use dispatch
 function send(object, op) {
     var deferred = defer();
-    var args = Array_slice(arguments, 2);
+    var args = array_slice(arguments, 2);
     object = resolve(object);
     nextTick(function () {
         object.promiseSend.apply(
@@ -1018,7 +1025,7 @@ function dispatch(object, op, args) {
 exports.dispatcher = dispatcher;
 function dispatcher(op) {
     return function (object) {
-        var args = Array_slice(arguments, 1);
+        var args = array_slice(arguments, 1);
         return dispatch(object, op, args);
     };
 }
@@ -1072,7 +1079,7 @@ var post = exports.post = dispatcher("post");
  * @return promise for the return value
  */
 exports.invoke = function (value, name) {
-    var args = Array_slice(arguments, 2);
+    var args = array_slice(arguments, 2);
     return post(value, name, args);
 };
 
@@ -1099,7 +1106,7 @@ var fapply = exports.fapply = dispatcher("fapply");
  */
 exports.call = call; // XXX deprecated, use fcall
 function call(value, thisp) {
-    var args = Array_slice(arguments, 2);
+    var args = array_slice(arguments, 2);
     return apply(value, thisp, args);
 }
 
@@ -1111,7 +1118,7 @@ function call(value, thisp) {
 exports["try"] = fcall; // XXX experimental
 exports.fcall = fcall;
 function fcall(value) {
-    var args = Array_slice(arguments, 1);
+    var args = array_slice(arguments, 1);
     return fapply(value, args);
 }
 
@@ -1124,9 +1131,9 @@ function fcall(value) {
  */
 exports.bind = bind; // XXX deprecated, use fbind
 function bind(value, thisp) {
-    var args = Array_slice(arguments, 2);
+    var args = array_slice(arguments, 2);
     return function bound() {
-        var allArgs = args.concat(Array_slice(arguments));
+        var allArgs = args.concat(array_slice(arguments));
         return apply(value, thisp, allArgs);
     };
 }
@@ -1139,9 +1146,9 @@ function bind(value, thisp) {
  */
 exports.fbind = fbind;
 function fbind(value) {
-    var args = Array_slice(arguments, 1);
+    var args = array_slice(arguments, 1);
     return function fbound() {
-        var allArgs = args.concat(Array_slice(arguments));
+        var allArgs = args.concat(array_slice(arguments));
         return fapply(value, allArgs);
     };
 }
@@ -1171,7 +1178,7 @@ function all(promises) {
             return resolve(promises);
         }
         var deferred = defer();
-        Array_reduce(promises, function (undefined, promise, index) {
+        array_reduce(promises, function (undefined, promise, index) {
             when(promise, function (value) {
                 promises[index] = value;
                 if (--countDown === 0) {
@@ -1256,9 +1263,9 @@ function end(promise) {
         // forward to a future turn so that ``when``
         // does not catch it and turn it into a rejection.
         nextTick(function () {
-            // If possible (i.e. if in V8), transform the error stack trace by
-            // removing Node and Q cruft, then concatenating with the stack
-            // trace of the promise we are ``end``ing. See #57.
+            // If possible (that is, if in V8), transform the error stack
+            // trace by removing Node and Q cruft, then concatenating with
+            // the stack trace of the promise we are ``end``ing. See #57.
             if (Error.captureStackTrace) {
                 var errorStackFrames = getStackFrames(error);
                 var promiseStackFrames = getStackFrames(promise);
@@ -1341,7 +1348,7 @@ function napply(callback, thisp, args) {
  */
 exports.ncall = ncall;
 function ncall(callback, thisp /*, ...args*/) {
-    var args = Array_slice(arguments, 2);
+    var args = array_slice(arguments, 2);
     return napply(callback, thisp, args);
 }
 
@@ -1357,12 +1364,12 @@ function ncall(callback, thisp /*, ...args*/) {
 exports.nbind = nbind;
 function nbind(callback /* thisp, ...args*/) {
     if (arguments.length > 1) {
-        var args = Array_slice(arguments, 1);
+        var args = array_slice(arguments, 1);
         callback = callback.bind.apply(callback, args);
     }
     return function () {
         var deferred = defer();
-        var args = Array_slice(arguments);
+        var args = array_slice(arguments);
         // add a continuation that resolves the promise
         args.push(deferred.makeNodeResolver());
         // trap exceptions thrown by the callback
@@ -1398,7 +1405,7 @@ function npost(object, name, args) {
  */
 exports.ninvoke = ninvoke;
 function ninvoke(object, name /*, ...args*/) {
-    var args = Array_slice(arguments, 2);
+    var args = array_slice(arguments, 2);
     return napply(object[name], name, args);
 }
 
