@@ -198,6 +198,19 @@ var array_reduce = uncurryThis(
     }
 );
 
+
+var array_indexOf = uncurryThis(
+    Array.prototype.indexOf || function (el) {
+        // not a very good shim, but good enough for our one use of it
+        for (var i = 0; i < this.length; i++) {
+            if (this[i] === el) {
+                return i;
+            }
+        }
+        return -1;
+    }
+);
+
 var object_create = Object.create || function (prototype) {
     function Type() { }
     Type.prototype = prototype;
@@ -658,7 +671,7 @@ function reject(exception) {
         "when": function (rejected) {
             // note that the error has been handled
             if (rejected) {
-                var at = rejections.indexOf(this);
+                var at = array_indexOf(rejections, this);
                 if (at !== -1) {
                     errors.splice(at, 1);
                     rejections.splice(at, 1);
