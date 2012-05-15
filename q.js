@@ -669,7 +669,7 @@ function reject(exception) {
     }, function fallback(op) {
         return reject(exception);
     }, function valueOf() {
-        return reject(exception);
+        return this;
     }, true);
     // note that the error has not been handled
     rejections.push(rejection);
@@ -1333,7 +1333,7 @@ function delay(promise, timeout) {
  */
 exports.napply = napply;
 function napply(callback, thisp, args) {
-    return nbind(callback).apply(thisp, args);
+    return nbind(callback, thisp).apply(void 0, args);
 }
 
 /**
