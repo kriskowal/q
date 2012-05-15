@@ -841,8 +841,8 @@ function when(value, fulfilled, rejected) {
     function _rejected(exception) {
         try {
             return rejected ? rejected(exception) : reject(exception);
-        } catch (exception) {
-            return reject(exception);
+        } catch (newException) {
+            return reject(newException);
         }
     }
 
