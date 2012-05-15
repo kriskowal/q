@@ -211,6 +211,20 @@ var array_indexOf = uncurryThis(
     }
 );
 
+var array_map = uncurryThis(
+    Array.prototype.map || function (callback) {
+        // actually a very bad shim, but good enough for our purposes
+        var length = this.length >>> 0;
+        var result = Array(length);
+
+        for (var i = 0; i < length; i++) {
+            result[i] = callback(this[i]);
+        }
+
+        return result;
+    }
+);
+
 var object_create = Object.create || function (prototype) {
     function Type() { }
     Type.prototype = prototype;
@@ -1216,10 +1230,10 @@ function all(promises) {
 exports.allResolved = allResolved;
 function allResolved(promises) {
     return when(promises, function (promises) {
-        return when(all(promises.map(function (promise) {
+        return when(all(array_map(promises, function (promise) {
             return when(promise, noop, noop);
         })), function () {
-            return promises.map(resolve);
+            return array_map(promises, resolve);
         });
     });
 }
