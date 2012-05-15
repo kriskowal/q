@@ -664,7 +664,7 @@ function reject(exception) {
     }, function fallback(op) {
         return reject(exception);
     }, function valueOf() {
-        return reject(exception);
+        return this;
     }, true);
     // note that the error has not been handled
     rejections.push(rejection);
@@ -770,8 +770,8 @@ function when(value, fulfilled, rejected) {
     function _rejected(exception) {
         try {
             return rejected ? rejected(exception) : reject(exception);
-        } catch (exception) {
-            return reject(exception);
+        } catch (newException) {
+            return reject(newException);
         }
     }
 
@@ -1200,7 +1200,7 @@ function delay(promise, timeout) {
  */
 exports.napply = napply;
 function napply(callback, thisp, args) {
-    return nbind(callback).apply(thisp, args);
+    return nbind(callback, thisp).apply(void 0, args);
 }
 
 /**
