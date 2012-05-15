@@ -200,10 +200,10 @@ var array_reduce = uncurryThis(
 
 
 var array_indexOf = uncurryThis(
-    Array.prototype.indexOf || function (el) {
+    Array.prototype.indexOf || function (value) {
         // not a very good shim, but good enough for our one use of it
         for (var i = 0; i < this.length; i++) {
-            if (this[i] === el) {
+            if (this[i] === value) {
                 return i;
             }
         }
@@ -212,16 +212,13 @@ var array_indexOf = uncurryThis(
 );
 
 var array_map = uncurryThis(
-    Array.prototype.map || function (callback) {
-        // actually a very bad shim, but good enough for our purposes
-        var length = this.length >>> 0;
-        var result = Array(length);
-
-        for (var i = 0; i < length; i++) {
-            result[i] = callback(this[i]);
-        }
-
-        return result;
+    Array.prototype.map || function (callback, thisp) {
+        var self = this;
+        var collect = [];
+        array_reduce(self, function (undefined, value, index) {
+            collect.push(callback.call(thisp, value, index, self));
+        }, void 0);
+        return collect;
     }
 );
 
