@@ -722,6 +722,31 @@ describe("node support", function () {
 
     });
 
+    describe("deferred.makeNodeResolver", function () {
+
+        it("fulfills a promise", function () {
+            var deferred = Q.defer();
+            var callback = deferred.makeNodeResolver();
+            callback(null, 10);
+            return deferred.promise.then(function (value) {
+                expect(value).toBe(10);
+            });
+        });
+
+        it("rejects a promise", function () {
+            var deferred = Q.defer();
+            var callback = deferred.makeNodeResolver();
+            var exception = new Error("Holy Exception of Anitoch");
+            callback(exception);
+            return deferred.promise.then(function (value) {
+                expect(5).toBe(3);
+            }, function (_exception) {
+                expect(_exception).toBe(exception);
+            });
+        });
+
+    });
+
 });
 
 describe("possible regressions", function () {
