@@ -515,7 +515,9 @@ describe("allResolved", function () {
     it("normalizes all given values to promises", function () {
         return Q.allResolved([1, Q.resolve(2), Q.reject(3)])
         .then(function (promises) {
-            expect(promises.every(Q.isPromise)).toBe(true);
+            expect(Q.isPromise(promises[0])).toBe(true);
+            expect(Q.isPromise(promises[1])).toBe(true);
+            expect(Q.isPromise(promises[2])).toBe(true);
         });
     });
 
@@ -530,10 +532,19 @@ describe("allResolved", function () {
         return Q.allResolved([1, Q.resolve(2), Q.reject(3)])
         .then(function (promises) {
             expect(promises.length).toEqual(3);
-            expect(promises.every(Q.isPromise)).toBe(true);
-            expect(promises.every(Q.isResolved)).toBe(true);
-            expect(promises.filter(Q.isFulfilled).length).toEqual(2);
-            expect(promises.filter(Q.isRejected).length).toEqual(1);
+
+            expect(Q.isPromise(promises[0])).toBe(true);
+            expect(Q.isPromise(promises[1])).toBe(true);
+            expect(Q.isPromise(promises[2])).toBe(true);
+
+            expect(Q.isResolved(promises[0])).toBe(true);
+            expect(Q.isResolved(promises[1])).toBe(true);
+            expect(Q.isResolved(promises[2])).toBe(true);
+
+            expect(Q.isFulfilled(promises[0])).toBe(true);
+            expect(Q.isFulfilled(promises[1])).toBe(true);
+            expect(Q.isRejected(promises[2])).toBe(true);
+
             expect(promises[0].valueOf()).toEqual(1);
             expect(promises[1].valueOf()).toEqual(2);
         })
