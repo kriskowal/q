@@ -89,7 +89,7 @@ describe("promises for objects", function () {
 
         it("propagates a rejection", function () {
             var exception = new Error("boo!");
-            return Q.call(function () {
+            return Q.fcall(function () {
                 throw exception;
             })
             .get("a")
@@ -131,7 +131,7 @@ describe("promises for objects", function () {
 
         it("fulfills a promise", function () {
             var object = {a: 10};
-            return Q.call(function () {
+            return Q.fcall(function () {
                 return object;
             })
             .del('a')
@@ -145,7 +145,7 @@ describe("promises for objects", function () {
 
         it("propagates a rejection", function () {
             var exception = new Error("hah-hah");
-            return Q.call(function () {
+            return Q.fcall(function () {
                 throw exception;
             })
             .del('a')
@@ -546,7 +546,7 @@ describe("allResolved", function () {
         var resolved;
         var rejected;
 
-        Q.call(function () {
+        Q.fcall(function () {
             toReject.reject();
             rejected = true;
         })
