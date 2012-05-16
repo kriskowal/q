@@ -1389,8 +1389,14 @@ function ncall(callback, thisp /*, ...args*/) {
 exports.nbind = nbind;
 function nbind(callback /* thisp, ...args*/) {
     if (arguments.length > 1) {
-        var args = array_slice(arguments, 1);
-        callback = callback.bind.apply(callback, args);
+        var thisp = arguments[1];
+        var args = array_slice(arguments, 2);
+
+        var originalCallback = callback;
+        callback = function () {
+            var combinedArgs = args.concat(array_slice(arguments));
+            return originalCallback.apply(thisp, combinedArgs);
+        };
     }
     return function () {
         var deferred = defer();
