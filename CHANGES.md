@@ -21,6 +21,9 @@
  - Added ``return`` for async generators, where generators are
    implemented.
  - Added preliminary support for long traces (@domenic)
+ - Rejected promises now have an "exception" property.  If an object
+   isRejected(object), then object.valueOf().exception will
+   synchronously observe the wrapped error.
 
 ## 0.8.4
 

@@ -198,7 +198,6 @@ var array_reduce = uncurryThis(
     }
 );
 
-
 var array_indexOf = uncurryThis(
     Array.prototype.indexOf || function (value) {
         // not a very good shim, but good enough for our one use of it
@@ -347,7 +346,7 @@ function formatSourcePosition(frame) {
     return line;
 }
 
-/**
+/*
  * Retrieves an array of structured stack frames parsed from the ``stack``
  * property of a given object.
  *
@@ -529,7 +528,7 @@ function promise(makePromise) {
  * bought and sold.
  */
 exports.makePromise = makePromise;
-function makePromise(descriptor, fallback, valueOf, rejected) {
+function makePromise(descriptor, fallback, valueOf, exception) {
     if (fallback === void 0) {
         fallback = function (op) {
             return reject(new Error("Promise does not support operation: " + op));
@@ -557,8 +556,8 @@ function makePromise(descriptor, fallback, valueOf, rejected) {
         promise.valueOf = valueOf;
     }
 
-    if (rejected) {
-        promise.promiseRejected = true;
+    if (exception) {
+        promise.exception = exception;
     }
 
     defend(promise);
@@ -659,7 +658,7 @@ function isFulfilled(object) {
 exports.isRejected = isRejected;
 function isRejected(object) {
     object = valueOf(object);
-    return object && !!object.promiseRejected;
+    return isPromise(object) && 'exception' in object;
 }
 
 var rejections = [];
@@ -678,6 +677,7 @@ if (typeof window !== "undefined" && window.console) {
  */
 exports.reject = reject;
 function reject(exception) {
+    exception = exception || new Error();
     var rejection = makePromise({
         "when": function (rejected) {
             // note that the error has been handled
@@ -694,7 +694,7 @@ function reject(exception) {
         return reject(exception);
     }, function valueOf() {
         return this;
-    }, true);
+    }, exception);
     // note that the error has not been handled
     rejections.push(rejection);
     errors.push(exception);

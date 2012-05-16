@@ -333,6 +333,7 @@ describe("valueOf", function () {
         var error = new Error("In your face.");
         var rejection = Q.reject(error);
         expect(rejection.valueOf()).toBe(rejection);
+        expect(rejection.valueOf().exception).toBe(error);
     });
 
     it("of deferred", function () {
@@ -342,9 +343,11 @@ describe("valueOf", function () {
 
     it("of deferred rejection", function () {
         var deferred = Q.defer();
-        var rejection = Q.reject(new Error("Rejected!"));
+        var error = new Error("Rejected!");
+        var rejection = Q.reject(error);
         deferred.resolve(rejection);
         expect(deferred.promise.valueOf()).toBe(rejection);
+        expect(deferred.promise.valueOf().exception).toBe(error);
     });
 
     it("of deferred fulfillment", function () {
