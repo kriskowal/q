@@ -285,7 +285,7 @@ describe("promises for functions", function () {
             return bound()
             .then(function (_result) {
                 expect(_result).toBe(result);
-            })
+            });
         });
 
         it("returns a rejected promise from a thrown error", function () {
@@ -298,7 +298,7 @@ describe("promises for functions", function () {
                 expect("flying pigs").toBe("swillin' pigs");
             }, function (_exception) {
                 expect(_exception).toBe(exception);
-            })
+            });
         });
 
         it("passes arguments through", function () {
@@ -433,7 +433,7 @@ describe("propagation", function () {
         .then()
         .then(function (ten) {
             expect(ten).toBe(10);
-        })
+        });
     });
 
     it("propagate through then with modifying callback", function () {
@@ -443,11 +443,11 @@ describe("propagation", function () {
         })
         .then(function (twen) {
             expect(twen).toBe(20);
-        })
+        });
     });
 
     it("errback recovers from exception", function () {
-        var error = new Error("Bah!")
+        var error = new Error("Bah!");
         return Q.reject(error)
         .then(null, function (_error) {
             expect(_error).toBe(error);
@@ -455,7 +455,7 @@ describe("propagation", function () {
         })
         .then(function (value) {
             expect(value).toBe(10);
-        })
+        });
     });
 
     it("rejection propagates through then with no errback", function () {
@@ -525,7 +525,7 @@ describe("allResolved", function () {
         return Q.allResolved([1, Q.resolve(2), Q.reject(3)])
         .then(null, function () {
             expect("flying pigs").toBe("flightless pigs");
-        })
+        });
     });
 
     it("the state and quantity of promises to be correct", function () {
@@ -547,7 +547,7 @@ describe("allResolved", function () {
 
             expect(promises[0].valueOf()).toEqual(1);
             expect(promises[1].valueOf()).toEqual(2);
-        })
+        });
     });
 
     it("is resolved after every constituent promise is resolved", function () {
@@ -564,13 +564,13 @@ describe("allResolved", function () {
         .then(function () {
             toResolve.resolve();
             resolved = true;
-        })
+        });
 
         return Q.allResolved(promises)
         .then(function (promises) {
             expect(resolved).toBe(true);
             expect(rejected).toBe(true);
-        })
+        });
     });
 
 });
@@ -645,7 +645,7 @@ describe("node support", function () {
             return Q.napply(subject.foo, subject, [])
             .then(function (result) {
                 expect(result).toBe(true);
-            })
+            });
         });
 
         it("rejects with callback error", function () {
@@ -681,7 +681,7 @@ describe("node support", function () {
             return Q.ncall(subject.foo, subject)
             .then(function (result) {
                 expect(result).toBe(true);
-            })
+            });
         });
 
         it("rejects with callback error", function () {
