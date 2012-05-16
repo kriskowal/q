@@ -3,14 +3,14 @@
 obseleted by developments in standardization and implementation.  Tread
 with care.
 
-Q now has an ``async`` function.  This can be used to
+Q has an ``async`` function.  This can be used to
 decorate a generator function such that ``yield`` is
 effectively equivalent to ``await`` or ``defer`` syntax as
 supported by languages like Go and, reportedly, C#3.
 
-Generator functions are presently only supported by
-SpiderMonkey, but they are standards track, and very similar
-down to details to generators in Python.
+Generator functions are presently only supported by SpiderMonkey, but
+they are (with some changes) on standards track, and very similar down
+to details to generators in Python.
 
     function count() {
         var i = 0;

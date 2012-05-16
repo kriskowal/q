@@ -115,7 +115,8 @@ if (typeof process !== "undefined") {
     nextTick = process.nextTick;
 } else if (typeof msSetImmediate === "function") {
     // IE 10 only, at the moment
-    nextTick = msSetImmediate;
+    // And yes, ``bind``ing to ``window`` is necessary O_o.
+    nextTick = msSetImmediate.bind(window);
 } else if (typeof setImmediate === "function") {
     // https://github.com/NobleJS/setImmediate
     nextTick = setImmediate;
@@ -195,6 +196,29 @@ var array_reduce = uncurryThis(
             }
         }
         return basis;
+    }
+);
+
+var array_indexOf = uncurryThis(
+    Array.prototype.indexOf || function (value) {
+        // not a very good shim, but good enough for our one use of it
+        for (var i = 0; i < this.length; i++) {
+            if (this[i] === value) {
+                return i;
+            }
+        }
+        return -1;
+    }
+);
+
+var array_map = uncurryThis(
+    Array.prototype.map || function (callback, thisp) {
+        var self = this;
+        var collect = [];
+        array_reduce(self, function (undefined, value, index) {
+            collect.push(callback.call(thisp, value, index, self));
+        }, void 0);
+        return collect;
     }
 );
 
@@ -323,7 +347,7 @@ function formatSourcePosition(frame) {
     return line;
 }
 
-/**
+/*
  * Retrieves an array of structured stack frames parsed from the ``stack``
  * property of a given object.
  *
@@ -504,7 +528,7 @@ function promise(makePromise) {
  * bought and sold.
  */
 exports.makePromise = makePromise;
-function makePromise(descriptor, fallback, valueOf, rejected) {
+function makePromise(descriptor, fallback, valueOf, exception) {
     if (fallback === void 0) {
         fallback = function (op) {
             return reject(new Error("Promise does not support operation: " + op));
@@ -529,8 +553,8 @@ function makePromise(descriptor, fallback, valueOf, rejected) {
         promise.valueOf = valueOf;
     }
 
-    if (rejected) {
-        promise.promiseRejected = true;
+    if (exception) {
+        promise.exception = exception;
     }
 
     defend(promise);
@@ -630,7 +654,7 @@ function isFulfilled(object) {
 exports.isRejected = isRejected;
 function isRejected(object) {
     object = valueOf(object);
-    return object && !!object.promiseRejected;
+    return isPromise(object) && 'exception' in object;
 }
 
 var rejections = [];
@@ -649,11 +673,12 @@ if (typeof window !== "undefined" && window.console) {
  */
 exports.reject = reject;
 function reject(exception) {
+    exception = exception || new Error();
     var rejection = makePromise({
         "when": function (rejected) {
             // note that the error has been handled
             if (rejected) {
-                var at = rejections.indexOf(this);
+                var at = array_indexOf(rejections, this);
                 if (at !== -1) {
                     errors.splice(at, 1);
                     rejections.splice(at, 1);
@@ -664,8 +689,8 @@ function reject(exception) {
     }, function fallback(op) {
         return reject(exception);
     }, function valueOf() {
-        return reject(exception);
-    }, true);
+        return this;
+    }, exception);
     // note that the error has not been handled
     rejections.push(rejection);
     errors.push(exception);
@@ -770,8 +795,8 @@ function when(value, fulfilled, rejected) {
     function _rejected(exception) {
         try {
             return rejected ? rejected(exception) : reject(exception);
-        } catch (exception) {
-            return reject(exception);
+        } catch (newException) {
+            return reject(newException);
         }
     }
 
@@ -1070,10 +1095,10 @@ function all(promises) {
 exports.allResolved = allResolved;
 function allResolved(promises) {
     return when(promises, function (promises) {
-        return when(all(promises.map(function (promise) {
+        return when(all(array_map(promises, function (promise) {
             return when(promise, noop, noop);
         })), function () {
-            return promises.map(resolve);
+            return array_map(promises, resolve);
         });
     });
 }
@@ -1200,7 +1225,7 @@ function delay(promise, timeout) {
  */
 exports.napply = napply;
 function napply(callback, thisp, args) {
-    return nbind(callback).apply(thisp, args);
+    return nbind(callback, thisp).apply(void 0, args);
 }
 
 /**
@@ -1231,8 +1256,14 @@ function ncall(callback, thisp /*, ...args*/) {
 exports.nbind = nbind;
 function nbind(callback /* thisp, ...args*/) {
     if (arguments.length > 1) {
-        var args = array_slice(arguments, 1);
-        callback = callback.bind.apply(callback, args);
+        var thisp = arguments[1];
+        var args = array_slice(arguments, 2);
+
+        var originalCallback = callback;
+        callback = function () {
+            var combinedArgs = args.concat(array_slice(arguments));
+            return originalCallback.apply(thisp, combinedArgs);
+        };
     }
     return function () {
         var deferred = defer();

@@ -14,12 +14,21 @@
    ``invoke``.
  - WARNING: The undocumented ``view`` and ``viewInfo`` will be removed.
 
-## Next minor
+## 0.8.5
 
- - Added ``fapply``, ``fcall``, ``fbind`` for non-thisp promised
-   function calls.
- - Added ``return`` for async generators, where generators are
-   implemented.
+ - Added preliminary support for long traces (@domenic)
+ - Added ``fapply``, ``fcall``, ``fbind`` for non-thisp
+   promised function calls.
+ - Added ``return`` for async generators, where generators
+   are implemented.
+ - Rejected promises now have an "exception" property.  If an object
+   isRejected(object), then object.valueOf().exception will
+   be the wrapped error.
+ - Added Jasmine specifications
+ - Support Internet Explorers 7–9 (with multiple bug fixes @domenic)
+ - Support Firefox 12
+ - Support Safari 5.1.5
+ - Support Chrome 18
 
 ## 0.8.4
 
