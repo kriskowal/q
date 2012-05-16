@@ -115,7 +115,8 @@ if (typeof process !== "undefined") {
     nextTick = process.nextTick;
 } else if (typeof msSetImmediate === "function") {
     // IE 10 only, at the moment
-    nextTick = msSetImmediate;
+    // And yes, ``bind``ing to ``window`` is necessary O_o.
+    nextTick = msSetImmediate.bind(window);
 } else if (typeof setImmediate === "function") {
     // https://github.com/NobleJS/setImmediate
     nextTick = setImmediate;
