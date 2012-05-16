@@ -1,3 +1,7 @@
+if (typeof Q === "undefined" && typeof require !== "undefined") {
+    // For Node compatability.
+    this.Q = require("../q");
+}
 
 describe("defer and when", function () {
 
