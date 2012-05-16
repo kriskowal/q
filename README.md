@@ -62,7 +62,7 @@ rest and spread arguments.
 The Q module can be loaded as:
 
 -   a ``<script>`` tag (creating a ``Q`` global variable):
-    ~3.3 KB minified and gzipped.
+    ~3 KB minified and gzipped.
 -   a NodeJS and CommonJS module available from NPM as the ``q``
     package
 -   a RequireJS module
