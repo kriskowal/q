@@ -1,3 +1,7 @@
 node_modules
 CHANGES.html
 README.html
+
+.coverage_data/
+.coverage_debug/
+cover_html/
