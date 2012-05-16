@@ -403,7 +403,7 @@ Everything above assumes you get a promise from somewhere else.  This
 is the common case.  Every once in a while, you will need to create a
 promise from scratch.
 
-You can create a promise from a value using ``Q.call``.  This returns a
+You can create a promise from a value using ``Q.fcall``.  This returns a
 promise for 10.
 
 ```javascript
@@ -412,7 +412,7 @@ return Q.fcall(function () {
 });
 ```
 
-You can also use ``call`` to get a promise for an exception.
+You can also use ``fcall`` to get a promise for an exception.
 
 ```javascript
 return Q.fcall(function () {
@@ -420,13 +420,12 @@ return Q.fcall(function () {
 })
 ```
 
-As the name implies, ``call`` can call functions, or even promised
+As the name implies, ``fcall`` can call functions, or even promised
 functions.  This uses the ``eventualAdd`` function above to add two
-numbers.  The second argument is the ``this`` object to pass into the
-function.
+numbers.
 
 ```javascript
-return Q.fcall(eventualAdd, null, 2, 2);
+return Q.fcall(eventualAdd, 2, 2);
 ```
 
 When nothing else will do the job, you can use ``defer``, which is
