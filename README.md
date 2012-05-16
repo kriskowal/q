@@ -403,6 +403,8 @@ Everything above assumes you get a promise from somewhere else.  This
 is the common case.  Every once in a while, you will need to create a
 promise from scratch.
 
+#### Using ``Q.fcall``
+
 You can create a promise from a value using ``Q.fcall``.  This returns a
 promise for 10.
 
@@ -428,6 +430,9 @@ numbers.
 return Q.fcall(eventualAdd, 2, 2);
 ```
 
+
+#### Using Deferreds
+
 When nothing else will do the job, you can use ``defer``, which is
 where all promises ultimately come from.
 
@@ -448,6 +453,10 @@ Note that a deferred can be resolved with a value or a promise.  The
 promise.
 
 ```javascript
+// this:
+deferred.reject(new Error("Can't do it"));
+
+// is shorthand for:
 var rejection = Q.fcall(function () {
     throw new Error("Can't do it");
 });
