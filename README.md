@@ -292,6 +292,7 @@ Q.allResolved(promises)
         if (promise.isFulfilled()) {
             var value = promise.valueOf();
         } else {
+            var exception = promise.valueOf().exception;
         }
     })
 })
