@@ -1293,13 +1293,15 @@ function end(promise) {
             // the stack trace of the promise we are ``end``ing. See #57.
             if (Error.captureStackTrace) {
                 var errorStackFrames = getStackFrames(error);
-                var promiseStackFrames = getStackFrames(promise);
+	        if (errorStackFrames){
+                    var promiseStackFrames = getStackFrames(promise);
 
-                var combinedStackFrames = errorStackFrames.concat(
-                    "From previous event:",
-                    promiseStackFrames
-                );
-                error.stack = formatStackTrace(error, combinedStackFrames);
+                    var combinedStackFrames = errorStackFrames.concat(
+                      "From previous event:",
+                      promiseStackFrames
+                    );
+                  error.stack = formatStackTrace(error, combinedStackFrames);
+		}
             }
 
             throw error;
