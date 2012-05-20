@@ -777,5 +777,26 @@ describe("possible regressions", function () {
         });
     });
 
+    describe("gh-73", function () {
+        it("does not choke on non-error rejection reasons", function () {
+            var REASON = "this is not an error, but it might show up in the console";
+            Q.reject(REASON).end();
+
+            var deferred = Q.defer();
+
+            window.onerror = function (message) {
+                console.log(arguments);
+                if (message.indexOf(REASON) === -1) {
+                    deferred.reject(new Error(
+                        "Error was thrown when calling .end(): " + message
+                    ));
+                }
+            };
+            Q.delay(10).then(deferred.resolve);
+
+            return deferred.promise;
+        });
+    });
+
 });
 
