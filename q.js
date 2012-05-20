@@ -1293,7 +1293,7 @@ function end(promise) {
             // the stack trace of the promise we are ``end``ing. See #57.
             if (Error.captureStackTrace) {
                 var errorStackFrames = getStackFrames(error);
-	        if (errorStackFrames){
+                if (errorStackFrames){
                     var promiseStackFrames = getStackFrames(promise);
 
                     var combinedStackFrames = errorStackFrames.concat(
@@ -1301,7 +1301,7 @@ function end(promise) {
                       promiseStackFrames
                     );
                   error.stack = formatStackTrace(error, combinedStackFrames);
-		}
+                }
             }
 
             throw error;
