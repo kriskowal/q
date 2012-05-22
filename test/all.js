@@ -14,6 +14,7 @@ exports['test bind'] = require('./bind');
 
 exports['test GH issue 9'] = require('./issue/9');
 exports['test GH issue 22'] = require('./issue/22');
+exports['test GH issue 75'] = require('./issue/75');
 
 if (module == require.main) {
     require('test').run(exports);
