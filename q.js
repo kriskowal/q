@@ -401,11 +401,12 @@ if (Error.captureStackTrace) {
     })();
 }
 
-function depreciate(fn, name, alternative){
+function deprecate(fn, name, alternative){
     return function(){
         if(typeof console !== 'undefined' && typeof console.warn === 'function'){
-            console.warn(name + " is depreciated, use " + alternative " instead.");
+            console.warn(name + " is depreciated, use " + alternative + " instead.");
         }
+        return fn.apply(fn,arguments);
     };
 }
 
