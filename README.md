@@ -78,6 +78,8 @@ are based on Q.
     remote objects
 -   [jaque](https://github.com/kriskowal/jaque)
     promising HTTP server, JSGI middleware
+-   [QEJS](https://github.com/jepso/QEJS)
+    Adds async promises to EJS templating
 
 [Many other projects](http://search.npmjs.org/#/q) in NPM use Q
 internally or provide Q promises.
