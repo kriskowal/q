@@ -1,6 +1,7 @@
+var Q = this.Q;
 if (typeof Q === "undefined" && typeof require !== "undefined") {
     // For Node compatability.
-    this.Q = require("../q");
+    Q = require("../q");
 }
 
 describe("defer and when", function () {
@@ -852,14 +853,22 @@ describe("possible regressions", function () {
 
             var deferred = Q.defer();
 
-            window.onerror = function (message) {
-                console.log(arguments);
+            function checkErrorMessage(message) {
                 if (message.indexOf(REASON) === -1) {
                     deferred.reject(new Error(
                         "Error was thrown when calling .end(): " + message
                     ));
                 }
             };
+
+            if (typeof window !== "undefined") {
+                window.onerror = checkErrorMessage;
+            } else if (typeof process !== "undefined") {
+                process.on("uncaughtException", function (exception) {
+                    checkErrorMessage(exception.message);
+                });
+            }
+
             Q.delay(10).then(deferred.resolve);
 
             return deferred.promise;
