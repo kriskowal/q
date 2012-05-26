@@ -1432,7 +1432,7 @@ function nbind(callback /* thisp, ...args*/) {
  */
 exports.npost = npost;
 function npost(object, name, args) {
-    return napply(object[name], name, args);
+    return napply(object[name], object, args);
 }
 
 /**
@@ -1448,7 +1448,7 @@ function npost(object, name, args) {
 exports.ninvoke = ninvoke;
 function ninvoke(object, name /*, ...args*/) {
     var args = array_slice(arguments, 2);
-    return napply(object[name], name, args);
+    return napply(object[name], object, args);
 }
 
 defend(exports);

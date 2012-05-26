@@ -632,6 +632,20 @@ describe("thenables", function () {
 
 describe("node support", function () {
 
+    var exception = new Error("That is not your favorite color.");
+
+    var obj = {
+        method: function (a, b, c, callback) {
+            callback(null, a + b + c);
+        },
+        thispChecker: function (callback) {
+            callback(null, this === obj);
+        },
+        errorCallbacker: function (a, b, c, callback) {
+            callback(exception);
+        }
+    };
+
     describe("napply", function (done) {
 
         it("fulfills with callback result", function () {
@@ -724,6 +738,60 @@ describe("node support", function () {
             }, subject, 1, 2).call({}, 3, 4)
             .then(function (ten) {
                 expect(ten).toBe(10);
+            });
+        });
+
+    });
+
+    describe("npost", function (done) {
+
+        it("fulfills with callback result", function () {
+            return Q.npost(obj, "method", [1, 2, 3])
+            .then(function (sum) {
+                expect(sum).toEqual(6);
+            });
+        });
+
+        it("gets the correct thisp", function () {
+            return Q.npost(obj, "thispChecker", [])
+            .then(function (result) {
+                expect(result).toBe(true);
+            });
+        });
+
+        it("rejects with callback error", function () {
+            return Q.npost(obj, "errorCallbacker", [1, 2, 3])
+            .then(function (sum) {
+                expect("blue").toBe("no, yellow!");
+            }, function (_exception) {
+                expect(_exception).toBe(exception);
+            });
+        });
+
+    });
+
+    describe("ninvoke", function (done) {
+
+        it("fulfills with callback result", function () {
+            return Q.ninvoke(obj, "method", 1, 2, 3)
+            .then(function (sum) {
+                expect(sum).toEqual(6);
+            });
+        });
+
+        it("gets the correct thisp", function () {
+            return Q.ninvoke(obj, "thispChecker")
+            .then(function (result) {
+                expect(result).toBe(true);
+            });
+        });
+
+        it("rejects with callback error", function () {
+            return Q.ninvoke(obj, "errorCallbacker", 1, 2, 3)
+            .then(function (sum) {
+                expect("blue").toBe("no, yellow!");
+            }, function (_exception) {
+                expect(_exception).toBe(exception);
             });
         });
 
