@@ -10,7 +10,6 @@ cover_html/
 design
 examples
 spec
-test
 .coverignore
 .travis.yml
 CHANGES.md

@@ -40,7 +40,6 @@
     },
     "dependencies": {},
     "devDependencies": {
-        "test": ">=0.3.0",
         "jshint": ">=0.7.1",
         "cover": "*",
         "jasmine-node": "*"
@@ -58,6 +57,6 @@
         }
     },
     "directories": {
-        "test": "./test"
+        "test": "./spec"
     }
 }
