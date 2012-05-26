@@ -46,9 +46,9 @@
         "jasmine-node": "*"
     },
     "scripts": {
-        "test": "node test/all.js",
-        "test-cover": "cover run test/all.js && cover report html",
-        "spec-cover": "cover run node_modules/jasmine-node/bin/jasmine-node spec && cover report html"
+        "test": "jasmine-node spec",
+        "lint": "jshint q.js",
+        "cover": "cover run node_modules/jasmine-node/bin/jasmine-node spec && cover report html"
     },
     "overlay": {
         "teleport": {
