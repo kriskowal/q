@@ -402,9 +402,9 @@ if (Error.captureStackTrace) {
 }
 
 function deprecate(fn, name, alternative){
-    return function(){
-        if(typeof console !== 'undefined' && typeof console.warn === 'function'){
-            console.warn(name + " is depreciated, use " + alternative + " instead.");
+    return function () {
+        if (typeof console !== "undefined" && typeof console.warn === "function"){
+            console.warn(name + " is deprecated, use " + alternative + " instead.");
         }
         return fn.apply(fn,arguments);
     };
@@ -506,7 +506,7 @@ defer.prototype.makeNodeResolver = function () {
     };
 };
 // XXX deprecated
-defer.prototype.node = deprecate(defer.prototype.makeNodeResolver, 'node','makeNodeResolver');
+defer.prototype.node = deprecate(defer.prototype.makeNodeResolver, "node", "makeNodeResolver");
 
 /**
  * @param makePromise {Function} a function that returns nothing and accepts
@@ -717,7 +717,7 @@ function reject(exception) {
  */
 exports.begin = resolve; // XXX experimental
 exports.resolve = resolve;
-exports.ref = deprecate(resolve,'ref','resolve'); // XXX deprecated, use resolve
+exports.ref = deprecate(resolve, "ref", "resolve"); // XXX deprecated, use resolve
 function resolve(object) {
     // If the object is already a Promise, return it directly.  This enables
     // the resolve function to both be used to created references from objects,
@@ -1000,8 +1000,8 @@ function _return(value) {
  * Constructs a promise method that can be used to safely observe resolution of
  * a promise for an arbitrarily named method like "propfind" in a future turn.
  */
-exports.sender = deprecate(sender, 'sender', 'dispatcher'); // XXX deprecated, use dispatcher
-exports.Method = deprecate(sender, 'Method', 'dispatcher'); // XXX deprecated, use dispatcher
+exports.sender = deprecate(sender, "sender", "dispatcher"); // XXX deprecated, use dispatcher
+exports.Method = deprecate(sender, "Method", "dispatcher"); // XXX deprecated, use dispatcher
 function sender(op) {
     return function (object) {
         var args = array_slice(arguments, 1);
@@ -1016,7 +1016,7 @@ function sender(op) {
  * @param ...args further arguments to be forwarded to the operation
  * @returns result {Promise} a promise for the result of the operation
  */
-exports.send = deprecate(send, 'send', 'dispatch'); // XXX deprecated, use dispatch
+exports.send = deprecate(send, "send", "dispatch"); // XXX deprecated, use dispatch
 function send(object, op) {
     var deferred = defer();
     var args = array_slice(arguments, 2);
@@ -1124,7 +1124,7 @@ exports.invoke = function (value, name) {
  * @param args      array of application arguments
  */
 // XXX deprecated, use fapply
-var apply = exports.apply = deprecate(dispatcher("apply"),'apply','fapply');
+var apply = exports.apply = deprecate(dispatcher("apply"), "apply", "fapply");
 
 /**
  * Applies the promised function in a future turn.
@@ -1140,7 +1140,7 @@ var fapply = exports.fapply = dispatcher("fapply");
  * @param ...args   array of application arguments
  */
 // XXX deprecated, use fcall
-exports.call = deprecate(call, 'call', 'fcall');
+exports.call = deprecate(call, "call", "fcall");
 function call(value, thisp) {
     var args = array_slice(arguments, 2);
     return apply(value, thisp, args);
@@ -1165,7 +1165,7 @@ function fcall(value) {
  * @param thisp   the `this` object for the call
  * @param ...args   array of application arguments
  */
-exports.bind = deprecate(bind, 'bind', 'fbind'); // XXX deprecated, use fbind
+exports.bind = deprecate(bind, "bind", "fbind"); // XXX deprecated, use fbind
 function bind(value, thisp) {
     var args = array_slice(arguments, 2);
     return function bound() {
