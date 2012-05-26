@@ -601,6 +601,173 @@ describe("spread", function () {
 
 });
 
+describe("fin", function () {
+
+    var exception1 = new Error("boo!");
+    var exception2 = new TypeError("evil!");
+
+    describe("when the promise is fulfilled", function () {
+
+        it("should call the callback", function () {
+            var called = false;
+
+            return Q.resolve("foo")
+            .fin(function () {
+                called = true;
+            })
+            .then(function () {
+                expect(called).toBe(true);
+            });
+        });
+
+        it("should fulfill with the original value", function () {
+            return Q.resolve("foo")
+            .fin(function () {
+                return "bar";
+            })
+            .then(function (result) {
+                expect(result).toBe("foo");
+            });
+        });
+
+        describe("when the callback returns a promise", function () {
+
+            describe("that is fulfilled", function () {
+                it("should fulfill with the original reason after that promise resolves", function () {
+                    var promise = Q.delay(250);
+
+                    return Q.resolve("foo")
+                    .fin(function () {
+                        return promise;
+                    })
+                    .then(function (result) {
+                        expect(Q.isResolved(promise)).toBe(true);
+                        expect(result).toBe("foo");
+                    });
+                });
+            });
+
+            describe("that is rejected", function () {
+                it("should reject with this new rejection reason", function () {
+                    return Q.resolve("foo")
+                    .fin(function () {
+                        return Q.reject(exception1);
+                    })
+                    .then(function () {
+                        expect(false).toBe(true);
+                    },
+                    function (exception) {
+                        expect(exception).toBe(exception1);
+                    });
+                });
+            });
+
+        });
+
+        describe("when the callback throws an exception", function () {
+            it("should reject with this new exception", function () {
+                return Q.resolve("foo")
+                .fin(function () {
+                    throw exception1;
+                })
+                .then(function () {
+                    expect(false).toBe(true);
+                },
+                function (exception) {
+                    expect(exception).toBe(exception1);
+                });
+            });
+        });
+    
+    });
+
+    describe("when the promise is rejected", function () {
+
+        it("should call the callback", function () {
+            var called = false;
+
+            return Q.reject(exception1)
+            .fin(function () {
+                called = true;
+            })
+            .then(function () {
+                expect(called).toBe(true);
+            }, function () {
+                expect(called).toBe(true);
+            });
+        });
+
+        it("should reject with the original reason", function () {
+            return Q.reject(exception1)
+            .fin(function () {
+                return "bar";
+            })
+            .then(function (result) {
+                expect(false).toBe(true);
+            },
+            function (exception) {
+                expect(exception).toBe(exception1);
+            });
+        });
+
+        describe("when the callback returns a promise", function () {
+
+            describe("that is fulfilled", function () {
+                it("should reject with the original reason after that promise resolves", function () {
+                    var promise = Q.delay(250);
+
+                    return Q.reject(exception1)
+                    .fin(function () {
+                        return promise;
+                    })
+                    .then(function (result) {
+                        expect(false).toBe(true);
+                    },
+                    function (exception) {
+                        expect(exception).toBe(exception1);
+                        expect(Q.isResolved(promise)).toBe(true);
+                    });
+                });
+            });
+
+            describe("that is rejected", function () {
+                it("should reject with the new reason", function () {
+                    var newException = new TypeError("evil!");
+
+                    return Q.reject(exception1)
+                    .fin(function () {
+                        return Q.reject(exception2);
+                    })
+                    .then(function (result) {
+                        expect(false).toBe(true);
+                    },
+                    function (exception) {
+                        expect(exception).toBe(exception2);
+                    });
+                });
+            });
+
+        });
+
+        describe("when the callback throws an exception", function () {
+            it("should reject with this new exception", function () {
+                return Q.reject(exception1)
+                .fin(function () {
+                    throw exception2;
+                })
+                .then(function () {
+                    expect(false).toBe(true);
+                },
+                function (exception) {
+                    expect(exception).toBe(exception2);
+                });
+            });
+        });
+    
+    });
+
+});
+
 describe("thenables", function () {
 
     it("assimilates a thenable with fulfillment with resolve", function () {
