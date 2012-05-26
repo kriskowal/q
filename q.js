@@ -2,8 +2,8 @@
 /*jshint browser: true, node: true,
   curly: true, eqeqeq: true, noarg: true, nonew: true, trailing: true,
   undef: true */
-/*global define: false, Q: true, msSetImmediate: true, setImmediate: true,
-  MessageChannel: true, ReturnValue: true, cajaVM: true, ses: true */
+/*global define: false, Q: true, msSetImmediate: false, setImmediate: false,
+  ReturnValue: false, cajaVM: false, ses: false */
 /*!
  *
  * Copyright 2009-2012 Kris Kowal under the terms of the MIT
@@ -59,6 +59,8 @@
  */
 
 (function (definition) {
+    // Turn off strict mode for this function so we can assign to global.Q
+    /*jshint strict: false*/
 
     // This file will function properly as a <script> tag, or a module
     // using CommonJS and NodeJS or RequireJS module formats.  In
@@ -393,6 +395,7 @@ if (Error.captureStackTrace) {
 
         // teases call of temporary prepareStackTrace
         // JSHint and Closure Compiler generate known warnings here
+        /*jshint expr: true */
         new Error().stack;
 
         Error.prepareStackTrace = oldPrepareStackTrace;
@@ -629,6 +632,8 @@ exports.nearer = valueOf;
 function valueOf(value) {
     // if !Object.isObject(value)
     // generates a known JSHint "constructor invocation without new" warning
+    // supposed to be fixed, but isn't? https://github.com/jshint/jshint/issues/392
+    /*jshint newcap: false */
     if (Object(value) !== value) {
         return value;
     } else {

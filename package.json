@@ -41,13 +41,13 @@
     "dependencies": {},
     "devDependencies": {
         "test": ">=0.3.0",
-        "jshint": "*",
+        "jshint": ">=0.7.1",
         "cover": "*",
         "jasmine-node": "*"
     },
     "scripts": {
         "test": "jasmine-node spec",
-        "lint": "jshint q.js",
+        "lint": "jshint --show-non-errors q.js",
         "cover": "cover run node_modules/jasmine-node/bin/jasmine-node spec && cover report html"
     },
     "overlay": {
