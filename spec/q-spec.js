@@ -501,6 +501,10 @@ describe("propagation", function () {
 
 describe("all", function () {
 
+    it("resolves when passed an empty array", function () {
+        return Q.all([]);
+    });
+
     it("resolves after any constituent promise is rejected", function () {
         var toResolve = Q.defer(); // never resolve
         var toReject = Q.defer();
