@@ -1334,10 +1334,14 @@ function end(promise) {
 exports.timeout = timeout;
 function timeout(promise, ms) {
     var deferred = defer();
-    when(promise, deferred.resolve, deferred.reject);
-    setTimeout(function () {
-        deferred.reject(new Error("Timed out after " + ms + "ms"));
+    var timeoutId = setTimeout(function () {
+        deferred.reject(new Error("Timed out after " + ms + " ms"));
     }, ms);
+
+    when(promise, function (value) {
+        clearTimeout(timeoutId);
+        deferred.resolve(value);
+    }, deferred.reject);
     return deferred.promise;
 }
 
