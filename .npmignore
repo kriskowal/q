@@ -11,6 +11,8 @@ design
 examples
 spec
 .coverignore
+.mailmap
+.npmignore
 .travis.yml
 CHANGES.md
 LICENSE
