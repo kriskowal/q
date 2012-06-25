@@ -35,7 +35,7 @@
         "url": "http://github.com/kriskowal/q.git"
     },
     "engines": {
-        "node": ">=0.2.0",
+        "node": ">=0.6.0",
         "teleport": ">=0.2.0"
     },
     "dependencies": {},
