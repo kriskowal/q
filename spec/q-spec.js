@@ -2,7 +2,7 @@
 
 var Q = this.Q;
 if (typeof Q === "undefined" && typeof require !== "undefined") {
-    // For Node compatability.
+    // For Node compatibility.
     Q = require("../q");
     require("./lib/jasmine-promise");
 }
@@ -21,6 +21,20 @@ describe("defer and when", function () {
         return promise;
     });
 
+    it("reject before when", function () {
+        var turn = 0;
+        var deferred = Q.defer();
+        deferred.reject(-1);
+        var promise = Q.when(deferred.promise, function () {
+        	expect(true).toBe(false);
+	    }, function (value) {
+    	    expect(turn).toEqual(1);
+        	expect(value).toEqual(-1);
+    	});
+        turn++;
+        return promise;
+    });
+
     it("when before resolve", function () {
         var turn = 0;
         var deferred = Q.defer();
@@ -32,6 +46,25 @@ describe("defer and when", function () {
         Q.nextTick(function () {
             expect(turn).toEqual(1);
             deferred.resolve(10);
+            turn++;
+        });
+        turn++;
+        return promise;
+    });
+
+    it("when before reject", function () {
+        var turn = 0;
+        var deferred = Q.defer();
+        var promise = deferred.promise.then(function () {
+        	expect(true).toBe(false);
+        }, function (value) {
+            expect(turn).toEqual(2);
+            expect(value).toEqual(-1);
+            turn++;
+        });
+        Q.nextTick(function () {
+            expect(turn).toEqual(1);
+            deferred.reject(-1);
             turn++;
         });
         turn++;
