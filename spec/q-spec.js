@@ -2,6 +2,7 @@ var Q = this.Q;
 if (typeof Q === "undefined" && typeof require !== "undefined") {
     // For Node compatability.
     Q = require("../q");
+    require("./lib/jasmine-promise");
 }
 
 describe("defer and when", function () {
