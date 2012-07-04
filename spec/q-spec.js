@@ -1,3 +1,5 @@
+"use strict";
+
 var Q = this.Q;
 if (typeof Q === "undefined" && typeof require !== "undefined") {
     // For Node compatability.
@@ -63,7 +65,7 @@ describe("defer and when", function () {
     });
 
     it("observers called even after throw", function () {
-        var thew = false;
+        var threw = false;
         var deferred = Q.defer();
         Q.when(deferred.promise, function () {
             threw = true;
@@ -683,7 +685,7 @@ describe("fin", function () {
                 });
             });
         });
-    
+
     });
 
     describe("when the promise is rejected", function () {
@@ -768,7 +770,7 @@ describe("fin", function () {
                 });
             });
         });
-    
+
     });
 
 });
