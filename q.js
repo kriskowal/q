@@ -457,15 +457,18 @@ function defer() {
     // forward to the resolved promise.  We coerce the resolution value to a
     // promise using the ref promise because it handles both fully
     // resolved values and other promises gracefully.
-    var pending = [], value;
+    var pending = [], progressListeners = [], value;
 
     var deferred = object_create(defer.prototype);
     var promise = object_create(makePromise.prototype);
 
-    promise.promiseSend = function () {
+    promise.promiseSend = function (op, _, __, progress) {
         var args = array_slice(arguments);
         if (pending) {
             pending.push(args);
+            if (op === "when" && progress) {
+                progressListeners.push(progress);
+            }
         } else {
             nextTick(function () {
                 value.promiseSend.apply(value, args);
@@ -495,6 +498,7 @@ function defer() {
             });
         }, void 0);
         pending = void 0;
+        progressListeners = void 0;
         return value;
     }
 
@@ -504,6 +508,17 @@ function defer() {
     deferred.resolve = become;
     deferred.reject = function (exception) {
         return become(reject(exception));
+    };
+    deferred.notify = function () {
+        if (pending) {
+            var args = arguments;
+
+            array_reduce(progressListeners, function (undefined, progressListener) {
+                nextTick(function () {
+                    progressListener.apply(void 0, args);
+                });
+            }, void 0);
+        }
     };
 
     return deferred;
@@ -580,7 +595,9 @@ function makePromise(descriptor, fallback, valueOf, exception) {
         } catch (exception) {
             result = reject(exception);
         }
-        resolved(result);
+        if (resolved) {
+            resolved(result);
+        }
     };
 
     if (valueOf) {
@@ -597,8 +614,8 @@ function makePromise(descriptor, fallback, valueOf, exception) {
 }
 
 // provide thenables, CommonJS/Promises/A
-makePromise.prototype.then = function (fulfilled, rejected) {
-    return when(this, fulfilled, rejected);
+makePromise.prototype.then = function (fulfilled, rejected, progressed) {
+    return when(this, fulfilled, rejected, progressed);
 };
 
 // Chainable methods
@@ -614,7 +631,7 @@ array_reduce(
         "all", "allResolved",
         "view", "viewInfo",
         "timeout", "delay",
-        "catch", "finally", "fail", "fin", "end"
+        "catch", "finally", "fail", "fin", "progress", "end"
     ],
     function (prev, name) {
         makePromise.prototype[name] = function () {
@@ -750,9 +767,9 @@ function resolve(object) {
     }
     // assimilate thenables, CommonJS/Promises/A
     if (object && typeof object.then === "function") {
-        var result = defer();
-        object.then(result.resolve, result.reject);
-        return result.promise;
+        var deferred = defer();
+        object.then(deferred.resolve, deferred.reject, deferred.notify);
+        return deferred.promise;
     }
     return makePromise({
         "when": function (rejected) {
@@ -876,13 +893,14 @@ function view(object) {
  *    called, but not both.
  * 3. that fulfilled and rejected will not be called in this turn.
  *
- * @param value     promise or immediate reference to observe
- * @param fulfilled function to be called with the fulfilled value
- * @param rejected  function to be called with the rejection exception
+ * @param value      promise or immediate reference to observe
+ * @param fulfilled  function to be called with the fulfilled value
+ * @param rejected   function to be called with the rejection exception
+ * @param progressed function to be called on any progress notifications
  * @return promise for the return value from the invoked callback
  */
 exports.when = when;
-function when(value, fulfilled, rejected) {
+function when(value, fulfilled, rejected, progressed) {
     var deferred = defer();
     var done = false;   // ensure the untrusted promise makes at most a
                         // single call to one of the callbacks
@@ -903,8 +921,9 @@ function when(value, fulfilled, rejected) {
         }
     }
 
+    var resolvedValue = resolve(value);
     nextTick(function () {
-        resolve(value).promiseSend("when", function (value) {
+        resolvedValue.promiseSend("when", function (value) {
             if (done) {
                 return;
             }
@@ -920,6 +939,11 @@ function when(value, fulfilled, rejected) {
             deferred.resolve(_rejected(exception));
         });
     });
+
+    // Progress listeners need to be attached in the current tick.
+    if (progressed) {
+        resolvedValue.promiseSend("when", void 0, void 0, progressed);
+    }
 
     return deferred.promise;
 }
@@ -1314,6 +1338,20 @@ exports["catch"] = // XXX experimental
 exports.fail = fail;
 function fail(promise, rejected) {
     return when(promise, void 0, rejected);
+}
+
+/**
+ * Attaches a listener that can respond to progress notifications from a
+ * promise's originating deferred. This listener receives the exact arguments
+ * passed to ``deferred.notify``.
+ * @param {Any*} promise for something
+ * @param {Function} callback to receive any progress notifications
+ * @returns the given promise, unchanged
+ */
+exports.progress = progress;
+function progress(promise, progressed) {
+    when(promise, void 0, void 0, progressed);
+    return promise;
 }
 
 /**
