@@ -63,26 +63,18 @@ The Q module can be loaded as:
 
 -   a ``<script>`` tag (creating a ``Q`` global variable):
     ~3.3 KB minified and gzipped.
--   a NodeJS and CommonJS module available from NPM as the ``q``
+-   a Node.js and CommonJS module available from NPM as the ``q``
     package
 -   a RequireJS module
 
-Q can exchange promises with jQuery and Dojo and the following libraries
-are based on Q.
-
--   [q-fs](https://github.com/kriskowal/q-fs)
-    file system
--   [q-http](https://github.com/kriskowal/q-http)
-    http client and server
--   [q-comm](https://github.com/kriskowal/q-comm)
-    remote objects
--   [jaque](https://github.com/kriskowal/jaque)
-    promising HTTP server, JSGI middleware
-
-[Many other projects](http://search.npmjs.org/#/q) in NPM use Q
-internally or provide Q promises.
+Q can exchange promises with jQuery, Dojo, When.js, WinJS, and more.
+Additionally, there are many libraries that produce and consume Q promises for
+everything from file system/database access or RPC to templating. For a list of
+some of the more popular ones, see [Libraries][].
 
 Please join the Q-Continuum [mailing list](https://groups.google.com/forum/#!forum/q-continuum).
+
+[Libraries]: https://github.com/kriskowal/q/wiki/Libraries
 
 
 ## Tutorial
@@ -635,6 +627,14 @@ will [be ameliorated][streamsnext].
 A method-by-method [Q API reference][reference] is available on the wiki.
 
 [reference]: q/wiki/API-Reference
+
+## More Examples
+
+A growing [examples gallery][examples] is available on the wiki, showing how Q
+can be used to make everything better. From XHR to database access to accessing
+the Flickr API, Q is there for you.
+
+[examples]: https://github.com/kriskowal/q/wiki/Examples-Gallery
 
 ---
 
