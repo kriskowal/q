@@ -1308,7 +1308,7 @@ function end(promise) {
             // trace by removing Node and Q cruft, then concatenating with
             // the stack trace of the promise we are ``end``ing. See #57.
             if (Error.captureStackTrace && typeof error === "object" &&
-                "stack" in error) {
+                error.stack) {
                 var errorStackFrames = getStackFrames(error);
                 var promiseStackFrames = getStackFrames(promise);
 
