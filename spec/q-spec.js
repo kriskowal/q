@@ -1059,7 +1059,6 @@ describe("possible regressions", function () {
             // why we check for "Script error." Because of this restriction,
             // the test will always pass on the local file system :(.
             if (!messageRegExp.test(message) && message !== "Script error.") {
-                console.dir(message);
                 onBadMessage(new Error(
                     "Error was thrown when calling .end(): " + message
                 ));
