@@ -887,13 +887,19 @@ function when(value, fulfilled, rejected) {
 
     nextTick(function () {
         resolve(value).promiseSend("when", function (value) {
-            if (done) {
-                return;
-            }
-            done = true;
             resolve(value).promiseSend("when", function (value) {
+                if (done) {
+                    return;
+                }
+                done = true;
+
                 deferred.resolve(_fulfilled(value));
             }, function (exception) {
+                if (done) {
+                    return;
+                }
+                done = true;
+
                 deferred.resolve(_rejected(exception));
             });
         }, function (exception) {
@@ -901,6 +907,7 @@ function when(value, fulfilled, rejected) {
                 return;
             }
             done = true;
+
             deferred.resolve(_rejected(exception));
         });
     });

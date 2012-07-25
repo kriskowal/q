@@ -1110,5 +1110,22 @@ describe("possible regressions", function () {
         });
     });
 
+    describe("gh-75", function () {
+        it("does not double-resolve misbehaved promises", function () {
+            var badPromise = Q.makePromise({
+                post: function () { return "hello"; }
+            });
+
+            var resolutions = 0;
+            function onResolution() {
+                ++resolutions;
+            }
+
+            return Q.when(badPromise, onResolution, onResolution).then(function () {
+                expect(resolutions).toBe(1);
+            });
+        });
+    });
+
 });
 
