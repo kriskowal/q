@@ -1053,6 +1053,34 @@ describe("possible regressions", function () {
         });
     });
 
+    function setupErrorMessageCheck(messageRegExp, onBadMessage) {
+        function checkErrorMessage(message) {
+            // See http://stackoverflow.com/q/5913978 for an explanation of
+            // why we check for "Script error." Because of this restriction,
+            // the test will always pass on the local file system :(.
+            if (!messageRegExp.test(message) && message !== "Script error.") {
+                console.dir(message);
+                onBadMessage(new Error(
+                    "Error was thrown when calling .end(): " + message
+                ));
+            }
+        }
+
+        if (typeof window !== "undefined") {
+            var oldWindowOnError = window.onerror;
+            window.onerror = function (message) {
+                window.onerror = oldWindowOnError;
+                checkErrorMessage(message);
+            };
+        } else if (typeof process !== "undefined") {
+            process.once("uncaughtException", function (thrown) {
+                // Deal with both normal cases, where a `message` property
+                // exists, and with degenerate ones.
+                checkErrorMessage(thrown.message || thrown);
+            });
+        }
+    }
+
     describe("gh-73", function () {
         it("does not choke on non-error rejection reasons", function () {
             var REASON = "this is not an error, but it might show up in the console";
@@ -1060,25 +1088,22 @@ describe("possible regressions", function () {
 
             var deferred = Q.defer();
 
-            function checkErrorMessage(message) {
-                // See http://stackoverflow.com/questions/5913978/cryptic-script-error-reported-in-javascript-in-chrome-and-firefox
-                // for an explanation of why we check for "Script error."
-                if (message.indexOf(REASON) === -1 &&
-                    message !== "Script error.") {
-                    deferred.reject(new Error(
-                        "Error was thrown when calling .end(): " + message
-                    ));
-                }
-            };
+            setupErrorMessageCheck(new RegExp(REASON), deferred.reject);
+            Q.delay(10).then(deferred.resolve);
 
-            if (typeof window !== "undefined") {
-                window.onerror = checkErrorMessage;
-            } else if (typeof process !== "undefined") {
-                process.on("uncaughtException", function (thrown) {
-                    checkErrorMessage(thrown);
-                });
-            }
+            return deferred.promise;
+        });
+    });
 
+    describe("gh-90", function () {
+        it("does not choke on rejection reasons with an undefined `stack`", function () {
+            var error = new RangeError("this is not an error, but it might show up in the console");
+            error.stack = undefined;
+            Q.reject(error).end();
+
+            var deferred = Q.defer();
+
+            setupErrorMessageCheck(new RegExp(error.message), deferred.reject);
             Q.delay(10).then(deferred.resolve);
 
             return deferred.promise;
