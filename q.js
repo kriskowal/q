@@ -1299,6 +1299,12 @@ function fin(promise, callback) {
     });
 }
 
+var globalErrorTrap = null;
+exports.onError = onError;
+function onError(handler){
+  globalErrorTrap = handler;
+}
+
 /**
  * Terminates a chain of promises, forcing rejections to be
  * thrown as exceptions.
@@ -1326,7 +1332,11 @@ function end(promise) {
                 error.stack = formatStackTrace(error, combinedStackFrames);
             }
 
+	  if (globalErrorTrap){
+	    globalErrorTrap(error)
+	  } else {
             throw error;
+	  }
         });
     });
 }
