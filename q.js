@@ -1227,13 +1227,20 @@ function all(promises) {
         }
         var deferred = defer();
         array_reduce(promises, function (undefined, promise, index) {
-            when(promise, function (value) {
-                promises[index] = value;
+            if (isFulfilled(promise)) {
+                promises[index] = valueOf(promise);
                 if (--countDown === 0) {
                     deferred.resolve(promises);
                 }
-            })
-            .fail(deferred.reject);
+            } else {
+                when(promise, function (value) {
+                    promises[index] = value;
+                    if (--countDown === 0) {
+                        deferred.resolve(promises);
+                    }
+                })
+                .fail(deferred.reject);
+            }
         }, void 0);
         return deferred.promise;
     });
