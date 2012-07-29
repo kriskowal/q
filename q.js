@@ -96,7 +96,7 @@
 
 
 // All code after this point will be filtered from stack traces.
-captureLine(new Error);
+captureLine(new Error());
 
 // shims
 
@@ -354,7 +354,7 @@ function formatSourcePosition(frame) {
 }
 
 function isInternalFrame(fileName, frame) {
-    if (fileName !== qFileName){
+    if (fileName !== qFileName) {
         return false;
     }
     var line = frame.getLineNumber();
@@ -414,7 +414,7 @@ function captureLine(objectWithStack) {
 
         Error.prepareStackTrace = oldPrepareStackTrace;
         qFileName = fileName;
-        if (qStartingLine){
+        if (qStartingLine) {
             qEndingLine = lineNumber;
         } else {
             qStartingLine = lineNumber;
@@ -422,12 +422,12 @@ function captureLine(objectWithStack) {
     }
 }
 
-function deprecate(fn, name, alternative){
+function deprecate(fn, name, alternative) {
     return function () {
-        if (typeof console !== "undefined" && typeof console.warn === "function"){
+        if (typeof console !== "undefined" && typeof console.warn === "function") {
             console.warn(name + " is deprecated, use " + alternative + " instead.");
         }
-        return fn.apply(fn,arguments);
+        return fn.apply(fn, arguments);
     };
 }
 
@@ -1341,7 +1341,7 @@ function end(promise) {
             // the stack trace of the promise we are ``end``ing. See #57.
             var errorStackFrames;
             if (Error.captureStackTrace && typeof error === "object" &&
-                (errorStackFrames = getStackFrames(error)) ) {
+                (errorStackFrames = getStackFrames(error))) {
                 var promiseStackFrames = getStackFrames(promise);
 
                 var combinedStackFrames = errorStackFrames.concat(
@@ -1496,7 +1496,7 @@ function ninvoke(object, name /*, ...args*/) {
 defend(exports);
 
 
-captureLine(new Error);
+captureLine(new Error());
 // All code before this point will be filtered from stack traces.
 
 });
