@@ -20,6 +20,9 @@
  - Fixed various cases involving unorthodox rejection reasons. #73 #90
    @ef4
  - Fixed double-resolving of misbehaved custom promises. #75
+ - Sped up ``Q.all`` for arrays contain already-resolved promises or scalar
+   values. @ForbesLindesay
+ - Made stack trace filtering work when concatenating assets. #93 @ef4
  - Added warnings for deprecated methods. @ForbesLindesay
  - Added ``.npmignore`` file so that dependent packages get a slimmer
    ``node_modules`` directory.
