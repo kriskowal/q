@@ -945,8 +945,10 @@ function when(value, fulfilled, rejected) {
  */
 exports.spread = spread;
 function spread(promise, fulfilled, rejected) {
-    return when(promise, function (values) {
-        return fulfilled.apply(void 0, values);
+    return when(promise, function (valuesOrPromises) {
+        return all(valuesOrPromises).then(function (values) {
+            return fulfilled.apply(void 0, values);
+        });
     }, rejected);
 }
 

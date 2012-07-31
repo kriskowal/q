@@ -631,12 +631,43 @@ describe("spread", function () {
         });
     });
 
-    it("spreads promises across arguments", function () {
+    it("spreads promises for arrays across arguments", function () {
         return Q.resolve([Q.resolve(10)])
-        .spread(function (promise) {
-            expect(Q.isPromise(promise)).toBe(true);
-            expect(promise.valueOf()).toEqual(10);
+        .spread(function (value) {
+            expect(value).toEqual(10);
         });
+    });
+
+    it("spreads arrays of promises across arguments", function () {
+        var deferredA = Q.defer();
+        var deferredB = Q.defer();
+
+        var promise = Q.spread([deferredA.promise, deferredB.promise],
+                               function (a, b) {
+            expect(a).toEqual(10);
+            expect(b).toEqual(20);
+        });
+
+        Q.delay(5).then(function () {
+            deferredA.resolve(10);
+        });
+        Q.delay(10).then(function () {
+            deferredB.resolve(20);
+        });
+
+        return promise;
+    });
+
+    it("calls the errback when given a rejected promise", function () {
+        var err = new Error();
+        Q.spread([Q.resolve(10), Q.reject(err)],
+            function () {
+                expect(true).toBe(false);
+            },
+            function (actual) {
+                expect(actual).toBe(error);
+            }
+        );
     });
 
 });
