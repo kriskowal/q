@@ -252,8 +252,8 @@ But ``spread`` calls ``all`` initially, so you can skip it in chains.
 
 ```javascript
 return foo()
-.then(function (name, location) {
-    return [name, FS.read(location, "utf-8")];
+.then(function (info) {
+    return [info.name, FS.read(info.location, "utf-8")];
     // FS.read returns a promise, so this array
     // mixes values and promises
 })
