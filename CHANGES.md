@@ -14,7 +14,7 @@
    ``invoke``.
  - WARNING: The undocumented ``view`` and ``viewInfo`` will be removed.
 
-## Next minor
+## 0.8.6
 
  - Fixed ``npost`` and ``ninvoke`` to pass the correct ``thisp``. #74
  - Fixed various cases involving unorthodox rejection reasons. #73 #90
