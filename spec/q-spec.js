@@ -1032,6 +1032,48 @@ describe("node support", function () {
 
 });
 
+describe("decorator functions", function () {
+    describe("promised", function () {
+        var exception = new Error("That is not the meaning of life.");
+        it("resolves promised arguments", function () {
+            var sum = Q.promised(function add(a, b) {
+                return a + b;
+            });
+            return sum(Q.resolve(4), Q.resolve(5)).then(function (sum) {
+                expect(sum).toEqual(9);
+            });
+        });
+        it("resolves promised `this`", function () {
+            var inc = Q.promised(function inc(a) {
+                return this + a;
+            });
+            return inc.call(Q.resolve(4), Q.resolve(5)).then(function (sum) {
+                expect(sum).toEqual(9);
+            });
+        });
+        it("is rejected if an argument is rejected", function () {
+            var sum = Q.promised(function add(a, b) {
+                return a + b;
+            });
+            return sum(Q.reject(exception), Q.resolve(4)).then(function () {
+                expect(4).toEqual(42);
+            }, function (_exception) {
+                expect(_exception).toBe(exception);
+            });
+        });
+        it("is rejected if `this` is rejected", function () {
+            var inc = Q.promised(function inc(a) {
+                return this + a;
+            });
+            return inc.call(Q.reject(exception), Q.resolve(4)).then(function () {
+                expect(4).toEqual(42);
+            }, function (_exception) {
+                expect(_exception).toBe(exception);
+            });
+        });
+    });
+});
+
 describe("possible regressions", function () {
 
     describe("gh-9", function () {

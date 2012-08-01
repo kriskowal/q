@@ -1027,6 +1027,30 @@ function _return(value) {
 }
 
 /**
+ * The promised function decorator ensures that any promise arguments
+ * are resolved and passed as values (`this` is also resolved and passed
+ * as a value).  It will also ensure that the result of a function is
+ * always a promise.
+ *
+ * @example
+ * var add = Q.promised(function (a, b) {
+ *     return a + b;
+ * });
+ * add(Q.resolve(a), Q.resolve(B));
+ * 
+ * @param {function} fn The function to decorate
+ * @returns {function} a function that has been decorated.
+ */
+exports.promised = promised;
+function promised(fn) {
+    return function () {
+        return all([this, all(arguments)]).spread(function (self, args) {
+          return fn.apply(self, args);
+        });
+    };
+}
+
+/**
  * Constructs a promise method that can be used to safely observe resolution of
  * a promise for an arbitrarily named method like "propfind" in a future turn.
  */
