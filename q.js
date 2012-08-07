@@ -905,21 +905,12 @@ function when(value, fulfilled, rejected) {
 
     nextTick(function () {
         resolve(value).promiseSend("when", function (value) {
-            resolve(value).promiseSend("when", function (value) {
-                if (done) {
-                    return;
-                }
-                done = true;
+            if (done) {
+                return;
+            }
+            done = true;
 
-                deferred.resolve(_fulfilled(value));
-            }, function (exception) {
-                if (done) {
-                    return;
-                }
-                done = true;
-
-                deferred.resolve(_rejected(exception));
-            });
+            deferred.resolve(_fulfilled(value));
         }, function (exception) {
             if (done) {
                 return;
@@ -1039,7 +1030,7 @@ function _return(value) {
  *     return a + b;
  * });
  * add(Q.resolve(a), Q.resolve(B));
- * 
+ *
  * @param {function} fn The function to decorate
  * @returns {function} a function that has been decorated.
  */
