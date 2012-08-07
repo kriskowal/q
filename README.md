@@ -425,8 +425,9 @@ return Q.fcall(eventualAdd, 2, 2);
 
 #### Using Deferreds
 
-When nothing else will do the job, you can use ``defer``, which is
-where all promises ultimately come from.
+If you have to interface with asynchronous functions that are callback-based
+instead of promise-based, Q provides a few shortcuts (like ``Q.ncall`` and
+friends). But much of the time, the solution will be to use *deferreds*.
 
 ```javascript
 var deferred = Q.defer();
