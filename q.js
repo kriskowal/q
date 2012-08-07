@@ -168,7 +168,7 @@ if (Function.prototype.bind) {
     uncurryThis = Function_bind.bind(Function_bind.call);
 } else {
     uncurryThis = function (f) {
-        return function (thisp) {
+        return function () {
             return f.call.apply(f, arguments);
         };
     };
@@ -616,7 +616,7 @@ array_reduce(
         "timeout", "delay",
         "catch", "finally", "fail", "fin", "end"
     ],
-    function (prev, name) {
+    function (undefined, name) {
         makePromise.prototype[name] = function () {
             return exports[name].apply(
                 exports,
@@ -723,7 +723,7 @@ function reject(exception) {
             }
             return rejected ? rejected(exception) : reject(exception);
         }
-    }, function fallback(op) {
+    }, function fallback() {
         return reject(exception);
     }, function valueOf() {
         return this;
@@ -755,7 +755,7 @@ function resolve(object) {
         return result.promise;
     }
     return makePromise({
-        "when": function (rejected) {
+        "when": function () {
             return object;
         },
         "get": function (name) {
@@ -816,7 +816,7 @@ exports.master = master;
 function master(object) {
     return makePromise({
         "isDef": function () {}
-    }, function fallback(op) {
+    }, function fallback() {
         var args = array_slice(arguments);
         return send.apply(void 0, [object].concat(args));
     }, function () {
@@ -832,7 +832,7 @@ function viewInfo(object, info) {
             "viewInfo": function () {
                 return info;
             }
-        }, function fallback(op) {
+        }, function fallback() {
             var args = array_slice(arguments);
             return send.apply(void 0, [object].concat(args));
         }, function () {
