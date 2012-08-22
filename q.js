@@ -67,13 +67,17 @@
     // Common/Node/RequireJS, the module exports the Q API and when
     // executed as a simple <script>, it creates a Q global instead.
 
-    // RequireJS
-    if (typeof define === "function") {
-        define(definition);
+    // Montage Require
+    if (typeof bootstrap === "function") {
+        bootstrap("promise", definition);
 
     // CommonJS
     } else if (typeof exports === "object") {
         definition(void 0, exports);
+
+    // RequireJS
+    } else if (typeof define === "function") {
+        define(definition);
 
     // SES (Secure EcmaScript)
     } else if (typeof ses !== "undefined") {
@@ -425,7 +429,7 @@ function captureLine(objectWithStack) {
 function deprecate(fn, name, alternative) {
     return function () {
         if (typeof console !== "undefined" && typeof console.warn === "function") {
-            console.warn(name + " is deprecated, use " + alternative + " instead.");
+            console.warn(name + " is deprecated, use " + alternative + " instead.", new Error("").stack);
         }
         return fn.apply(fn, arguments);
     };
@@ -1420,7 +1424,7 @@ function delay(promise, timeout) {
  * Passes a continuation to a Node function, which is called with a given
  * `this` value and arguments provided as an array, and returns a promise.
  *
- *      var FS = require("fs");
+ *      var FS = (require)("fs");
  *      Q.napply(FS.readFile, FS, [__filename])
  *      .then(function (content) {
  *      })
@@ -1435,7 +1439,7 @@ function napply(callback, thisp, args) {
  * Passes a continuation to a Node function, which is called with a given
  * `this` value and arguments provided individually, and returns a promise.
  *
- *      var FS = require("fs");
+ *      var FS = (require)("fs");
  *      Q.ncall(FS.readFile, FS, __filename)
  *      .then(function (content) {
  *      })
