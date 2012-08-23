@@ -105,7 +105,7 @@ describe("defer and when", function () {
         Q.when(deferred.promise, function () {
             threw = true;
             throw new Error(REASON);
-        }).end();
+        });
         var promise = Q.when(deferred.promise, function (value) {
             expect(value).toEqual(10);
         }, function () {
