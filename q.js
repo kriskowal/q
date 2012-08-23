@@ -98,9 +98,10 @@
 })(function (require, exports) {
 "use strict";
 
-
-// All code after this point will be filtered from stack traces.
-captureLine(new Error());
+// All code after this point will be filtered from stack traces reported
+// by Q.
+var qStartingLine = captureLine();
+var qFileName;
 
 // shims
 
@@ -399,30 +400,25 @@ function getStackFrames(objectWithStack) {
 
 // discover own file name and line number range for filtering stack
 // traces
-var qFileName, qStartingLine, qEndingLine;
-function captureLine(objectWithStack) {
+function captureLine() {
     if (Error.captureStackTrace) {
         var fileName, lineNumber;
 
         var oldPrepareStackTrace = Error.prepareStackTrace;
 
         Error.prepareStackTrace = function (error, frames) {
-            fileName = frames[0].getFileName();
-            lineNumber = frames[0].getLineNumber();
+            fileName = frames[1].getFileName();
+            lineNumber = frames[1].getLineNumber();
         };
 
         // teases call of temporary prepareStackTrace
         // JSHint and Closure Compiler generate known warnings here
         /*jshint expr: true */
-        objectWithStack.stack;
+        new Error().stack;
 
         Error.prepareStackTrace = oldPrepareStackTrace;
         qFileName = fileName;
-        if (qStartingLine) {
-            qEndingLine = lineNumber;
-        } else {
-            qStartingLine = lineNumber;
-        }
+        return lineNumber;
     }
 }
 
@@ -1361,8 +1357,11 @@ function end(promise) {
             // trace by removing Node and Q cruft, then concatenating with
             // the stack trace of the promise we are ``end``ing. See #57.
             var errorStackFrames;
-            if (Error.captureStackTrace && typeof error === "object" &&
-                (errorStackFrames = getStackFrames(error))) {
+            if (
+                Error.captureStackTrace &&
+                typeof error === "object" &&
+                (errorStackFrames = getStackFrames(error))
+            ) {
                 var promiseStackFrames = getStackFrames(promise);
 
                 var combinedStackFrames = errorStackFrames.concat(
@@ -1516,8 +1515,7 @@ function ninvoke(object, name /*, ...args*/) {
 
 defend(exports);
 
-
-captureLine(new Error());
 // All code before this point will be filtered from stack traces.
+var qEndingLine = captureLine();
 
 });
