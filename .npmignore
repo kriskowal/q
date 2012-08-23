@@ -17,7 +17,6 @@ spec
 .travis.yml
 CHANGES.md
 LICENSE
-README.md
 VERSIONS.md
 q.min.js
 q.min.js.gz
