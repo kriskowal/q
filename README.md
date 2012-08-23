@@ -63,26 +63,18 @@ The Q module can be loaded as:
 
 -   a ``<script>`` tag (creating a ``Q`` global variable):
     ~3 KB minified and gzipped.
--   a NodeJS and CommonJS module available from NPM as the ``q``
+-   a Node.js and CommonJS module available from NPM as the ``q``
     package
 -   a RequireJS module
 
-Q can exchange promises with jQuery and Dojo and the following libraries
-are based on Q.
-
--   [q-fs](https://github.com/kriskowal/q-fs)
-    file system
--   [q-http](https://github.com/kriskowal/q-http)
-    http client and server
--   [q-comm](https://github.com/kriskowal/q-comm)
-    remote objects
--   [jaque](https://github.com/kriskowal/jaque)
-    promising HTTP server, JSGI middleware
-
-[Many other projects](http://search.npmjs.org/#/q) in NPM use Q
-internally or provide Q promises.
+Q can exchange promises with jQuery, Dojo, When.js, WinJS, and more.
+Additionally, there are many libraries that produce and consume Q promises for
+everything from file system/database access or RPC to templating. For a list of
+some of the more popular ones, see [Libraries][].
 
 Please join the Q-Continuum [mailing list](https://groups.google.com/forum/#!forum/q-continuum).
+
+[Libraries]: https://github.com/kriskowal/q/wiki/Libraries
 
 
 ## Tutorial
@@ -260,8 +252,8 @@ But ``spread`` calls ``all`` initially, so you can skip it in chains.
 
 ```javascript
 return foo()
-.then(function (name, location) {
-    return [name, FS.read(location, "utf-8")];
+.then(function (info) {
+    return [info.name, FS.read(info.location, "utf-8")];
     // FS.read returns a promise, so this array
     // mixes values and promises
 })
@@ -292,6 +284,7 @@ Q.allResolved(promises)
         if (promise.isFulfilled()) {
             var value = promise.valueOf();
         } else {
+            var exception = promise.valueOf().exception;
         }
     })
 })
@@ -402,7 +395,9 @@ Everything above assumes you get a promise from somewhere else.  This
 is the common case.  Every once in a while, you will need to create a
 promise from scratch.
 
-You can create a promise from a value using ``Q.call``.  This returns a
+#### Using ``Q.fcall``
+
+You can create a promise from a value using ``Q.fcall``.  This returns a
 promise for 10.
 
 ```javascript
@@ -411,7 +406,7 @@ return Q.fcall(function () {
 });
 ```
 
-You can also use ``call`` to get a promise for an exception.
+You can also use ``fcall`` to get a promise for an exception.
 
 ```javascript
 return Q.fcall(function () {
@@ -419,17 +414,20 @@ return Q.fcall(function () {
 })
 ```
 
-As the name implies, ``call`` can call functions, or even promised
+As the name implies, ``fcall`` can call functions, or even promised
 functions.  This uses the ``eventualAdd`` function above to add two
-numbers.  The second argument is the ``this`` object to pass into the
-function.
+numbers.
 
 ```javascript
-return Q.fcall(eventualAdd, null, 2, 2);
+return Q.fcall(eventualAdd, 2, 2);
 ```
 
-When nothing else will do the job, you can use ``defer``, which is
-where all promises ultimately come from.
+
+#### Using Deferreds
+
+If you have to interface with asynchronous functions that are callback-based
+instead of promise-based, Q provides a few shortcuts (like ``Q.ncall`` and
+friends). But much of the time, the solution will be to use *deferreds*.
 
 ```javascript
 var deferred = Q.defer();
@@ -448,6 +446,10 @@ Note that a deferred can be resolved with a value or a promise.  The
 promise.
 
 ```javascript
+// this:
+deferred.reject(new Error("Can't do it"));
+
+// is shorthand for:
 var rejection = Q.fcall(function () {
     throw new Error("Can't do it");
 });
@@ -626,6 +628,14 @@ will [be ameliorated][streamsnext].
 A method-by-method [Q API reference][reference] is available on the wiki.
 
 [reference]: q/wiki/API-Reference
+
+## More Examples
+
+A growing [examples gallery][examples] is available on the wiki, showing how Q
+can be used to make everything better. From XHR to database access to accessing
+the Flickr API, Q is there for you.
+
+[examples]: https://github.com/kriskowal/q/wiki/Examples-Gallery
 
 ---
 

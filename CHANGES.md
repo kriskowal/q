@@ -14,6 +14,23 @@
    ``invoke``.
  - WARNING: The undocumented ``view`` and ``viewInfo`` will be removed.
 
+## 0.8.7
+
+ - Support [Montage Require](http://github.com/kriskowal/mr)
+
+## 0.8.6
+
+ - Fixed ``npost`` and ``ninvoke`` to pass the correct ``thisp``. #74
+ - Fixed various cases involving unorthodox rejection reasons. #73 #90
+   @ef4
+ - Fixed double-resolving of misbehaved custom promises. #75
+ - Sped up ``Q.all`` for arrays contain already-resolved promises or scalar
+   values. @ForbesLindesay
+ - Made stack trace filtering work when concatenating assets. #93 @ef4
+ - Added warnings for deprecated methods. @ForbesLindesay
+ - Added ``.npmignore`` file so that dependent packages get a slimmer
+   ``node_modules`` directory.
+
 ## 0.8.5
 
  - Added preliminary support for long traces (@domenic)

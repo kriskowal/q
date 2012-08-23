@@ -2,8 +2,8 @@
 /*jshint browser: true, node: true,
   curly: true, eqeqeq: true, noarg: true, nonew: true, trailing: true,
   undef: true */
-/*global define: false, Q: true, msSetImmediate: true, setImmediate: true,
-  MessageChannel: true, ReturnValue: true, cajaVM: true, ses: true */
+/*global define: false, Q: true, msSetImmediate: false, setImmediate: false,
+  ReturnValue: false, cajaVM: false, ses: false */
 /*!
  *
  * Copyright 2009-2012 Kris Kowal under the terms of the MIT
@@ -59,19 +59,25 @@
  */
 
 (function (definition) {
+    // Turn off strict mode for this function so we can assign to global.Q
+    /*jshint strict: false*/
 
     // This file will function properly as a <script> tag, or a module
     // using CommonJS and NodeJS or RequireJS module formats.  In
     // Common/Node/RequireJS, the module exports the Q API and when
     // executed as a simple <script>, it creates a Q global instead.
 
-    // RequireJS
-    if (typeof define === "function") {
-        define(definition);
+    // Montage Require
+    if (typeof bootstrap === "function") {
+        bootstrap("promise", definition);
 
     // CommonJS
     } else if (typeof exports === "object") {
         definition(void 0, exports);
+
+    // RequireJS
+    } else if (typeof define === "function") {
+        define(definition);
 
     // SES (Secure EcmaScript)
     } else if (typeof ses !== "undefined") {
@@ -91,6 +97,11 @@
 
 })(function (require, exports) {
 "use strict";
+
+// All code after this point will be filtered from stack traces reported
+// by Q.
+var qStartingLine = captureLine();
+var qFileName;
 
 // shims
 
@@ -162,7 +173,7 @@ if (Function.prototype.bind) {
     uncurryThis = Function_bind.bind(Function_bind.call);
 } else {
     uncurryThis = function (f) {
-        return function (thisp) {
+        return function () {
             return f.call.apply(f, arguments);
         };
     };
@@ -347,6 +358,14 @@ function formatSourcePosition(frame) {
     return line;
 }
 
+function isInternalFrame(fileName, frame) {
+    if (fileName !== qFileName) {
+        return false;
+    }
+    var line = frame.getLineNumber();
+    return line >= qStartingLine && line <= qEndingLine;
+}
+
 /*
  * Retrieves an array of structured stack frames parsed from the ``stack``
  * property of a given object.
@@ -367,7 +386,7 @@ function getStackFrames(objectWithStack) {
             return (
                 fileName !== "module.js" &&
                 fileName !== "node.js" &&
-                fileName !== qFileName
+                !isInternalFrame(fileName, frame)
             );
         });
     };
@@ -379,28 +398,38 @@ function getStackFrames(objectWithStack) {
     return stack;
 }
 
-// discover own file name for filtering stack traces
-var qFileName;
-if (Error.captureStackTrace) {
-    qFileName = (function () {
-        var fileName;
+// discover own file name and line number range for filtering stack
+// traces
+function captureLine() {
+    if (Error.captureStackTrace) {
+        var fileName, lineNumber;
 
         var oldPrepareStackTrace = Error.prepareStackTrace;
 
         Error.prepareStackTrace = function (error, frames) {
-            fileName = frames[0].getFileName();
+            fileName = frames[1].getFileName();
+            lineNumber = frames[1].getLineNumber();
         };
 
         // teases call of temporary prepareStackTrace
         // JSHint and Closure Compiler generate known warnings here
+        /*jshint expr: true */
         new Error().stack;
 
         Error.prepareStackTrace = oldPrepareStackTrace;
-
-        return fileName;
-    })();
+        qFileName = fileName;
+        return lineNumber;
+    }
 }
 
+function deprecate(fn, name, alternative) {
+    return function () {
+        if (typeof console !== "undefined" && typeof console.warn === "function") {
+            console.warn(name + " is deprecated, use " + alternative + " instead.", new Error("").stack);
+        }
+        return fn.apply(fn, arguments);
+    };
+}
 
 // end of shims
 // beginning of real work
@@ -497,6 +526,8 @@ defer.prototype.makeNodeResolver = function () {
         }
     };
 };
+// XXX deprecated
+defer.prototype.node = deprecate(defer.prototype.makeNodeResolver, "node", "makeNodeResolver");
 
 /**
  * @param makePromise {Function} a function that returns nothing and accepts
@@ -507,9 +538,8 @@ defer.prototype.makeNodeResolver = function () {
 exports.promise = promise;
 function promise(makePromise) {
     var deferred = defer();
-    call(
+    fcall(
         makePromise,
-        void 0,
         deferred.resolve,
         deferred.reject
     ).fail(deferred.reject);
@@ -581,7 +611,7 @@ array_reduce(
         "timeout", "delay",
         "catch", "finally", "fail", "fin", "end"
     ],
-    function (prev, name) {
+    function (undefined, name) {
         makePromise.prototype[name] = function () {
             return exports[name].apply(
                 exports,
@@ -615,6 +645,8 @@ exports.nearer = valueOf;
 function valueOf(value) {
     // if !Object.isObject(value)
     // generates a known JSHint "constructor invocation without new" warning
+    // supposed to be fixed, but isn't? https://github.com/jshint/jshint/issues/392
+    /*jshint newcap: false */
     if (Object(value) !== value) {
         return value;
     } else {
@@ -686,7 +718,7 @@ function reject(exception) {
             }
             return rejected ? rejected(exception) : reject(exception);
         }
-    }, function fallback(op) {
+    }, function fallback() {
         return reject(exception);
     }, function valueOf() {
         return this;
@@ -717,7 +749,7 @@ function resolve(object) {
         return result.promise;
     }
     return makePromise({
-        "when": function (rejected) {
+        "when": function () {
             return object;
         },
         "get": function (name) {
@@ -801,35 +833,21 @@ function when(value, fulfilled, rejected) {
     }
 
     nextTick(function () {
-        resolve(value).promiseDispatch(
-            function (value) {
-                if (done) {
-                    return;
-                }
-                done = true;
-                resolve(value).promiseDispatch(
-                    function (value) {
-                        deferred.resolve(_fulfilled(value));
-                    },
-                    "when",
-                    [
-                        function (exception) {
-                            deferred.resolve(_rejected(exception));
-                        }
-                    ]
-                );
-            },
-            "when",
-            [
-                function (exception) {
-                    if (done) {
-                        return;
-                    }
-                    done = true;
-                    deferred.resolve(_rejected(exception));
-                }
-            ]
-        );
+        resolve(value).promiseDispatch(function (value) {
+            if (done) {
+                return;
+            }
+            done = true;
+
+            deferred.resolve(_fulfilled(value));
+        }, "when", [function (exception) {
+            if (done) {
+                return;
+            }
+            done = true;
+
+            deferred.resolve(_rejected(exception));
+        }]);
     });
 
     return deferred.promise;
@@ -847,8 +865,10 @@ function when(value, fulfilled, rejected) {
  */
 exports.spread = spread;
 function spread(promise, fulfilled, rejected) {
-    return when(promise, function (values) {
-        return fulfilled.apply(void 0, values);
+    return when(promise, function (valuesOrPromises) {
+        return all(valuesOrPromises).then(function (values) {
+            return fulfilled.apply(void 0, values);
+        });
     }, rejected);
 }
 
@@ -926,6 +946,31 @@ function async(makeGenerator) {
 exports['return'] = _return;
 function _return(value) {
     throw new QReturnValue(value);
+}
+
+/**
+ * The promised function decorator ensures that any promise arguments
+ * are resolved and passed as values (`this` is also resolved and passed
+ * as a value).  It will also ensure that the result of a function is
+ * always a promise.
+ *
+ * @example
+ * var add = Q.promised(function (a, b) {
+ *     return a + b;
+ * });
+ * add(Q.resolve(a), Q.resolve(B));
+ *
+ * @param {function} wrapped The function to decorate
+ * @returns {function} a function that has been decorated.
+ */
+exports.promised = promised;
+function promised(wrapped) {
+    return function () {
+        return all([this, all(arguments)])
+        .spread(function (self, args) {
+            return wrapped.apply(self, args);
+        });
+    };
 }
 
 /**
@@ -1071,13 +1116,20 @@ function all(promises) {
         }
         var deferred = defer();
         array_reduce(promises, function (undefined, promise, index) {
-            when(promise, function (value) {
-                promises[index] = value;
+            if (isFulfilled(promise)) {
+                promises[index] = valueOf(promise);
                 if (--countDown === 0) {
                     deferred.resolve(promises);
                 }
-            })
-            .fail(deferred.reject);
+            } else {
+                when(promise, function (value) {
+                    promises[index] = value;
+                    if (--countDown === 0) {
+                        deferred.resolve(promises);
+                    }
+                })
+                .fail(deferred.reject);
+            }
         }, void 0);
         return deferred.promise;
     });
@@ -1158,8 +1210,12 @@ function end(promise) {
             // If possible (that is, if in V8), transform the error stack
             // trace by removing Node and Q cruft, then concatenating with
             // the stack trace of the promise we are ``end``ing. See #57.
-            if (Error.captureStackTrace) {
-                var errorStackFrames = getStackFrames(error);
+            var errorStackFrames;
+            if (
+                Error.captureStackTrace &&
+                typeof error === "object" &&
+                (errorStackFrames = getStackFrames(error))
+            ) {
                 var promiseStackFrames = getStackFrames(promise);
 
                 var combinedStackFrames = errorStackFrames.concat(
@@ -1185,10 +1241,14 @@ function end(promise) {
 exports.timeout = timeout;
 function timeout(promise, ms) {
     var deferred = defer();
-    when(promise, deferred.resolve, deferred.reject);
-    setTimeout(function () {
-        deferred.reject(new Error("Timed out after " + ms + "ms"));
+    var timeoutId = setTimeout(function () {
+        deferred.reject(new Error("Timed out after " + ms + " ms"));
     }, ms);
+
+    when(promise, function (value) {
+        clearTimeout(timeoutId);
+        deferred.resolve(value);
+    }, deferred.reject);
     return deferred.promise;
 }
 
@@ -1217,7 +1277,7 @@ function delay(promise, timeout) {
  * Passes a continuation to a Node function, which is called with a given
  * `this` value and arguments provided as an array, and returns a promise.
  *
- *      var FS = require("fs");
+ *      var FS = (require)("fs");
  *      Q.napply(FS.readFile, FS, [__filename])
  *      .then(function (content) {
  *      })
@@ -1232,7 +1292,7 @@ function napply(callback, thisp, args) {
  * Passes a continuation to a Node function, which is called with a given
  * `this` value and arguments provided individually, and returns a promise.
  *
- *      var FS = require("fs");
+ *      var FS = (require)("fs");
  *      Q.ncall(FS.readFile, FS, __filename)
  *      .then(function (content) {
  *      })
@@ -1288,7 +1348,7 @@ function nbind(callback /* thisp, ...args*/) {
  */
 exports.npost = npost;
 function npost(object, name, args) {
-    return napply(object[name], name, args);
+    return napply(object[name], object, args);
 }
 
 /**
@@ -1304,9 +1364,12 @@ function npost(object, name, args) {
 exports.ninvoke = ninvoke;
 function ninvoke(object, name /*, ...args*/) {
     var args = array_slice(arguments, 2);
-    return napply(object[name], name, args);
+    return napply(object[name], object, args);
 }
 
 defend(exports);
+
+// All code before this point will be filtered from stack traces.
+var qEndingLine = captureLine();
 
 });
