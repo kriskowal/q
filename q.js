@@ -775,6 +775,15 @@ function resolve(object) {
     if (isPromise(object)) {
         return object;
     }
+    // In order to break infinite recursion or loops between `then` and
+    // `resolve`, it is necessary to attempt to extract fulfilled values
+    // out of foreign promise implementations before attempting to wrap
+    // them as unresolved promises.  It is my hope that other
+    // implementations will implement `valueOf` to synchronously extract
+    // the fulfillment value from their fulfilled promises.  If the
+    // other promise library does not implement `valueOf`, the
+    // implementations on primordial prototypes are harmless.
+    object = valueOf(object);
     // assimilate thenables, CommonJS/Promises/A
     if (object && typeof object.then === "function") {
         var deferred = defer();
