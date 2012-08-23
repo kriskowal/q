@@ -481,7 +481,7 @@ describe("promises for objects", function () {
             return Q.resolve(object)
             .put('a', 1)
             .then(function (result) {
-                expect(result).toBe(1); // not supported. may change in future version.
+                expect(result).toBe(object);
                 expect(object.a).toBe(1);
             });
         });
@@ -509,7 +509,7 @@ describe("promises for objects", function () {
             .del('a')
             .then(function (result) {
                 expect('a' in object).toBe(false);
-                expect(result).toBe(true); // not supported, may change
+                expect(result).toBe(object);
             }, function (exception) {
                 expect("up").toBe("down");
             });

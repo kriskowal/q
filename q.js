@@ -789,10 +789,12 @@ function resolve(object) {
             return object[name];
         },
         "put": function (name, value) {
-            return object[name] = value;
+            object[name] = value;
+            return object;
         },
         "del": function (name) {
-            return delete object[name];
+            delete object[name];
+            return object;
         },
         "post": function (name, value) {
             return object[name].apply(object, value);
