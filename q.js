@@ -538,9 +538,8 @@ defer.prototype.node = deprecate(defer.prototype.makeNodeResolver, "node", "make
 exports.promise = promise;
 function promise(makePromise) {
     var deferred = defer();
-    call(
+    fcall(
         makePromise,
-        void 0,
         deferred.resolve,
         deferred.reject
     ).fail(deferred.reject);
