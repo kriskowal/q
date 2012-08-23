@@ -422,12 +422,12 @@ function captureLine() {
     }
 }
 
-function deprecate(fn, name, alternative) {
+function deprecate(callback, name, alternative) {
     return function () {
         if (typeof console !== "undefined" && typeof console.warn === "function") {
             console.warn(name + " is deprecated, use " + alternative + " instead.", new Error("").stack);
         }
-        return fn.apply(fn, arguments);
+        return callback.apply(callback, arguments);
     };
 }
 
@@ -546,7 +546,7 @@ defer.prototype.node = deprecate(defer.prototype.makeNodeResolver, "node", "make
 
 /**
  * @param makePromise {Function} a function that returns nothing and accepts
- * the resolve and reject functions for a deferred.
+ * the resolve, reject, and notify functions for a deferred.
  * @returns a promise that may be resolved with the given resolve and reject
  * functions, or rejected by a thrown exception in makePromise
  */
@@ -556,7 +556,8 @@ function promise(makePromise) {
     fcall(
         makePromise,
         deferred.resolve,
-        deferred.reject
+        deferred.reject,
+        deferred.notify
     ).fail(deferred.reject);
     return deferred.promise;
 }
@@ -1064,14 +1065,14 @@ function _return(value) {
  * });
  * add(Q.resolve(a), Q.resolve(B));
  *
- * @param {function} fn The function to decorate
+ * @param {function} callback The function to decorate
  * @returns {function} a function that has been decorated.
  */
 exports.promised = promised;
-function promised(fn) {
+function promised(callback) {
     return function () {
         return all([this, all(arguments)]).spread(function (self, args) {
-          return fn.apply(self, args);
+          return callback.apply(self, args);
         });
     };
 }
