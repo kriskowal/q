@@ -2,6 +2,7 @@ node_modules
 npm-debug.log
 CHANGES.html
 README.html
+.tmp
 
 .coverage_data/
 .coverage_debug/

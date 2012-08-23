@@ -5,6 +5,7 @@ README.html
 
 .coverage_data/
 .coverage_debug/
+.tmp
 cover_html/
 
 design

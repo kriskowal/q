@@ -14,6 +14,10 @@
    ``invoke``.
  - WARNING: The undocumented ``view`` and ``viewInfo`` will be removed.
 
+## 0.8.7
+
+ - Support [Montage Require](http://github.com/kriskowal/mr)
+
 ## 0.8.6
 
  - Fixed ``npost`` and ``ninvoke`` to pass the correct ``thisp``. #74
