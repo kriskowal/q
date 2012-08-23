@@ -141,6 +141,311 @@ describe("always next tick", function () {
 
 });
 
+describe("progress", function () {
+
+    it("calls a single progress listener", function () {
+        var progressed = false;
+        var deferred = Q.defer();
+
+        var promise = Q.when(
+            deferred.promise,
+            function () {
+                expect(progressed).toBe(true);
+            },
+            function () {
+                expect(true).toBe(false);
+            },
+            function () {
+                progressed = true;
+            }
+        );
+
+        deferred.notify();
+        deferred.resolve();
+
+        return promise;
+    });
+
+    it("calls multiple progress listeners", function () {
+        var progressed1 = false;
+        var progressed2 = false;
+        var deferred = Q.defer();
+        var promise = Q.when(
+            deferred.promise,
+            function () {
+                expect(progressed1).toBe(true);
+                expect(progressed2).toBe(true);
+            },
+            function () {
+                expect(true).toBe(false);
+            },
+            function () {
+                progressed1 = true;
+            }
+        );
+        Q.when(deferred.promise, null, null, function () {
+            progressed2 = true;
+        });
+
+        deferred.notify();
+        deferred.resolve();
+
+        return promise;
+    });
+
+    it("calls all progress listeners even if one throws", function () {
+        var progressed1 = false;
+        var progressed2 = false;
+        var progressed3 = false;
+        var deferred = Q.defer();
+        var promise = Q.when(
+            deferred.promise,
+            function () {
+                expect(progressed1).toBe(true);
+                expect(progressed2).toBe(true);
+                expect(progressed3).toBe(true);
+            },
+            function () {
+                expect(true).toBe(false);
+            },
+            function () {
+                progressed1 = true;
+            }
+        );
+        Q.when(deferred.promise, null, null, function () {
+            progressed2 = true;
+            throw new Error("just a test, ok if it shows up in the console");
+        });
+        Q.when(deferred.promise, null, null, function () {
+            progressed3 = true;
+        });
+
+        deferred.notify();
+        deferred.resolve();
+
+        // In Node, swallow the eventually-thrown error.
+        function uncaughtExceptionHandler() { }
+        if (typeof process === "object") {
+            process.on("uncaughtException", uncaughtExceptionHandler);
+            promise.fin(function () {
+                process.removeListener("uncaughtException", uncaughtExceptionHandler);
+            })
+        }
+
+        return promise;
+    });
+
+    it("calls the progress listener even if later rejected", function () {
+        var progressed = false;
+        var deferred = Q.defer();
+        var promise = Q.when(
+            deferred.promise,
+            function () {
+                expect(true).toBe(false);
+            },
+            function () {
+                expect(progressed).toEqual(true);
+            },
+            function () {
+                progressed = true;
+            }
+        );
+
+        deferred.notify();
+        deferred.reject();
+
+        return promise;
+    });
+
+    it("calls the progress listener with the notify values", function () {
+        var progressValues = [];
+        var desiredProgressValues = [{}, {}, "foo", 5];
+        var deferred = Q.defer();
+        var promise = Q.when(
+            deferred.promise,
+            function () {
+                for (var i = 0; i < desiredProgressValues.length; ++i) {
+                    var desired = desiredProgressValues[i];
+                    var actual = progressValues[i];
+                    expect(actual).toBe(desired);
+                }
+            },
+            function () {
+                expect(true).toBe(false);
+            },
+            function (value) {
+                progressValues.push(value);
+            }
+        );
+
+        for (var i = 0; i < desiredProgressValues.length; ++i) {
+            deferred.notify(desiredProgressValues[i]);
+        }
+        deferred.resolve();
+
+        return promise;
+    });
+
+    it("does not call the progress listener if notify is called after fulfillment", function () {
+        var deferred = Q.defer();
+        var called = false;
+
+        Q.when(deferred.promise, null, null, function () {
+            called = true;
+        });
+
+        deferred.resolve();
+        deferred.notify();
+
+        return Q.delay(10).then(function () {
+            expect(called).toBe(false);
+        });
+    });
+
+    it("does not call the progress listener if notify is called after rejection", function () {
+        var deferred = Q.defer();
+        var called = false;
+
+        Q.when(deferred.promise, null, null, function () {
+            called = true;
+        });
+
+        deferred.reject();
+        deferred.notify();
+
+        return Q.delay(10).then(function () {
+            expect(called).toBe(false);
+        });
+    });
+
+    it("should not save and re-emit progress notifications", function () {
+        var deferred = Q.defer();
+        var progressValues = [];
+
+        deferred.notify(1);
+
+        var promise = Q.when(
+            deferred.promise,
+            function () {
+                expect(progressValues).toEqual([2]);
+            },
+            function () {
+                expect(true).toBe(false);
+            },
+            function (progressValue) {
+                progressValues.push(progressValue);
+            }
+        );
+
+        deferred.notify(2);
+        deferred.resolve();
+
+        return promise;
+    });
+
+    it("should allow attaching progress listeners w/ .progress", function () {
+        var progressed = false;
+        var deferred = Q.defer();
+
+        deferred.promise.progress(function () {
+            progressed = true;
+        });
+
+        deferred.notify();
+        deferred.resolve();
+
+        return deferred.promise;
+    });
+
+    it("should allow attaching progress listeners w/ Q.progress", function () {
+        var progressed = false;
+        var deferred = Q.defer();
+
+        Q.progress(deferred.promise, function () {
+            progressed = true;
+        });
+
+        deferred.notify();
+        deferred.resolve();
+
+        return deferred.promise;
+    });
+
+    it("should call the progress listener with undefined context", function () {
+        var progressed = false;
+        var progressContext = {};
+        var deferred = Q.defer();
+        var promise = Q.when(
+            deferred.promise,
+            function () {
+                expect(progressed).toBe(true);
+                expect(progressContext).toBe(undefined);
+            },
+            function () {
+                expect(true).toBe(false);
+            },
+            function () {
+                progressed = true;
+                progressContext = this;
+            }
+        );
+
+        deferred.notify();
+        deferred.resolve();
+
+        return promise;
+    });
+
+    it("should forward all notify arguments to listeners", function () {
+        var progressValueArrays = [];
+        var deferred = Q.defer();
+
+        var promise = Q.when(
+            deferred.promise,
+            function () {
+                expect(progressValueArrays).toEqual([[1], [2, 3], [4, 5, 6]]);
+            },
+            function () {
+                expect(true).toBe(false);
+            },
+            function () {
+                var args = Array.prototype.slice.call(arguments);
+                progressValueArrays.push(args);
+            }
+        );
+
+        deferred.notify(1);
+        deferred.notify(2, 3);
+        deferred.notify(4, 5, 6);
+        deferred.resolve();
+
+        return promise;
+    });
+
+    it("should work with .then as well", function () {
+        var progressed = false;
+        var deferred = Q.defer();
+
+        var promise = deferred.promise.then(
+            function () {
+                expect(progressed).toBe(true);
+            },
+            function () {
+                expect(true).toBe(false);
+            },
+            function () {
+                progressed = true;
+            }
+        );
+
+        deferred.notify();
+        deferred.resolve();
+
+        return promise;
+    });
+
+});
+
 describe("promises for objects", function () {
 
     describe("get", function () {
@@ -878,6 +1183,25 @@ describe("thenables", function () {
         })
         .then(function (undefined) {
             expect(undefined).toEqual(void 0);
+        });
+    });
+
+    it("assimilates a thenable with progress and fulfillment", function () {
+        var progressValueArrays = [];
+        return Q.resolve({
+            then: function (fulfilled, rejected, progressed) {
+                Q.nextTick(function () {
+                    progressed(1, 2);
+                    progressed(3, 4, 5);
+                    fulfilled();
+                });
+            }
+        })
+        .progress(function () {
+            progressValueArrays.push(Array.prototype.slice.call(arguments));
+        })
+        .then(function () {
+            expect(progressValueArrays).toEqual([[1, 2], [3, 4, 5]]);
         });
     });
 
