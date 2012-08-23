@@ -7,6 +7,8 @@ if (typeof Q === "undefined" && typeof require !== "undefined") {
     require("./lib/jasmine-promise");
 }
 
+var REASON = "this is not an error, but it might show up in the console";
+
 describe("defer and when", function () {
 
     it("resolve before when", function () {
@@ -102,8 +104,8 @@ describe("defer and when", function () {
         var deferred = Q.defer();
         Q.when(deferred.promise, function () {
             threw = true;
-            throw new Error("Wah-wah");
-        });
+            throw new Error(REASON);
+        }).end();
         var promise = Q.when(deferred.promise, function (value) {
             expect(value).toEqual(10);
         }, function () {
@@ -1179,7 +1181,6 @@ describe("possible regressions", function () {
 
     describe("gh-73", function () {
         it("does not choke on non-error rejection reasons", function () {
-            var REASON = "this is not an error, but it might show up in the console";
             Q.reject(REASON).end();
 
             var deferred = Q.defer();
@@ -1193,7 +1194,7 @@ describe("possible regressions", function () {
 
     describe("gh-90", function () {
         it("does not choke on rejection reasons with an undefined `stack`", function () {
-            var error = new RangeError("this is not an error, but it might show up in the console");
+            var error = new RangeError(REASON);
             error.stack = undefined;
             Q.reject(error).end();
 

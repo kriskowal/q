@@ -695,12 +695,21 @@ function isRejected(object) {
 
 var rejections = [];
 var errors = [];
-if (typeof window !== "undefined" && window.console) {
-    // This promise library consumes exceptions thrown in handlers so
-    // they can be handled by a subsequent promise.  The rejected
-    // promises get added to this array when they are created, and
-    // removed when they are handled.
-    console.log("Should be empty:", errors);
+var errorsDisplayed;
+function displayErrors() {
+    if (
+        !errorsDisplayed &&
+        typeof window !== "undefined" &&
+        !window.Touch &&
+        window.console
+    ) {
+        // This promise library consumes exceptions thrown in handlers so
+        // they can be handled by a subsequent promise.  The rejected
+        // promises get added to this array when they are created, and
+        // removed when they are handled.
+        console.log("Should be empty:", errors);
+    }
+    errorsDisplayed = true;
 }
 
 /**
@@ -728,6 +737,7 @@ function reject(exception) {
         return this;
     }, exception);
     // note that the error has not been handled
+    displayErrors();
     rejections.push(rejection);
     errors.push(exception);
     return rejection;
