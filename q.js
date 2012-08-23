@@ -526,8 +526,6 @@ defer.prototype.makeNodeResolver = function () {
         }
     };
 };
-// XXX deprecated
-defer.prototype.node = deprecate(defer.prototype.makeNodeResolver, "node", "makeNodeResolver");
 
 /**
  * @param makePromise {Function} a function that returns nothing and accepts
@@ -604,7 +602,8 @@ array_reduce(
         "dispatch",
         "when", "spread",
         "get", "put", "del",
-        "post", "invoke",
+        "post", "send",
+        "invoke", // XXX deprecated
         "keys",
         "fapply", "fcall", "fbind",
         "all", "allResolved",
@@ -1051,10 +1050,12 @@ var post = exports.post = dispatcher("post");
  * @param ...args   array of invocation arguments
  * @return promise for the return value
  */
-exports.invoke = function (value, name) {
+exports.send = function (value, name) {
     var args = array_slice(arguments, 2);
     return post(value, name, args);
 };
+// XXX deprecated
+exports.invoke = deprecate(exports.send, "invoke", "send");
 
 /**
  * Applies the promised function in a future turn.
@@ -1361,11 +1362,12 @@ function npost(object, name, args) {
  * be provided by Q and appended to these arguments.
  * @returns a promise for the value or error
  */
-exports.ninvoke = ninvoke;
-function ninvoke(object, name /*, ...args*/) {
+exports.nsend = nsend;
+function nsend(object, name /*, ...args*/) {
     var args = array_slice(arguments, 2);
     return napply(object[name], object, args);
 }
+exports.ninvoke = deprecate(nsend, "ninvoke", "nsend");
 
 defend(exports);
 
