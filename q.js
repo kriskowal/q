@@ -966,6 +966,9 @@ function when(value, fulfilled, rejected, progressed) {
         resolvedValue.promiseSend("when", void 0, void 0, progressed);
     }
 
+    // Propagate progress from the original promise to the returned one.
+    resolvedValue.promiseSend("when", void 0, void 0, deferred.notify);
+
     return deferred.promise;
 }
 

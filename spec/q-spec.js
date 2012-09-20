@@ -229,7 +229,7 @@ describe("progress", function () {
             process.on("uncaughtException", uncaughtExceptionHandler);
             promise.fin(function () {
                 process.removeListener("uncaughtException", uncaughtExceptionHandler);
-            })
+            });
         }
 
         return promise;
@@ -864,6 +864,29 @@ describe("propagation", function () {
         });
     });
 
+    it("should propagate progress", function () {
+        var d = Q.defer();
+
+        var progressValues = [];
+        var promise = d.promise
+        .then()
+        .then(
+            function () {
+                expect(progressValues).toEqual([1]);
+            },
+            function () {
+                expect(true).toBe(false);
+            },
+            function (progressValue) {
+                progressValues.push(progressValue);
+            }
+        );
+
+        d.notify(1);
+        d.resolve();
+
+        return promise;
+    });
 });
 
 describe("all", function () {
@@ -1186,9 +1209,28 @@ describe("thenables", function () {
         });
     });
 
-    it("assimilates a thenable with progress and fulfillment", function () {
+    it("assimilates a thenable with progress and fulfillment (using resolve)", function () {
         var progressValueArrays = [];
         return Q.resolve({
+            then: function (fulfilled, rejected, progressed) {
+                Q.nextTick(function () {
+                    progressed(1, 2);
+                    progressed(3, 4, 5);
+                    fulfilled();
+                });
+            }
+        })
+        .progress(function () {
+            progressValueArrays.push(Array.prototype.slice.call(arguments));
+        })
+        .then(function () {
+            expect(progressValueArrays).toEqual([[1, 2], [3, 4, 5]]);
+        });
+    });
+
+    it("assimilates a thenable with progress and fulfillment (using when)", function () {
+        var progressValueArrays = [];
+        return Q.when({
             then: function (fulfilled, rejected, progressed) {
                 Q.nextTick(function () {
                     progressed(1, 2);
