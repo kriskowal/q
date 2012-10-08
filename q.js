@@ -631,7 +631,10 @@ array_reduce(
         "all", "allResolved",
         "view", "viewInfo",
         "timeout", "delay",
-        "catch", "finally", "fail", "fin", "progress", "end"
+        "catch", "finally", "fail", "fin", "progress", "end",
+        "ncall", "napply", "nbind",
+        "npost", "ninvoke",
+        "nend"
     ],
     function (undefined, name) {
         makePromise.prototype[name] = function () {
@@ -1570,6 +1573,27 @@ exports.ninvoke = ninvoke;
 function ninvoke(object, name /*, ...args*/) {
     var args = array_slice(arguments, 2);
     return napply(object[name], object, args);
+}
+
+exports.nend = nend;
+function nend(promise, nodeback) {
+    if (nodeback) {
+        var deferred = defer();
+        promise.then(function (value) {
+            nextTick(function () {
+                deferred.resolve();
+                nodeback(null, value);
+            });
+        }, function (error) {
+            nextTick(function () {
+                deferred.resolve();
+                nodeback(error);
+            });
+        });
+        return deferred.promise;
+    } else {
+        return promise;
+    }
 }
 
 defend(exports);

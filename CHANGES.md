@@ -14,6 +14,10 @@
    ``invoke``.
  - WARNING: The undocumented ``view`` and ``viewInfo`` will be removed.
 
+## 0.8.9
+
+ - Add `nend`
+
 ## 0.8.7
 
  - Support [Montage Require](http://github.com/kriskowal/mr)

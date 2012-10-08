@@ -1411,6 +1411,32 @@ describe("node support", function () {
 
     });
 
+    describe("nend", function () {
+
+        it("calls back with a resolution", function () {
+            var spy = jasmine.createSpy();
+            return Q.resolve(10).nend(spy)
+            .then(function () {
+                expect(spy.argsForCall).toEqual([[null, 10]]);
+            });
+        });
+
+        it("calls back with an error", function () {
+            var spy = jasmine.createSpy();
+            return Q.reject(10).nend(spy)
+            .then(function () {
+                expect(spy.argsForCall).toEqual([[10]]);
+            });
+        });
+
+        it("forwards a promise", function () {
+            return Q.resolve(10).nend().then(function (ten) {
+                expect(ten).toBe(10);
+            });
+        });
+
+    });
+
 });
 
 describe("decorator functions", function () {
