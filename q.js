@@ -1578,19 +1578,15 @@ function ninvoke(object, name /*, ...args*/) {
 exports.nend = nend;
 function nend(promise, nodeback) {
     if (nodeback) {
-        var deferred = defer();
         promise.then(function (value) {
             nextTick(function () {
-                deferred.resolve();
                 nodeback(null, value);
             });
         }, function (error) {
             nextTick(function () {
-                deferred.resolve();
                 nodeback(error);
             });
         });
-        return deferred.promise;
     } else {
         return promise;
     }
