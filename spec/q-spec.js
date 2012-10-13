@@ -9,6 +9,10 @@ if (typeof Q === "undefined" && typeof require !== "undefined") {
 
 var REASON = "this is not an error, but it might show up in the console";
 
+afterEach(function () {
+    Q.onerror = null;
+});
+
 describe("defer and when", function () {
 
     it("resolve before when", function () {
@@ -1508,41 +1512,17 @@ describe("possible regressions", function () {
         });
     });
 
-    function setupErrorMessageCheck(messageRegExp, onBadMessage) {
-        function checkErrorMessage(message) {
-            // See http://stackoverflow.com/q/5913978 for an explanation of
-            // why we check for "Script error." Because of this restriction,
-            // the test will always pass on the local file system :(.
-            if (!messageRegExp.test(message) && message !== "Script error.") {
-                onBadMessage(new Error(
-                    "Error was thrown when calling .end(): " + message
-                ));
-            }
-        }
-
-        if (typeof window !== "undefined") {
-            var oldWindowOnError = window.onerror;
-            window.onerror = function (message) {
-                window.onerror = oldWindowOnError;
-                checkErrorMessage(message);
-            };
-        } else if (typeof process !== "undefined") {
-            process.once("uncaughtException", function (thrown) {
-                // Deal with both normal cases, where a `message` property
-                // exists, and with degenerate ones.
-                checkErrorMessage(thrown.message || thrown);
-            });
-        }
-    }
-
     describe("gh-73", function () {
         it("does not choke on non-error rejection reasons", function () {
             Q.reject(REASON).end();
 
             var deferred = Q.defer();
 
-            setupErrorMessageCheck(new RegExp(REASON), deferred.reject);
-            Q.delay(10).then(deferred.resolve);
+            Q.onerror = function (error) {
+                expect(error).toBe(REASON);
+                deferred.resolve();
+            };
+            Q.delay(10).then(deferred.reject);
 
             return deferred.promise;
         });
@@ -1556,8 +1536,11 @@ describe("possible regressions", function () {
 
             var deferred = Q.defer();
 
-            setupErrorMessageCheck(new RegExp(error.message), deferred.reject);
-            Q.delay(10).then(deferred.resolve);
+            Q.onerror = function (theError) {
+                expect(theError).toBe(error);
+                deferred.resolve();
+            };
+            Q.delay(10).then(deferred.reject);
 
             return deferred.promise;
         });
