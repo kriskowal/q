@@ -868,7 +868,7 @@ describe("propagation", function () {
         });
     });
 
-    it("should propagate progress", function () {
+    it("should propagate progress by default", function () {
         var d = Q.defer();
 
         var progressValues = [];
@@ -887,6 +887,32 @@ describe("propagation", function () {
         );
 
         d.notify(1);
+        d.resolve();
+
+        return promise;
+    });
+
+    it("should allow translation of progress in the progressback", function () {
+        var d = Q.defer();
+
+        var progressValues = [];
+        var promise = d.promise
+        .progress(function (p) {
+            return p + 5;
+        })
+        .then(
+            function () {
+                expect(progressValues).toEqual([10]);
+            },
+            function () {
+                expect(true).toBe(false);
+            },
+            function (progressValue) {
+                progressValues.push(progressValue);
+            }
+        );
+
+        d.notify(5);
         d.resolve();
 
         return promise;
