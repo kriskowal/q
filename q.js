@@ -1371,8 +1371,7 @@ function fail(promise, rejected) {
  */
 exports.progress = progress;
 function progress(promise, progressed) {
-    when(promise, void 0, void 0, progressed);
-    return promise;
+    return when(promise, void 0, void 0, progressed);
 }
 
 /**
