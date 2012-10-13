@@ -1433,7 +1433,11 @@ function end(promise) {
                 error.stack = formatStackTrace(error, combinedStackFrames);
             }
 
-            throw error;
+            if (exports.onerror) {
+                exports.onerror(error);
+            } else {
+                throw error;
+            }
         });
     });
 }
@@ -1591,8 +1595,6 @@ function nend(promise, nodeback) {
         return promise;
     }
 }
-
-defend(exports);
 
 // All code before this point will be filtered from stack traces.
 var qEndingLine = captureLine();
