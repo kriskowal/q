@@ -505,13 +505,11 @@ function defer() {
     deferred.reject = function (exception) {
         return become(reject(exception));
     };
-    deferred.notify = function () {
+    deferred.notify = function (progress) {
         if (pending) {
-            var args = arguments;
-
             array_reduce(progressListeners, function (undefined, progressListener) {
                 nextTick(function () {
-                    progressListener.apply(void 0, args);
+                    progressListener(progress);
                 });
             }, void 0);
         }

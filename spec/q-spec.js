@@ -400,14 +400,14 @@ describe("progress", function () {
         return promise;
     });
 
-    it("should forward all notify arguments to listeners", function () {
+    it("should forward only the first notify argument to listeners", function () {
         var progressValueArrays = [];
         var deferred = Q.defer();
 
         var promise = Q.when(
             deferred.promise,
             function () {
-                expect(progressValueArrays).toEqual([[1], [2, 3], [4, 5, 6]]);
+                expect(progressValueArrays).toEqual([[1], [2], [4]]);
             },
             function () {
                 expect(true).toBe(false);
@@ -1337,7 +1337,7 @@ describe("thenables", function () {
             progressValueArrays.push(Array.prototype.slice.call(arguments));
         })
         .then(function () {
-            expect(progressValueArrays).toEqual([[1, 2], [3, 4, 5]]);
+            expect(progressValueArrays).toEqual([[1], [3]]);
         });
     });
 
