@@ -1483,24 +1483,24 @@ describe("decorator functions", function () {
 
 describe("stack trace formatting", function () {
     it("doesn't mangle a stack trace that gets handled twice", function () {
-	var d1 = Q.defer();
-	var d2 = Q.defer();
-	var captured = [];
-	d1.promise.end();
-	d2.promise.end();
-	Q.onError(function(err){
-	    captured.push(err.stack);
-	});
-	try {
-	    throw new Error("boom!");
-	} catch (err) {
-	    d1.reject(err);
-	    d2.reject(err);
-	}
-	waitsFor(function(){ return captured.length == 2 }, 1000, "waiting for exceptions");
-	runs(function(){
-	    expect(captured[0]).toEqual(captured[1]);
-	});
+        var d1 = Q.defer();
+        var d2 = Q.defer();
+        var captured = [];
+        d1.promise.end();
+        d2.promise.end();
+        Q.onError(function(err){
+            captured.push(err.stack);
+        });
+        try {
+            throw new Error("boom!");
+        } catch (err) {
+            d1.reject(err);
+            d2.reject(err);
+        }
+        waitsFor(function(){ return captured.length == 2 }, 1000, "waiting for exceptions");
+        runs(function(){
+            expect(captured[0]).toEqual(captured[1]);
+        });
     });
 });
 
