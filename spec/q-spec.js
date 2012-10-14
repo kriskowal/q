@@ -1491,6 +1491,29 @@ describe("decorator functions", function () {
     });
 });
 
+describe("stack trace formatting", function () {
+    it("doesn't mangle a stack trace that gets handled twice", function () {
+        var d1 = Q.defer();
+        var d2 = Q.defer();
+        var captured = [];
+        d1.promise.end();
+        d2.promise.end();
+
+        Q.onerror = function (err) {
+            captured.push(err.stack);
+        };
+
+        var error = new Error("boom!");
+        d1.reject(error);
+        d2.reject(error);
+
+        return Q.all([d1.promise.fail(function () {}), d2.promise.fail(function () { })])
+        .then(function () {
+            expect(captured[0]).toEqual(captured[1]);
+        });
+    });
+});
+
 describe("possible regressions", function () {
 
     describe("gh-9", function () {

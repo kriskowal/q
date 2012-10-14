@@ -1422,11 +1422,15 @@ function end(promise) {
             ) {
                 var promiseStackFrames = getStackFrames(promise);
 
-                var combinedStackFrames = errorStackFrames.concat(
-                    "From previous event:",
-                    promiseStackFrames
-                );
-                error.stack = formatStackTrace(error, combinedStackFrames);
+                // Check to make sure the stack trace hasn't already been
+                // rendered (possibly by us).
+                if (typeof errorStackFrames !== "string") {
+                    var combinedStackFrames = errorStackFrames.concat(
+                        "From previous event:",
+                        promiseStackFrames
+                    );
+                    error.stack = formatStackTrace(error, combinedStackFrames);
+                }
             }
 
             if (exports.onerror) {
