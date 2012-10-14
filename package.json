@@ -48,7 +48,7 @@
     "scripts": {
         "test": "jasmine-node spec",
         "test-browser": "opener spec/q-spec.html",
-        "lint": "jshint --show-non-errors q.js",
+        "lint": "jshint q.js",
         "cover": "cover run node_modules/jasmine-node/bin/jasmine-node spec && cover report html && opener cover_html/index.html"
     },
     "overlay": {

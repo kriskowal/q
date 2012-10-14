@@ -2,8 +2,8 @@
 /*jshint browser: true, node: true,
   curly: true, eqeqeq: true, noarg: true, nonew: true, trailing: true,
   undef: true */
-/*global define: false, Q: true, msSetImmediate: false, setImmediate: false,
-  ReturnValue: false, cajaVM: false, ses: false */
+/*global define: false, Q: true, setImmediate: false,
+  ReturnValue: false, cajaVM: false, ses: false, bootstrap: false */
 /*!
  *
  * Copyright 2009-2012 Kris Kowal under the terms of the MIT
@@ -124,12 +124,8 @@ var nextTick;
 if (typeof process !== "undefined") {
     // node
     nextTick = process.nextTick;
-} else if (typeof msSetImmediate === "function") {
-    // IE 10 only, at the moment
-    // And yes, ``bind``ing to ``window`` is necessary O_o.
-    nextTick = msSetImmediate.bind(window);
 } else if (typeof setImmediate === "function") {
-    // https://github.com/NobleJS/setImmediate
+    // In IE10, or use https://github.com/NobleJS/setImmediate
     nextTick = setImmediate;
 } else if (typeof MessageChannel !== "undefined") {
     // modern browsers
