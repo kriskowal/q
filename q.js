@@ -1421,12 +1421,16 @@ function end(promise) {
                 (errorStackFrames = getStackFrames(error))
             ) {
                 var promiseStackFrames = getStackFrames(promise);
-
-                var combinedStackFrames = errorStackFrames.concat(
-                    "From previous event:",
-                    promiseStackFrames
-                );
-                error.stack = formatStackTrace(error, combinedStackFrames);
+                if (typeof(errorStackFrames) === 'string'){
+                    // the stack trace has already been rendered
+                    // (possibly by us).
+                } else {
+                    var combinedStackFrames = errorStackFrames.concat(
+                        "From previous event:",
+                        promiseStackFrames
+                    );
+                    error.stack = formatStackTrace(error, combinedStackFrames);
+                }
             }
 
             if (exports.onerror) {
