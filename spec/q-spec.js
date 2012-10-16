@@ -1174,6 +1174,138 @@ describe("fin", function () {
 
 });
 
+describe("done", function () {
+    describe("when the promise is fulfilled", function () {
+        describe("and the callback does not throw", function () {
+            it("should call the callback and return nothing", function () {
+                var called = false;
+
+                var promise = Q.resolve();
+
+                var returnValue = promise.done(function () {
+                    called = true;
+                });
+
+                return promise.fail(function () { }).fin(function () {
+                    expect(called).toBe(true);
+                    expect(returnValue).toBe(undefined);
+                });
+            });
+        });
+
+        describe("and the callback throws", function () {
+            it("should rethrow that error in the next turn and return nothing", function () {
+                var turn = 0;
+                Q.nextTick(function () {
+                    ++turn;
+                });
+
+                var returnValue = Q.resolve().done(
+                    function () {
+                        throw "foo";
+                    }
+                );
+
+                var deferred = Q.defer();
+                Q.onerror = function (error) {
+                    expect(turn).toBe(1);
+                    expect(error).toBe("foo");
+                    expect(returnValue).toBe(undefined);
+                    deferred.resolve();
+                };
+                Q.delay(10).then(deferred.reject);
+
+                return deferred.promise;
+            });
+        });
+    });
+
+    describe("when the promise is rejected", function () {
+        describe("and the errback handles it", function () {
+            it("should call the errback and return nothing", function () {
+                var called = false;
+
+                var promise = Q.reject(new Error());
+
+                var returnValue = promise.done(
+                    function () { },
+                    function () {
+                        called = true;
+                    }
+                );
+
+                return promise.fail(function () { }).fin(function () {
+                    expect(called).toBe(true);
+                    expect(returnValue).toBe(undefined);
+                });
+            });
+        });
+
+        describe("and the errback throws", function () {
+            it("should rethrow that error in the next turn and return nothing", function () {
+                var turn = 0;
+                Q.nextTick(function () {
+                    ++turn;
+                });
+
+                var returnValue = Q.reject("bar").done(
+                    null,
+                    function () {
+                        throw "foo";
+                    }
+                );
+
+                var deferred = Q.defer();
+                Q.onerror = function (error) {
+                    expect(turn).toBe(1);
+                    expect(error).toBe("foo");
+                    expect(returnValue).toBe(undefined);
+                    deferred.resolve();
+                };
+                Q.delay(10).then(deferred.reject);
+
+                return deferred.promise;
+            });
+        });
+
+        describe("and there is no errback", function () {
+            it("should throw the original error in the next turn", function () {
+                var turn = 0;
+                Q.nextTick(function () {
+                    ++turn;
+                });
+
+                var returnValue = Q.reject("bar").done();
+
+                var deferred = Q.defer();
+                Q.onerror = function (error) {
+                    expect(turn).toBe(1);
+                    expect(error).toBe("bar");
+                    expect(returnValue).toBe(undefined);
+                    deferred.resolve();
+                };
+                Q.delay(10).then(deferred.reject);
+
+                return deferred.promise;
+            });
+        });
+    });
+
+    it("should attach a progress listener", function () {
+        var deferred = Q.defer();
+
+        var spy = jasmine.createSpy();
+        deferred.promise.done(null, null, spy);
+
+        deferred.notify(10);
+        deferred.resolve();
+
+        return deferred.promise.then(function () {
+            expect(spy).toHaveBeenCalledWith(10);
+        });
+    });
+});
+
 describe("thenables", function () {
 
     it("assimilates a thenable with fulfillment with resolve", function () {
@@ -1537,7 +1669,7 @@ describe("possible regressions", function () {
 
     describe("gh-73", function () {
         it("does not choke on non-error rejection reasons", function () {
-            Q.reject(REASON).end();
+            Q.reject(REASON).done();
 
             var deferred = Q.defer();
 
@@ -1555,7 +1687,7 @@ describe("possible regressions", function () {
         it("does not choke on rejection reasons with an undefined `stack`", function () {
             var error = new RangeError(REASON);
             error.stack = undefined;
-            Q.reject(error).end();
+            Q.reject(error).done();
 
             var deferred = Q.defer();
 

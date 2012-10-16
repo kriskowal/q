@@ -627,7 +627,7 @@ array_reduce(
         "all", "allResolved",
         "view", "viewInfo",
         "timeout", "delay",
-        "catch", "finally", "fail", "fin", "progress", "end",
+        "catch", "finally", "fail", "fin", "progress", "end", "done",
         "ncall", "napply", "nbind",
         "npost", "ninvoke",
         "nend"
@@ -1405,15 +1405,16 @@ function fin(promise, callback) {
  * @param {Any*} promise at the end of a chain of promises
  * @returns nothing
  */
-exports.end = end; // XXX stopgap
-function end(promise) {
-    when(promise, void 0, function (error) {
+exports.end = deprecate(done, "end", "done"); // XXX deprecated, use done
+exports.done = done;
+function done(promise, fulfilled, rejected, progress) {
+    function onUnhandledError(error) {
         // forward to a future turn so that ``when``
         // does not catch it and turn it into a rejection.
         nextTick(function () {
             // If possible (that is, if in V8), transform the error stack
             // trace by removing Node and Q cruft, then concatenating with
-            // the stack trace of the promise we are ``end``ing. See #57.
+            // the stack trace of the promise we are ``done``ing. See #57.
             var errorStackFrames;
             if (
                 Error.captureStackTrace &&
@@ -1439,7 +1440,14 @@ function end(promise) {
                 throw error;
             }
         });
-    });
+    }
+
+    // Avoid unnecessary `nextTick`ing via an unnecessary `when`.
+    var promiseToHandle = fulfilled || rejected || progress ?
+        when(promise, fulfilled, rejected, progress) :
+        promise;
+
+    fail(promiseToHandle, onUnhandledError);
 }
 
 /**
@@ -1522,7 +1530,7 @@ function ncall(callback, thisp /*, ...args*/) {
  *
  *      Q.nbind(FS.readFile, FS)(__filename)
  *      .then(console.log)
- *      .end()
+ *      .done()
  *
  */
 exports.nbind = nbind;
