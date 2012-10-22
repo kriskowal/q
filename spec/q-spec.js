@@ -1306,6 +1306,38 @@ describe("done", function () {
     });
 });
 
+describe("thenResolve", function () {
+    describe("Resolving with an object", function () {
+        it("returns a promise for that object once the promise is resolved", function () {
+            var waited = false;
+            Q.delay(20)
+                .then(function () {
+                    waited = true;
+                })
+                .thenResolve('foo')
+                .then(function (val) {
+                    expect(waited).toBe(true);
+                    expect(val).toBe('foo');
+                });
+        });
+    });
+
+    describe("Resolving with an promise", function () {
+        it("returns a promise for the result of that promise once the promise is resolved", function () {
+            var waited = false;
+            Q.delay(20)
+                .then(function () {
+                    waited = true;
+                })
+                .thenResolve(Q.resolve('foo'))
+                .then(function (val) {
+                    expect(waited).toBe(true);
+                    expect(val).toBe('foo');
+                });
+        });
+    });
+});
+
 describe("thenables", function () {
 
     it("assimilates a thenable with fulfillment with resolve", function () {
