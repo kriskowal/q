@@ -614,6 +614,10 @@ makePromise.prototype.then = function (fulfilled, rejected, progressed) {
     return when(this, fulfilled, rejected, progressed);
 };
 
+makePromise.prototype.thenResolve = function (value) {
+    return when(this, function () { return value; });
+};
+
 // Chainable methods
 array_reduce(
     [
