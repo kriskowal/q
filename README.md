@@ -38,7 +38,7 @@ Q.fcall(step1)
 }, function (error) {
     // Handle any error from step1 through step4
 })
-.end();
+.done();
 ```
 
 With this approach, you also get implicit error propagation,
@@ -368,7 +368,7 @@ foo()
 .then(function () {
     return "bar";
 })
-.end()
+.done()
 ```
 
 Ending a promise chain makes sure that, if an error doesn’t get
