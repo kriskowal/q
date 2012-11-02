@@ -616,7 +616,7 @@ will [be ameliorated][streamsnext].
 
 A method-by-method [Q API reference][reference] is available on the wiki.
 
-[reference]: q/wiki/API-Reference
+[reference]: https://github.com/kriskowal/q/wiki/API-Reference
 
 ## More Examples
 
