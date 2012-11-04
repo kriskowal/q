@@ -672,9 +672,10 @@ function valueOf(value) {
     /*jshint newcap: false */
     if (Object(value) !== value) {
         return value;
-    } else {
+    } else if (isPromise(value)) {
         return value.valueOf();
     }
+    return value;
 }
 
 /**

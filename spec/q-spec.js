@@ -739,6 +739,11 @@ describe("valueOf", function () {
         expect(a.promise.valueOf()).toBe(b.promise);
     });
 
+    it("should not convert `Date` instances to milliseconds", function () {
+        var promise = Q.resolve(new Date(2012, 10, 4));
+        expect(promise.valueOf()).toEqual(new Date(2012, 10, 4));
+    });
+
 });
 
 describe("promise states", function () {
