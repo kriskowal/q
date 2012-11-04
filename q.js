@@ -985,7 +985,7 @@ function spread(promise, fulfilled, rejected) {
     return when(promise, function (valuesOrPromises) {
         return all(valuesOrPromises).then(function (values) {
             return fulfilled.apply(void 0, values);
-        });
+        }, rejected);
     }, rejected);
 }
 
