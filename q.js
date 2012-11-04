@@ -1,9 +1,4 @@
 // vim:ts=4:sts=4:sw=4:
-/*jshint browser: true, node: true,
-  curly: true, eqeqeq: true, noarg: true, nonew: true, trailing: true,
-  undef: true */
-/*global define: false, Q: true, setImmediate: false,
-  ReturnValue: false, cajaVM: false, ses: false, bootstrap: false */
 /*!
  *
  * Copyright 2009-2012 Kris Kowal under the terms of the MIT

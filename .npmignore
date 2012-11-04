@@ -12,6 +12,7 @@ design
 examples
 spec
 .coverignore
+.jshintrc
 .mailmap
 .npmignore
 .travis.yml
