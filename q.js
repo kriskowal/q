@@ -1573,7 +1573,12 @@ function nbind(callback /* thisp, ...args*/) {
  */
 exports.npost = npost;
 function npost(object, name, args) {
-    return napply(object[name], object, args);
+    var nodeArgs = array_slice(args);
+    var deferred = defer();
+    nodeArgs.push(deferred.makeNodeResolver());
+
+    post(object, name, nodeArgs).fail(deferred.reject);
+    return deferred.promise;
 }
 
 /**
@@ -1588,11 +1593,11 @@ function npost(object, name, args) {
  */
 exports.ninvoke = ninvoke;
 function ninvoke(object, name /*, ...args*/) {
-    var args = array_slice(arguments, 2);
+    var nodeArgs = array_slice(arguments, 2);
     var deferred = defer();
-    args.push(deferred.makeNodeResolver());
+    nodeArgs.push(deferred.makeNodeResolver());
 
-    post(object, name, args).fail(deferred.reject);
+    post(object, name, nodeArgs).fail(deferred.reject);
     return deferred.promise;
 }
 

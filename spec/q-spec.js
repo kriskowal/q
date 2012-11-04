@@ -1596,6 +1596,23 @@ describe("node support", function () {
             });
         });
 
+        it("rejects with thrown error", function () {
+            return Q.npost(obj, "errorThrower", [1, 2, 3])
+            .then(function (sum) {
+                expect(true).toBe(false);
+            }, function (_exception) {
+                expect(_exception).toBe(exception);
+            });
+        });
+
+        it("works on promises for objects with Node methods", function () {
+            return Q.resolve(obj)
+            .npost("method", [1, 2, 3])
+            .then(function (sum) {
+                expect(sum).toEqual(6);
+            });
+        });
+
     });
 
     describe("ninvoke", function (done) {
