@@ -120,6 +120,11 @@ describe("defer and when", function () {
         return promise;
     });
 
+    it("returns `undefined` from the deferred's methods", function () {
+        expect(Q.defer().resolve()).toBe(undefined);
+        expect(Q.defer().reject()).toBe(undefined);
+    });
+
 });
 
 describe("always next tick", function () {

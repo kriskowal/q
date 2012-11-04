@@ -490,7 +490,6 @@ function defer() {
         }, void 0);
         pending = void 0;
         progressListeners = void 0;
-        return value;
     }
 
     defend(promise);
@@ -498,7 +497,7 @@ function defer() {
     deferred.promise = promise;
     deferred.resolve = become;
     deferred.reject = function (exception) {
-        return become(reject(exception));
+        become(reject(exception));
     };
     deferred.notify = function (progress) {
         if (pending) {
