@@ -1,9 +1,10 @@
 "use strict";
+/*global Q: true, describe: false, it: false, expect: false, afterEach: false,
+         require: false, jasmine: false, waitsFor: false, runs: false */
 
-var Q = this.Q;
 if (typeof Q === "undefined" && typeof require !== "undefined") {
     // For Node compatibility.
-    Q = require("../q");
+    global.Q = require("../q");
     require("./lib/jasmine-promise");
 }
 
@@ -32,11 +33,11 @@ describe("defer and when", function () {
         var deferred = Q.defer();
         deferred.reject(-1);
         var promise = Q.when(deferred.promise, function () {
-        	expect(true).toBe(false);
-	    }, function (value) {
-    	    expect(turn).toEqual(1);
-        	expect(value).toEqual(-1);
-    	});
+            expect(true).toBe(false);
+        }, function (value) {
+            expect(turn).toEqual(1);
+            expect(value).toEqual(-1);
+        });
         turn++;
         return promise;
     });
@@ -62,7 +63,7 @@ describe("defer and when", function () {
         var turn = 0;
         var deferred = Q.defer();
         var promise = deferred.promise.then(function () {
-        	expect(true).toBe(false);
+            expect(true).toBe(false);
         }, function (value) {
             expect(turn).toEqual(2);
             expect(value).toEqual(-1);
@@ -89,7 +90,7 @@ describe("defer and when", function () {
             i++;
             expect(value).toBe(resolution);
             expect(nextTurn).toBe(true);
-            if (i == count) {
+            if (i === count) {
                 done();
             }
         }
@@ -1049,12 +1050,12 @@ describe("spread", function () {
 
     it("calls the errback when given a rejected promise", function () {
         var err = new Error();
-        Q.spread([Q.resolve(10), Q.reject(err)],
+        return Q.spread([Q.resolve(10), Q.reject(err)],
             function () {
                 expect(true).toBe(false);
             },
             function (actual) {
-                expect(actual).toBe(error);
+                expect(actual).toBe(err);
             }
         );
     });
