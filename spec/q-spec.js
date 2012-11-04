@@ -1468,6 +1468,9 @@ describe("node support", function () {
         },
         errorCallbacker: function (a, b, c, callback) {
             callback(exception);
+        },
+        errorThrower: function (a, b, c, callback) {
+            throw exception;
         }
     };
 
@@ -1617,6 +1620,23 @@ describe("node support", function () {
                 expect("blue").toBe("no, yellow!");
             }, function (_exception) {
                 expect(_exception).toBe(exception);
+            });
+        });
+
+        it("rejects with thrown error", function () {
+            return Q.ninvoke(obj, "errorThrower", 1, 2, 3)
+            .then(function (sum) {
+                expect(true).toBe(false);
+            }, function (_exception) {
+                expect(_exception).toBe(exception);
+            });
+        });
+
+        it("works on promises for objects with Node methods", function () {
+            return Q.resolve(obj)
+            .ninvoke("method", 1, 2, 3)
+            .then(function (sum) {
+                expect(sum).toEqual(6);
             });
         });
 

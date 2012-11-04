@@ -1589,7 +1589,11 @@ function npost(object, name, args) {
 exports.ninvoke = ninvoke;
 function ninvoke(object, name /*, ...args*/) {
     var args = array_slice(arguments, 2);
-    return napply(object[name], object, args);
+    var deferred = defer();
+    args.push(deferred.makeNodeResolver());
+
+    post(object, name, args).fail(deferred.reject);
+    return deferred.promise;
 }
 
 exports.nend = nend;
