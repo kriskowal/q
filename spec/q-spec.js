@@ -1765,8 +1765,8 @@ describe("stack trace formatting", function () {
         var d1 = Q.defer();
         var d2 = Q.defer();
         var captured = [];
-        d1.promise.end();
-        d2.promise.end();
+        d1.promise.done();
+        d2.promise.done();
 
         Q.onerror = function (err) {
             captured.push(err.stack);
