@@ -505,13 +505,11 @@ function defer() {
     deferred.reject = function (exception) {
         return become(reject(exception));
     };
-    deferred.notify = function () {
+    deferred.notify = function (progress) {
         if (pending) {
-            var args = arguments;
-
             array_reduce(progressListeners, function (undefined, progressListener) {
                 nextTick(function () {
-                    progressListener.apply(void 0, args);
+                    progressListener(progress);
                 });
             }, void 0);
         }
@@ -945,6 +943,10 @@ function when(value, fulfilled, rejected, progressed) {
         }
     }
 
+    function _progressed(value) {
+        return progressed ? progressed(value) : value;
+    }
+
     var resolvedValue = resolve(value);
     nextTick(function () {
         resolvedValue.promiseSend("when", function (value) {
@@ -964,10 +966,10 @@ function when(value, fulfilled, rejected, progressed) {
         });
     });
 
-    // Progress listeners need to be attached in the current tick.
-    if (progressed) {
-        resolvedValue.promiseSend("when", void 0, void 0, progressed);
-    }
+    // Progress propagator need to be attached in the current tick.
+    resolvedValue.promiseSend("when", void 0, void 0, function (value) {
+        deferred.notify(_progressed(value));
+    });
 
     return deferred.promise;
 }
@@ -1374,8 +1376,7 @@ function fail(promise, rejected) {
  */
 exports.progress = progress;
 function progress(promise, progressed) {
-    when(promise, void 0, void 0, progressed);
-    return promise;
+    return when(promise, void 0, void 0, progressed);
 }
 
 /**

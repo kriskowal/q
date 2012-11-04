@@ -233,7 +233,7 @@ describe("progress", function () {
             process.on("uncaughtException", uncaughtExceptionHandler);
             promise.fin(function () {
                 process.removeListener("uncaughtException", uncaughtExceptionHandler);
-            })
+            });
         }
 
         return promise;
@@ -400,14 +400,14 @@ describe("progress", function () {
         return promise;
     });
 
-    it("should forward all notify arguments to listeners", function () {
+    it("should forward only the first notify argument to listeners", function () {
         var progressValueArrays = [];
         var deferred = Q.defer();
 
         var promise = Q.when(
             deferred.promise,
             function () {
-                expect(progressValueArrays).toEqual([[1], [2, 3], [4, 5, 6]]);
+                expect(progressValueArrays).toEqual([[1], [2], [4]]);
             },
             function () {
                 expect(true).toBe(false);
@@ -868,6 +868,55 @@ describe("propagation", function () {
         });
     });
 
+    it("should propagate progress by default", function () {
+        var d = Q.defer();
+
+        var progressValues = [];
+        var promise = d.promise
+        .then()
+        .then(
+            function () {
+                expect(progressValues).toEqual([1]);
+            },
+            function () {
+                expect(true).toBe(false);
+            },
+            function (progressValue) {
+                progressValues.push(progressValue);
+            }
+        );
+
+        d.notify(1);
+        d.resolve();
+
+        return promise;
+    });
+
+    it("should allow translation of progress in the progressback", function () {
+        var d = Q.defer();
+
+        var progressValues = [];
+        var promise = d.promise
+        .progress(function (p) {
+            return p + 5;
+        })
+        .then(
+            function () {
+                expect(progressValues).toEqual([10]);
+            },
+            function () {
+                expect(true).toBe(false);
+            },
+            function (progressValue) {
+                progressValues.push(progressValue);
+            }
+        );
+
+        d.notify(5);
+        d.resolve();
+
+        return promise;
+    });
 });
 
 describe("all", function () {
@@ -1354,7 +1403,7 @@ describe("thenables", function () {
         });
     });
 
-    it("assimilates a thenable with progress and fulfillment", function () {
+    it("assimilates a thenable with progress and fulfillment (using resolve)", function () {
         var progressValueArrays = [];
         return Q.resolve({
             then: function (fulfilled, rejected, progressed) {
@@ -1369,7 +1418,26 @@ describe("thenables", function () {
             progressValueArrays.push(Array.prototype.slice.call(arguments));
         })
         .then(function () {
-            expect(progressValueArrays).toEqual([[1, 2], [3, 4, 5]]);
+            expect(progressValueArrays).toEqual([[1], [3]]);
+        });
+    });
+
+    it("assimilates a thenable with progress and fulfillment (using when)", function () {
+        var progressValueArrays = [];
+        return Q.when({
+            then: function (fulfilled, rejected, progressed) {
+                Q.nextTick(function () {
+                    progressed(1, 2);
+                    progressed(3, 4, 5);
+                    fulfilled();
+                });
+            }
+        })
+        .progress(function () {
+            progressValueArrays.push(Array.prototype.slice.call(arguments));
+        })
+        .then(function () {
+            expect(progressValueArrays).toEqual([[1], [3]]);
         });
     });
 
