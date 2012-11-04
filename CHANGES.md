@@ -14,9 +14,38 @@
    ``invoke``.
  - WARNING: The undocumented ``view`` and ``viewInfo`` will be removed.
 
+## Next minor
+
+ - Added ``done`` as a replacement for ``end``, taking the usual fulfillment,
+   rejection, and progress handlers. It's essentially equivalent to
+   ``then(f, r, p).end()``.
+ - Added ``Q.onerror``, a settable error trap that you can use to get full stack
+   traces for uncaught errors. #94
+ - Added ``thenResolve`` as a shortcut for returning a constant value once a
+   promise is fulfilled. #108 @ForbesLindesay
+ - Various tweaks to progress notification, including propagation and
+   transformation of progress values and only forwarding a single progress
+   object.
+ - ``nend`` no longer returns a promise.
+ - ``deferred.resolve`` and ``deferred.reject`` no longer (sometimes) return
+   ``deferred.promise``.
+ - Fixed stack traces getting mangled if they hit ``end`` twice. #116 #121 @ef4
+ - Fixed ``ninvoke`` and ``npost`` to work on promises for objects with Node
+   methods. #134
+ - Fixed accidental coercion of objects with nontrivial ``valueOf`` methods,
+   like ``Date``s, by the promise's ``valueOf`` method. #135
+ - Fixed ``spread`` not calling the passed rejection handler if given a rejected
+   promise.
+
 ## 0.8.9
 
- - Add `nend`
+ - Added ``nend``
+ - Added preliminary progress notification support, via
+   ``promise.then(onFulfilled, onRejected, onProgress)``,
+   ``promise.progress(onProgress)``, and ``deferred.notify(...progressData)``.
+ - Made ``put`` and ``del`` return the object acted upon for easier chaining.
+   #84
+ - Fixed coercion cycles with cooperating promises. #106
 
 ## 0.8.7
 
