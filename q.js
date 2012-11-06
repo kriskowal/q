@@ -626,7 +626,7 @@ array_reduce(
         "catch", "finally", "fail", "fin", "progress", "end", "done",
         "ncall", "napply", "nbind",
         "npost", "ninvoke",
-        "nend"
+        "nend", "nodeify"
     ],
     function (undefined, name) {
         makePromise.prototype[name] = function () {
