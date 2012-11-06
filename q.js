@@ -1596,8 +1596,9 @@ function ninvoke(object, name /*, ...args*/) {
     return deferred.promise;
 }
 
-exports.nend = nend;
-function nend(promise, nodeback) {
+exports.nend = deprecate(nodeify, "nend", "nodeify"); // XXX deprecated, use nodeify
+exports.nodeify = nodeify;
+function nodeify(promise, nodeback) {
     if (nodeback) {
         promise.then(function (value) {
             nextTick(function () {

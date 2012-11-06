@@ -1695,11 +1695,11 @@ describe("node support", function () {
 
     });
 
-    describe("nend", function () {
+    describe("nodeify", function () {
 
         it("calls back with a resolution", function () {
             var spy = jasmine.createSpy();
-            Q.resolve(10).nend(spy);
+            Q.resolve(10).nodeify(spy);
             waitsFor(function () {
                 return spy.argsForCall.length;
             });
@@ -1710,7 +1710,7 @@ describe("node support", function () {
 
         it("calls back with an error", function () {
             var spy = jasmine.createSpy();
-            Q.reject(10).nend(spy);
+            Q.reject(10).nodeify(spy);
             waitsFor(function () {
                 return spy.argsForCall.length;
             });
@@ -1720,7 +1720,7 @@ describe("node support", function () {
         });
 
         it("forwards a promise", function () {
-            return Q.resolve(10).nend().then(function (ten) {
+            return Q.resolve(10).nodeify().then(function (ten) {
                 expect(ten).toBe(10);
             });
         });

@@ -6,6 +6,7 @@
    removed.  Use ``sender(op)``.
  - WARNING: The deprecated ``node`` export will be removed.
    Use ``nbind``.
+ - WARNING: The deprecated ``nend`` export will be removed. Use ``nodeify``.
  - WARNING: The deprecated ``deferred.node()`` interface will be
    removed.  Use ``deferred.makeNodeResolver()``.
  - WARNING: The deprecated ``call``, ``apply``, and ``bind`` are
@@ -26,7 +27,8 @@
  - Various tweaks to progress notification, including propagation and
    transformation of progress values and only forwarding a single progress
    object.
- - ``nend`` no longer returns a promise.
+ - Renamed ``nend`` to ``nodeify``. It no longer returns an always-fulfilled
+   promise when a Node callback is passed.
  - ``deferred.resolve`` and ``deferred.reject`` no longer (sometimes) return
    ``deferred.promise``.
  - Fixed stack traces getting mangled if they hit ``end`` twice. #116 #121 @ef4
