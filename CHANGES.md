@@ -55,7 +55,7 @@ replacements are listed here:
 (*) Use of ``thisp`` is discouraged. For calling methods, use ``post`` or
 ``invoke``.
 
-## Next minor
+## 0.8.10
 
  - Added ``done`` as a replacement for ``end``, taking the usual fulfillment,
    rejection, and progress handlers. It's essentially equivalent to
