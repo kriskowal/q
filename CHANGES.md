@@ -2,18 +2,58 @@
 
 ## Next major
 
- - WARNING: The undocumented ``Method`` export will be
-   removed.  Use ``sender(op)``.
- - WARNING: The deprecated ``node`` export will be removed.
-   Use ``nbind``.
- - WARNING: The deprecated ``nend`` export will be removed. Use ``nodeify``.
- - WARNING: The deprecated ``deferred.node()`` interface will be
-   removed.  Use ``deferred.makeNodeResolver()``.
- - WARNING: The deprecated ``call``, ``apply``, and ``bind`` are
-   replaced with ``fcall``, ``fapply``, and ``fbind``.  Use of a
-   ``thisp`` is discouraged.  For calling methods, use ``post`` or
-   ``invoke``.
- - WARNING: The undocumented ``view`` and ``viewInfo`` will be removed.
+The following deprecated or undocumented methods will be removed. Their
+replacements are listed here:
+
+<table>
+   <thead>
+      <tr>
+         <th>0.8.x method</th>
+         <th>0.9 replacement</th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td><code>call</code>, <code>apply</code>, <code>bind</code> (*)</td>
+         <td><code>fcall</code>, <code>fapply</code>, <code>fbind</code></td>
+      </tr>
+      <tr>
+         <td><code>end</code></td>
+         <td><code>done</code></td>
+      </tr>
+      <tr>
+         <td><code>ref</code></td>
+         <td><code>resolve</code></td>
+      </tr>
+      <tr>
+         <td><code>node</code></td>
+         <td><code>nbind</code></td>
+      </tr>
+      <tr>
+         <td><code>nend</code></td>
+         <td><code>nodeify</code></td>
+      </tr>
+      <tr>
+         <td><code>deferred.node</code></td>
+         <td><code>deferred.makeNodeResolver</code></td>
+      </tr>
+      <tr>
+         <td><code>Method</code>, <code>sender</code></td>
+         <td><code>dispatcher</code></td>
+      </tr>
+      <tr>
+         <td><code>send</code></td>
+         <td><code>dispatch</code></td>
+      </tr>
+      <tr>
+         <td><code>view</code>, <code>viewInfo</code></td>
+         <td>(none)</td>
+      </tr>
+   </tbody>
+</table>
+
+(*) Use of ``thisp`` is discouraged. For calling methods, use ``post`` or
+``invoke``.
 
 ## Next minor
 
