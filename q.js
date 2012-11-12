@@ -664,12 +664,16 @@ function valueOf(value) {
     // generates a known JSHint "constructor invocation without new" warning
     // supposed to be fixed, but isn't? https://github.com/jshint/jshint/issues/392
     /*jshint newcap: false */
-    if (Object(value) !== value) {
+    if (isPromise(value)) {
+        return value.valueOf();
+    }
+    return value;
+    /*if (Object(value) !== value || typeof value.valueOf !== "function") {
         return value;
     } else if (isPromise(value)) {
         return value.valueOf();
     }
-    return value;
+    return value;*/
 }
 
 /**
