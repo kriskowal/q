@@ -750,30 +750,6 @@ describe("valueOf", function () {
         expect(promise.valueOf()).toEqual(new Date(2012, 10, 4));
     });
 
-    it("should not call valueOf on a non-promise", function () {
-        var a = true;
-        var b = {
-            valueOf: function () {
-                return false;
-            }
-        };
-        a.valueOf = function () {
-            return false;
-        };
-        Q.resolve(a)
-        .then(function (value) {
-            expect(value).toBe(true);
-        }, function () {
-            expect(false).toBe(true);
-        });
-        Q.resolve(b)
-        .then(function (value) {
-            expect(value).toBe(b);
-        }, function () {
-            expect(false).toBe(true);
-        });
-    });
-
 });
 
 describe("promise states", function () {
