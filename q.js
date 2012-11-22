@@ -254,7 +254,7 @@ function isNodeFrame(stackLine) {
 }
 
 function isInternalFrame(stackLine) {
-    var pieces = /at [^ ]+ \((.*):(\d+):\d+\)/.exec(stackLine);
+    var pieces = /at .+ \((.*):(\d+):\d+\)/.exec(stackLine);
 
     if (!pieces) {
         return false;
