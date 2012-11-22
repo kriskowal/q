@@ -235,6 +235,22 @@ if (typeof ReturnValue !== "undefined") {
 
 var STACK_JUMP_SEPARATOR = "From previous event:";
 
+function makeStackTraceLong(error, promise) {
+    // If possible (that is, if in V8), transform the error stack
+    // trace by removing Node and Q cruft, then concatenating with
+    // the stack trace of the promise we are ``done``ing. See #57.
+    if (promise.stack &&
+        typeof error === "object" &&
+        error !== null &&
+        error.stack &&
+        error.stack.indexOf(STACK_JUMP_SEPARATOR) === -1
+    ) {
+        error.stack = filterStackString(error.stack) +
+            "\n" + STACK_JUMP_SEPARATOR + "\n" +
+            filterStackString(promise.stack);
+    }
+}
+
 function filterStackString(stackString) {
     var lines = stackString.split("\n");
     var desiredLines = [];
@@ -809,11 +825,15 @@ function when(value, fulfilled, rejected, progressed) {
     }
 
     function _rejected(exception) {
-        try {
-            return rejected ? rejected(exception) : reject(exception);
-        } catch (newException) {
-            return reject(newException);
+        if (rejected) {
+            makeStackTraceLong(exception, resolvedValue);
+            try {
+                return rejected(exception);
+            } catch (newException) {
+                return reject(newException);
+            }
         }
+        return reject(exception);
     }
 
     function _progressed(value) {
@@ -1290,19 +1310,7 @@ function done(promise, fulfilled, rejected, progress) {
         // forward to a future turn so that ``when``
         // does not catch it and turn it into a rejection.
         nextTick(function () {
-            // If possible (that is, if in V8), transform the error stack
-            // trace by removing Node and Q cruft, then concatenating with
-            // the stack trace of the promise we are ``done``ing. See #57.
-            if (Error.captureStackTrace &&
-                typeof error === "object" &&
-                error !== null &&
-                error.stack &&
-                error.stack.indexOf(STACK_JUMP_SEPARATOR) === -1
-            ) {
-                error.stack = filterStackString(error.stack) +
-                    "\n" + STACK_JUMP_SEPARATOR + "\n" +
-                    filterStackString(promise.stack);
-            }
+            makeStackTraceLong(error, promise);
 
             if (exports.onerror) {
                 exports.onerror(error);
