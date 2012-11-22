@@ -1273,7 +1273,7 @@ describe("done", function () {
                     expect(returnValue).toBe(undefined);
                     deferred.resolve();
                 };
-                Q.delay(10).then(deferred.reject);
+                Q.delay(100).then(deferred.reject);
 
                 return deferred.promise;
             });
@@ -1322,7 +1322,7 @@ describe("done", function () {
                     expect(returnValue).toBe(undefined);
                     deferred.resolve();
                 };
-                Q.delay(10).then(deferred.reject);
+                Q.delay(100).then(deferred.reject);
 
                 return deferred.promise;
             });
