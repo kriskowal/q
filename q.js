@@ -660,13 +660,7 @@ defend(makePromise.prototype);
  */
 exports.nearer = valueOf;
 function valueOf(value) {
-    // if !Object.isObject(value)
-    // generates a known JSHint "constructor invocation without new" warning
-    // supposed to be fixed, but isn't? https://github.com/jshint/jshint/issues/392
-    /*jshint newcap: false */
-    if (Object(value) !== value) {
-        return value;
-    } else if (isPromise(value)) {
+    if (isPromise(value)) {
         return value.valueOf();
     }
     return value;
