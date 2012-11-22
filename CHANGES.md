@@ -15,7 +15,11 @@ replacements are listed here:
    <tbody>
       <tr>
          <td><code>call</code>, <code>apply</code>, <code>bind</code> (*)</td>
-         <td><code>fcall</code>, <code>fapply</code>, <code>fbind</code></td>
+         <td><code>fcall</code>/<code>invoke</code>, <code>fapply</code>/<code>post</code>, <code>fbind</code></td>
+      </tr>
+      <tr>
+         <td><code>ncall</code>, <code>napply</code>, <code>bind</code> (*)</td>
+         <td><code>nfcall</code>/<code>ninvoke</code>, <code>nfapply</code>/<code>npost</code>, <code>nfbind</code></td>
       </tr>
       <tr>
          <td><code>end</code></td>
