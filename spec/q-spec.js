@@ -1485,6 +1485,68 @@ describe("node support", function () {
         }
     };
 
+    describe("nfapply", function (done) {
+
+        it("fulfills with callback result", function () {
+            return Q.nfapply(function (a, b, c, callback) {
+                callback(null, a + b + c);
+            }, [1, 2, 3])
+            .then(function (sum) {
+                expect(sum).toEqual(6);
+            });
+        });
+
+        it("rejects with callback error", function () {
+            var exception = new Error("That is not your favorite color.");
+            return Q.nfapply(function (a, b, c, callback) {
+                callback(exception);
+            }, [1, 2, 3])
+            .then(function (sum) {
+                expect(true).toBe(false);
+            }, function (_exception) {
+                expect(_exception).toBe(exception);
+            });
+        });
+
+    });
+
+    describe("nfcall", function () {
+        it("fulfills with callback result", function () {
+            return Q.nfcall(function (a, b, c, callback) {
+                callback(null, a + b + c);
+            }, 1, 2, 3)
+            .then(function (sum) {
+                expect(sum).toEqual(6);
+            });
+        });
+
+        it("rejects with callback error", function () {
+            var exception = new Error("That is not your favorite color.");
+            return Q.nfcall(function (a, b, c, callback) {
+                callback(exception);
+            }, 1, 2, 3)
+            .then(function (sum) {
+                expect(true).toBe(false);
+            }, function (_exception) {
+                expect(_exception).toBe(exception);
+            });
+        });
+
+    });
+
+    describe("nfbind", function () {
+
+        it("mixes partial application with complete application", function () {
+            return Q.nfbind(function (a, b, c, d, callback) {
+                callback(null, a + b + c + d);
+            }, 1, 2).call({}, 3, 4)
+            .then(function (ten) {
+                expect(ten).toBe(10);
+            });
+        });
+
+    });
+
     describe("napply", function (done) {
 
         it("fulfills with callback result", function () {
