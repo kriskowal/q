@@ -524,6 +524,7 @@ array_reduce(
         "view", "viewInfo",
         "timeout", "delay",
         "catch", "finally", "fail", "fin", "progress", "end", "done",
+        "nfcall", "nfapply", "nfbind",
         "ncall", "napply", "nbind",
         "npost", "ninvoke",
         "nend", "nodeify"
@@ -1376,6 +1377,68 @@ function delay(promise, timeout) {
 }
 
 /**
+ * Passes a continuation to a Node function, which is called with the given
+ * arguments provided as an array, and returns a promise.
+ *
+ *      var readFile = require("fs").readFile;
+ *      Q.nfapply(readFile, [__filename])
+ *      .then(function (content) {
+ *      })
+ *
+ */
+exports.nfapply = nfapply;
+function nfapply(callback, args) {
+    var nodeArgs = array_slice(args);
+    var deferred = defer();
+    nodeArgs.push(deferred.makeNodeResolver());
+
+    fapply(callback, nodeArgs).fail(deferred.reject);
+    return deferred.promise;
+}
+
+/**
+ * Passes a continuation to a Node function, which is called with the given
+ * arguments provided individually, and returns a promise.
+ *
+ *      var readFile = require("fs").readFile;
+ *      Q.nfcall(readFile, __filename)
+ *      .then(function (content) {
+ *      })
+ *
+ */
+exports.nfcall = nfcall;
+function nfcall(callback/*, ...args */) {
+    var nodeArgs = array_slice(arguments, 1);
+    var deferred = defer();
+    nodeArgs.push(deferred.makeNodeResolver());
+
+    fapply(callback, nodeArgs).fail(deferred.reject);
+    return deferred.promise;
+}
+
+/**
+ * Wraps a NodeJS continuation passing function and returns an equivalent
+ * version that returns a promise.
+ *
+ *      Q.nfbind(FS.readFile, __filename)("utf-8")
+ *      .then(console.log)
+ *      .done()
+ *
+ */
+exports.nfbind = nfbind;
+function nfbind(callback/*, ...args */) {
+    var baseArgs = array_slice(arguments, 1);
+    return function () {
+        var nodeArgs = baseArgs.concat(array_slice(arguments));
+        var deferred = defer();
+        nodeArgs.push(deferred.makeNodeResolver());
+
+        fapply(callback, nodeArgs).fail(deferred.reject);
+        return deferred.promise;
+    };
+}
+
+/**
  * Passes a continuation to a Node function, which is called with a given
  * `this` value and arguments provided as an array, and returns a promise.
  *
@@ -1385,7 +1448,7 @@ function delay(promise, timeout) {
  *      })
  *
  */
-exports.napply = napply;
+exports.napply = deprecate(napply, "napply", "npost");
 function napply(callback, thisp, args) {
     return nbind(callback, thisp).apply(void 0, args);
 }
@@ -1400,7 +1463,7 @@ function napply(callback, thisp, args) {
  *      })
  *
  */
-exports.ncall = ncall;
+exports.ncall = deprecate(ncall, "ncall", "ninvoke");
 function ncall(callback, thisp /*, ...args*/) {
     var args = array_slice(arguments, 2);
     return napply(callback, thisp, args);
@@ -1415,7 +1478,7 @@ function ncall(callback, thisp /*, ...args*/) {
  *      .done()
  *
  */
-exports.nbind = nbind;
+exports.nbind = deprecate(nbind, "nbind", "nfbind");
 function nbind(callback /* thisp, ...args*/) {
     if (arguments.length > 1) {
         var thisp = arguments[1];
