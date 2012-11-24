@@ -415,7 +415,7 @@ return Q.fcall(eventualAdd, 2, 2);
 #### Using Deferreds
 
 If you have to interface with asynchronous functions that are callback-based
-instead of promise-based, Q provides a few shortcuts (like ``Q.ncall`` and
+instead of promise-based, Q provides a few shortcuts (like ``Q.nfcall`` and
 friends). But much of the time, the solution will be to use *deferreds*.
 
 ```javascript
@@ -582,22 +582,22 @@ FS.readFile("foo.txt", "utf-8", deferred.makeNodeResolver());
 return deferred.promise;
 ```
 
-And there are ``Q.ncall`` and ``Q.ninvoke`` for even shorter
+And there are ``Q.nfcall`` and ``Q.ninvoke`` for even shorter
 expression.
 
 ```javascript
-return Q.ncall(FS.readFile, FS, "foo.txt", "utf-8");
+return Q.nfcall(FS.readFile, "foo.txt", "utf-8");
 ```
 
 ```javascript
-return Q.ninvoke(FS, 'readFile', "foo.txt", "utf-8");
+return Q.ninvoke(FS, "readFile", "foo.txt", "utf-8");
 ```
 
-There is also a ``Q.nbind`` function that that creates a reusable
+There is also a ``Q.nfbind`` function that that creates a reusable
 wrapper.
 
 ```javascript
-var readFile = Q.nbind(FS.readFile, FS)
+var readFile = Q.nfbind(FS.readFile);
 return readFile("foo.txt", "utf-8");
 ```
 
