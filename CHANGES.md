@@ -59,6 +59,17 @@ replacements are listed here:
 (*) Use of ``thisp`` is discouraged. For calling methods, use ``post`` or
 ``invoke``.
 
+## 0.8.11 (unreleased)
+ - Added ``nfcall``, ``nfapply``, and ``nfbind`` as ``thisp``-less versions of
+   ``ncall`, ``napply``, and ``nbind``. The latter are now deprecated. #142
+ - Long stack traces no longer cause linearly-growing memory usage when chaining
+   promises together. #111
+ - Inspecting ``error.stack`` in a rejection handler will now give a long stack
+   trace. #103
+ - Fixed ``Q.timeout`` to clear its timeout handle when the promise is rejected;
+   previously, it kept the event loop alive until the timeout period expired.
+   #145 @dfilatov
+
 ## 0.8.10
 
  - Added ``done`` as a replacement for ``end``, taking the usual fulfillment,
