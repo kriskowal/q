@@ -1346,7 +1346,11 @@ function timeout(promise, ms) {
     when(promise, function (value) {
         clearTimeout(timeoutId);
         deferred.resolve(value);
-    }, deferred.reject);
+    }, function (exception) {
+        clearTimeout(timeoutId);
+        deferred.reject(exception);
+    });
+
     return deferred.promise;
 }
 
