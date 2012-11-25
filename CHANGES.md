@@ -59,7 +59,7 @@ replacements are listed here:
 (*) Use of ``thisp`` is discouraged. For calling methods, use ``post`` or
 ``invoke``.
 
-## 0.8.11 (unreleased)
+## 0.8.11
  - Added ``nfcall``, ``nfapply``, and ``nfbind`` as ``thisp``-less versions of
    ``ncall`, ``napply``, and ``nbind``. The latter are now deprecated. #142
  - Long stack traces no longer cause linearly-growing memory usage when chaining
@@ -69,6 +69,8 @@ replacements are listed here:
  - Fixed ``Q.timeout`` to clear its timeout handle when the promise is rejected;
    previously, it kept the event loop alive until the timeout period expired.
    #145 @dfilatov
+ - Added `q/queue` module, which exports an infinite promise queue
+   constructor.
 
 ## 0.8.10
 

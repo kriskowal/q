@@ -4,9 +4,9 @@ If a function cannot return a value or throw an exception without
 blocking, it can return a promise instead.  A promise is an object
 that represents the return value or the thrown exception that the
 function may eventually provide.  A promise can also be used as a
-proxy for a [remote object][Q-Comm] to overcome latency.
+proxy for a [remote object][Q-Connection] to overcome latency.
 
-[Q-Comm]: https://github.com/kriskowal/q-comm
+[Q-Connection]: https://github.com/kriskowal/q-connection
 
 On the first pass, promises can mitigate the “[Pyramid of
 Doom][POD]”: the situation where code marches to the right faster
