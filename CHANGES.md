@@ -61,7 +61,7 @@ replacements are listed here:
 
 ## 0.8.11
  - Added ``nfcall``, ``nfapply``, and ``nfbind`` as ``thisp``-less versions of
-   ``ncall`, ``napply``, and ``nbind``. The latter are now deprecated. #142
+   ``ncall``, ``napply``, and ``nbind``. The latter are now deprecated. #142
  - Long stack traces no longer cause linearly-growing memory usage when chaining
    promises together. #111
  - Inspecting ``error.stack`` in a rejection handler will now give a long stack
