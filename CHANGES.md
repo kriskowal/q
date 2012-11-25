@@ -1,9 +1,38 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
-## Next major
+## v1.0.0 (unreleased)
 
-The following deprecated or undocumented methods will be removed. Their
-replacements are listed here:
+The following deprecated methods will be removed.
+
+<table>
+    <thead>
+        <tr>
+            <th>0.9.x method</th>
+            <th>1.x replacement</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>invoke</code></td>
+            <td><code>send</code></td>
+        </tr>
+        <tr>
+            <td><code>ninvoke</code></td>
+            <td><code>nsend</code></td>
+        </tr>
+    </tbody>
+</table>
+
+## v0.9.0 (unreleased)
+
+This release removes many layers of deprecated methods and brings Q
+closer to alignment with Mark Miller’s TC39 [strawman][] for
+concurrency.
+
+[strawman]: http://wiki.ecmascript.org/doku.php?id=strawman:concurrency
+
+The following deprecated or undocumented methods have been removed.
+Their replacements are listed here:
 
 <table>
    <thead>
@@ -59,7 +88,25 @@ replacements are listed here:
 (*) Use of ``thisp`` is discouraged. For calling methods, use ``post`` or
 ``invoke``.
 
+-   Q now exports a `Q(value)` function, an alias for `resolve`.
+    `Q.call`, `Q.apply`, and `Q.bind` were removed to make room for the
+    same methods on the function prototype.  This aligns with the
+    concurrency strawman.
+-   `invoke` has been renamed `send` in all its forms.  The old methods
+    are deprecated.  This aligns with the concurrency strawman.
+-   `Q.fulfill` has been added.  It is distinct from `Q.resolve` in that
+    it does not pass promises through, nor coerces promises from other
+    systems.  The promise becomes the fulfillment value.
+-   `Q.put` has been renamed `Q.set`.
+-   The internal interface for a promise now uses
+    `dispatchPromise(resolve, op, operands)` instead of `sendPromise(op,
+    resolve, ...operands)`, which reduces the cases where Q needs to do
+    argument slicing.
+-   The internal protocol uses different operands.  "put" is now "set".
+    "del" is now "delete".  "view" and "viewInfo" have been removed.
+
 ## 0.8.11
+
  - Added ``nfcall``, ``nfapply``, and ``nfbind`` as ``thisp``-less versions of
    ``ncall`, ``napply``, and ``nbind``. The latter are now deprecated. #142
  - Long stack traces no longer cause linearly-growing memory usage when chaining
