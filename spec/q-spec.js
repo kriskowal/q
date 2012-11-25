@@ -1702,9 +1702,10 @@ if (typeof require === "function") {
 
     if (domain) {
         describe("node domain support", function () {
-            it("should work", function (done) {
+            it("should work for non-promise async inside a promise handler",
+               function (done) {
                 var error = new Error("should be caught by the domain");
-                var d = require("domain").create();
+                var d = domain.create();
 
                 d.run(function () {
                     Q.resolve().then(function () {
@@ -1712,6 +1713,26 @@ if (typeof require === "function") {
                             throw error;
                         }, 10);
                     });
+                });
+
+                var errorTimeout = setTimeout(function () {
+                    done(new Error("Wasn't caught"));
+                }, 100);
+
+                d.on("error", function (theError) {
+                    expect(theError).toBe(error);
+                    clearTimeout(errorTimeout);
+                    done();
+                });
+            });
+
+            it("should transfer errors from `done` into the domain",
+               function (done) {
+                var error = new Error("should be caught by the domain");
+                var d = domain.create();
+
+                d.run(function () {
+                    Q.reject(error).done();
                 });
 
                 var errorTimeout = setTimeout(function () {
