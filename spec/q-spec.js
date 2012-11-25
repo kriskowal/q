@@ -1694,6 +1694,33 @@ describe("node support", function () {
 
 });
 
+if (typeof process === "object" && process && typeof require === "function") {
+    describe("node domain support", function () {
+        it("should work", function (done) {
+            var error = new Error("should be caught by the domain's handler");
+            var domain = require("domain").create();
+
+            domain.run(function () {
+                Q.resolve().then(function () {
+                    setTimeout(function () {
+                        throw error;
+                    }, 10);
+                });
+            });
+
+            var errorTimeout = setTimeout(function () {
+                done(new Error("Wasn't caught"));
+            }, 100);
+
+            domain.on("error", function (theError) {
+                expect(theError).toBe(error);
+                clearTimeout(errorTimeout);
+                done();
+            });
+        });
+    });
+}
+
 describe("decorator functions", function () {
     describe("promised", function () {
         var exception = new Error("That is not the meaning of life.");
