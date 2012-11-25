@@ -454,6 +454,25 @@ describe("progress", function () {
         return promise;
     });
 
+    it("should re-throw all errors thrown by listeners to Q.onerror", function () {
+        var theError = new Error("boo!");
+
+        var def = Q.defer();
+        def.promise.progress(function () {
+            throw theError;
+        });
+
+        var deferred = Q.defer();
+        Q.onerror = function (error) {
+            expect(error).toBe(theError);
+            deferred.resolve();
+        };
+        Q.delay(100).then(deferred.reject);
+
+        def.notify();
+
+        return deferred.promise;
+    });
 });
 
 describe("promises for objects", function () {
@@ -927,6 +946,33 @@ describe("propagation", function () {
         d.resolve();
 
         return promise;
+    });
+
+
+    it("should stop progress propagation if an error is thrown", function () {
+        var def = Q.defer();
+        var p2 = def.promise.progress(function () {
+            throw new Error("boo!");
+        });
+
+        Q.onerror = function () { /* just swallow it for this test */ };
+
+        var progressValues = [];
+        var result = p2.then(
+            function () {
+                expect(progressValues).toEqual([]);
+            },
+            function () {
+                expect(true).toBe(false);
+            },
+            function (progressValue) {
+                progressValues.push(progressValue);
+            }
+        );
+
+        def.notify();
+        def.resolve();
+        return result;
     });
 });
 

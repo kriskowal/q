@@ -862,7 +862,22 @@ function when(value, fulfilled, rejected, progressed) {
 
     // Progress propagator need to be attached in the current tick.
     resolvedValue.promiseSend("when", void 0, void 0, function (value) {
-        deferred.notify(_progressed(value));
+        var newValue;
+        var threw = false;
+        try {
+            newValue = _progressed(value);
+        } catch (e) {
+            threw = true;
+            if (Q.onerror) {
+                Q.onerror(e);
+            } else {
+                throw e;
+            }
+        }
+
+        if (!threw) {
+            deferred.notify(newValue);
+        }
     });
 
     return deferred.promise;
