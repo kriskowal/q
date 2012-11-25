@@ -654,7 +654,6 @@ function reject(exception) {
  * Constructs a promise for an immediate reference.
  * @param value immediate reference
  */
-exports.begin = resolve; // XXX experimental
 exports.resolve = resolve;
 function resolve(object) {
     // If the object is already a Promise, return it directly.  This enables
@@ -1165,7 +1164,6 @@ function fin(promise, callback) {
  * @param {Any*} promise at the end of a chain of promises
  * @returns nothing
  */
-exports.end = deprecate(done, "end", "done"); // XXX deprecated, use done
 exports.done = done;
 function done(promise, fulfilled, rejected, progress) {
     function onUnhandledError(error) {
@@ -1300,70 +1298,6 @@ function nfbind(callback/*, ...args */) {
 }
 
 /**
- * Passes a continuation to a Node function, which is called with a given
- * `this` value and arguments provided as an array, and returns a promise.
- *
- *      var FS = (require)("fs");
- *      Q.napply(FS.readFile, FS, [__filename])
- *      .then(function (content) {
- *      })
- *
- */
-exports.napply = deprecate(napply, "napply", "npost");
-function napply(callback, thisp, args) {
-    return nbind(callback, thisp).apply(void 0, args);
-}
-
-/**
- * Passes a continuation to a Node function, which is called with a given
- * `this` value and arguments provided individually, and returns a promise.
- *
- *      var FS = (require)("fs");
- *      Q.ncall(FS.readFile, FS, __filename)
- *      .then(function (content) {
- *      })
- *
- */
-exports.ncall = deprecate(ncall, "ncall", "ninvoke");
-function ncall(callback, thisp /*, ...args*/) {
-    var args = array_slice(arguments, 2);
-    return napply(callback, thisp, args);
-}
-
-/**
- * Wraps a NodeJS continuation passing function and returns an equivalent
- * version that returns a promise.
- *
- *      Q.nbind(FS.readFile, FS)(__filename)
- *      .then(console.log)
- *      .done()
- *
- */
-exports.nbind = deprecate(nbind, "nbind", "nfbind");
-function nbind(callback /* thisp, ...args*/) {
-    if (arguments.length > 1) {
-        var thisp = arguments[1];
-        var args = array_slice(arguments, 2);
-
-        var originalCallback = callback;
-        callback = function () {
-            var combinedArgs = args.concat(array_slice(arguments));
-            return originalCallback.apply(thisp, combinedArgs);
-        };
-    }
-    return function () {
-        var deferred = defer();
-        var args = array_slice(arguments);
-        // add a continuation that resolves the promise
-        args.push(deferred.makeNodeResolver());
-        // trap exceptions thrown by the callback
-        fapply(callback, args)
-        .fail(deferred.reject);
-        return deferred.promise;
-    };
-}
-
-/**
  * Calls a method of a Node-style object that accepts a Node-style
  * callback with a given array of arguments, plus a provided callback.
  * @param object an object that has the named method
@@ -1402,7 +1336,6 @@ function nsend(object, name /*, ...args*/) {
 }
 exports.ninvoke = deprecate(nsend, "ninvoke", "nsend");
 
-exports.nend = deprecate(nodeify, "nend", "nodeify"); // XXX deprecated, use nodeify
 exports.nodeify = nodeify;
 function nodeify(promise, nodeback) {
     if (nodeback) {
