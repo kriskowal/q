@@ -396,6 +396,9 @@ function defer() {
 
     deferred.promise = promise;
     deferred.resolve = become;
+    deferred.fulfill = function (value) {
+        become(fulfill(value));
+    };
     deferred.reject = function (exception) {
         become(reject(exception));
     };
@@ -651,32 +654,11 @@ function reject(exception) {
 }
 
 /**
- * Constructs a promise for an immediate reference.
+ * Constructs a fulfilled promise for an immediate reference.
  * @param value immediate reference
  */
-exports.resolve = resolve;
-function resolve(object) {
-    // If the object is already a Promise, return it directly.  This enables
-    // the resolve function to both be used to created references from objects,
-    // but to tolerably coerce non-promises to promises.
-    if (isPromise(object)) {
-        return object;
-    }
-    // In order to break infinite recursion or loops between `then` and
-    // `resolve`, it is necessary to attempt to extract fulfilled values
-    // out of foreign promise implementations before attempting to wrap
-    // them as unresolved promises.  It is my hope that other
-    // implementations will implement `valueOf` to synchronously extract
-    // the fulfillment value from their fulfilled promises.  If the
-    // other promise library does not implement `valueOf`, the
-    // implementations on primordial prototypes are harmless.
-    object = valueOf(object);
-    // assimilate thenables, CommonJS/Promises/A
-    if (object && typeof object.then === "function") {
-        var deferred = defer();
-        object.then(deferred.resolve, deferred.reject, deferred.notify);
-        return deferred.promise;
-    }
+exports.fulfill = fulfill;
+function fulfill(object) {
     return makePromise({
         "when": function () {
             return object;
@@ -704,6 +686,37 @@ function resolve(object) {
     }, void 0, function valueOf() {
         return object;
     });
+}
+
+/**
+ * Constructs a promise for an immediate reference, passes promises through, or
+ * coerces promises from different systems.
+ * @param value immediate reference or promise
+ */
+exports.resolve = resolve;
+function resolve(object) {
+    // If the object is already a Promise, return it directly.  This enables
+    // the resolve function to both be used to created references from objects,
+    // but to tolerably coerce non-promises to promises.
+    if (isPromise(object)) {
+        return object;
+    }
+    // In order to break infinite recursion or loops between `then` and
+    // `resolve`, it is necessary to attempt to extract fulfilled values
+    // out of foreign promise implementations before attempting to wrap
+    // them as unresolved promises.  It is my hope that other
+    // implementations will implement `valueOf` to synchronously extract
+    // the fulfillment value from their fulfilled promises.  If the
+    // other promise library does not implement `valueOf`, the
+    // implementations on primordial prototypes are harmless.
+    object = valueOf(object);
+    // assimilate thenables, CommonJS/Promises/A
+    if (object && typeof object.then === "function") {
+        var deferred = defer();
+        object.then(deferred.resolve, deferred.reject, deferred.notify);
+        return deferred.promise;
+    }
+    return fulfill(object);
 }
 
 /**
