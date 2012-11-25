@@ -1,0 +1,21 @@
+{
+    "browser": true,
+    "node": true,
+
+    "curly": true,
+    "eqeqeq": true,
+    "noarg": true,
+    "nonew": true,
+    "trailing": true,
+    "undef": true,
+
+    "globals": {
+        "bootstrap": false,
+        "cajaVM": false,
+        "define": false,
+        "Q": true,
+        "ReturnValue": false,
+        "ses": false,
+        "setImmediate": false
+    }
+}

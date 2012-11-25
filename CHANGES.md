@@ -2,17 +2,109 @@
 
 ## Next major
 
- - WARNING: The undocumented ``Method`` export will be
-   removed.  Use ``sender(op)``.
- - WARNING: The deprecated ``node`` export will be removed.
-   Use ``nbind``.
- - WARNING: The deprecated ``deferred.node()`` interface will be
-   removed.  Use ``deferred.makeNodeResolver()``.
- - WARNING: The deprecated ``call``, ``apply``, and ``bind`` are
-   replaced with ``fcall``, ``fapply``, and ``fbind``.  Use of a
-   ``thisp`` is discouraged.  For calling methods, use ``post`` or
-   ``invoke``.
- - WARNING: The undocumented ``view`` and ``viewInfo`` will be removed.
+The following deprecated or undocumented methods will be removed. Their
+replacements are listed here:
+
+<table>
+   <thead>
+      <tr>
+         <th>0.8.x method</th>
+         <th>0.9 replacement</th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td><code>call</code>, <code>apply</code>, <code>bind</code> (*)</td>
+         <td><code>fcall</code>/<code>invoke</code>, <code>fapply</code>/<code>post</code>, <code>fbind</code></td>
+      </tr>
+      <tr>
+         <td><code>ncall</code>, <code>napply</code>, <code>bind</code> (*)</td>
+         <td><code>nfcall</code>/<code>ninvoke</code>, <code>nfapply</code>/<code>npost</code>, <code>nfbind</code></td>
+      </tr>
+      <tr>
+         <td><code>end</code></td>
+         <td><code>done</code></td>
+      </tr>
+      <tr>
+         <td><code>ref</code></td>
+         <td><code>resolve</code></td>
+      </tr>
+      <tr>
+         <td><code>node</code></td>
+         <td><code>nbind</code></td>
+      </tr>
+      <tr>
+         <td><code>nend</code></td>
+         <td><code>nodeify</code></td>
+      </tr>
+      <tr>
+         <td><code>deferred.node</code></td>
+         <td><code>deferred.makeNodeResolver</code></td>
+      </tr>
+      <tr>
+         <td><code>Method</code>, <code>sender</code></td>
+         <td><code>dispatcher</code></td>
+      </tr>
+      <tr>
+         <td><code>send</code></td>
+         <td><code>dispatch</code></td>
+      </tr>
+      <tr>
+         <td><code>view</code>, <code>viewInfo</code></td>
+         <td>(none)</td>
+      </tr>
+   </tbody>
+</table>
+
+(*) Use of ``thisp`` is discouraged. For calling methods, use ``post`` or
+``invoke``.
+
+## 0.8.11
+ - Added ``nfcall``, ``nfapply``, and ``nfbind`` as ``thisp``-less versions of
+   ``ncall`, ``napply``, and ``nbind``. The latter are now deprecated. #142
+ - Long stack traces no longer cause linearly-growing memory usage when chaining
+   promises together. #111
+ - Inspecting ``error.stack`` in a rejection handler will now give a long stack
+   trace. #103
+ - Fixed ``Q.timeout`` to clear its timeout handle when the promise is rejected;
+   previously, it kept the event loop alive until the timeout period expired.
+   #145 @dfilatov
+ - Added `q/queue` module, which exports an infinite promise queue
+   constructor.
+
+## 0.8.10
+
+ - Added ``done`` as a replacement for ``end``, taking the usual fulfillment,
+   rejection, and progress handlers. It's essentially equivalent to
+   ``then(f, r, p).end()``.
+ - Added ``Q.onerror``, a settable error trap that you can use to get full stack
+   traces for uncaught errors. #94
+ - Added ``thenResolve`` as a shortcut for returning a constant value once a
+   promise is fulfilled. #108 @ForbesLindesay
+ - Various tweaks to progress notification, including propagation and
+   transformation of progress values and only forwarding a single progress
+   object.
+ - Renamed ``nend`` to ``nodeify``. It no longer returns an always-fulfilled
+   promise when a Node callback is passed.
+ - ``deferred.resolve`` and ``deferred.reject`` no longer (sometimes) return
+   ``deferred.promise``.
+ - Fixed stack traces getting mangled if they hit ``end`` twice. #116 #121 @ef4
+ - Fixed ``ninvoke`` and ``npost`` to work on promises for objects with Node
+   methods. #134
+ - Fixed accidental coercion of objects with nontrivial ``valueOf`` methods,
+   like ``Date``s, by the promise's ``valueOf`` method. #135
+ - Fixed ``spread`` not calling the passed rejection handler if given a rejected
+   promise.
+
+## 0.8.9
+
+ - Added ``nend``
+ - Added preliminary progress notification support, via
+   ``promise.then(onFulfilled, onRejected, onProgress)``,
+   ``promise.progress(onProgress)``, and ``deferred.notify(...progressData)``.
+ - Made ``put`` and ``del`` return the object acted upon for easier chaining.
+   #84
+ - Fixed coercion cycles with cooperating promises. #106
 
 ## 0.8.7
 

@@ -4,9 +4,9 @@ If a function cannot return a value or throw an exception without
 blocking, it can return a promise instead.  A promise is an object
 that represents the return value or the thrown exception that the
 function may eventually provide.  A promise can also be used as a
-proxy for a [remote object][Q-Comm] to overcome latency.
+proxy for a [remote object][Q-Connection] to overcome latency.
 
-[Q-Comm]: https://github.com/kriskowal/q-comm
+[Q-Connection]: https://github.com/kriskowal/q-connection
 
 On the first pass, promises can mitigate the “[Pyramid of
 Doom][POD]”: the situation where code marches to the right faster
@@ -38,7 +38,7 @@ Q.fcall(step1)
 }, function (error) {
     // Handle any error from step1 through step4
 })
-.end();
+.done();
 ```
 
 With this approach, you also get implicit error propagation,
@@ -241,8 +241,7 @@ the recived promises fails first gets handled by the error handler.
 
 ```javascript
 function eventualAdd(a, b) {
-    return Q.all([a, b])
-    .spread(function (a, b) {
+    return Q.spread([a, b], function (a, b) {
         return a + b;
     })
 }
@@ -259,16 +258,6 @@ return foo()
 })
 .spread(function (name, text) {
 })
-```
-
-And you can use ``Q.spread`` directly on an array of promises.
-
-```javascript
-function eventualAdd(a, b) {
-    return Q.spread([a, b], function (a, b) {
-        return a + b;
-    })
-}
 ```
 
 The ``all`` function returns a promise for an array of values.  If one
@@ -379,7 +368,7 @@ foo()
 .then(function () {
     return "bar";
 })
-.end()
+.done()
 ```
 
 Ending a promise chain makes sure that, if an error doesn’t get
@@ -426,7 +415,7 @@ return Q.fcall(eventualAdd, 2, 2);
 #### Using Deferreds
 
 If you have to interface with asynchronous functions that are callback-based
-instead of promise-based, Q provides a few shortcuts (like ``Q.ncall`` and
+instead of promise-based, Q provides a few shortcuts (like ``Q.nfcall`` and
 friends). But much of the time, the solution will be to use *deferreds*.
 
 ```javascript
@@ -593,22 +582,22 @@ FS.readFile("foo.txt", "utf-8", deferred.makeNodeResolver());
 return deferred.promise;
 ```
 
-And there are ``Q.ncall`` and ``Q.ninvoke`` for even shorter
+And there are ``Q.nfcall`` and ``Q.ninvoke`` for even shorter
 expression.
 
 ```javascript
-return Q.ncall(FS.readFile, FS, "foo.txt", "utf-8");
+return Q.nfcall(FS.readFile, "foo.txt", "utf-8");
 ```
 
 ```javascript
-return Q.ninvoke(FS, 'readFile', "foo.txt", "utf-8");
+return Q.ninvoke(FS, "readFile", "foo.txt", "utf-8");
 ```
 
-There is also a ``Q.nbind`` function that that creates a reusable
+There is also a ``Q.nfbind`` function that that creates a reusable
 wrapper.
 
 ```javascript
-var readFile = Q.nbind(FS.readFile, FS)
+var readFile = Q.nfbind(FS.readFile);
 return readFile("foo.txt", "utf-8");
 ```
 
@@ -627,7 +616,7 @@ will [be ameliorated][streamsnext].
 
 A method-by-method [Q API reference][reference] is available on the wiki.
 
-[reference]: q/wiki/API-Reference
+[reference]: https://github.com/kriskowal/q/wiki/API-Reference
 
 ## More Examples
 
