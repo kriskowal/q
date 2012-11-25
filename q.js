@@ -522,7 +522,7 @@ array_reduce(
         "isResolved", "isFulfilled", "isRejected",
         "dispatch",
         "when", "spread",
-        "get", "put", "del",
+        "get", "put", "set", "del", "delete",
         "post", "send",
         "invoke", // XXX deprecated
         "keys",
@@ -672,11 +672,11 @@ function fulfill(object) {
         "get": function (name) {
             return object[name];
         },
-        "put": function (name, value) {
+        "set": function (name, value) {
             object[name] = value;
             return object;
         },
-        "del": function (name) {
+        "delete": function (name) {
             delete object[name];
             return object;
         },
@@ -995,7 +995,8 @@ Q.get = dispatcher("get");
  * @param value     new value of property
  * @return promise for the return value
  */
-Q.put = dispatcher("put");
+Q.put = // XXX deprecated
+Q.set = dispatcher("set");
 
 /**
  * Deletes a property in a future turn.
@@ -1004,7 +1005,7 @@ Q.put = dispatcher("put");
  * @return promise for the return value
  */
 Q["delete"] = // XXX experimental
-Q.del = dispatcher("del");
+Q.del = dispatcher("delete");
 
 /**
  * Invokes a method in a future turn.
@@ -1363,6 +1364,7 @@ function nsend(object, name /*, ...args*/) {
     post(object, name, nodeArgs).fail(deferred.reject);
     return deferred.promise;
 }
+// XXX deprecated
 Q.ninvoke = deprecate(nsend, "ninvoke", "nsend");
 
 Q.nodeify = nodeify;
