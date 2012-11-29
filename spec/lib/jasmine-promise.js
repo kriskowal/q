@@ -23,7 +23,7 @@ jasmine.Block.prototype.execute = function (onComplete) {
         // It seems Jasmine likes to return the suite if you pass it anything.
         // So make sure it's a promise first.
         if (result && typeof result.then === "function") {
-            result.timeout(500).then(function () {
+            Q.timeout(result, 500).then(function () {
                 onComplete();
             }, function (error) {
                 spec.fail(error);
@@ -52,15 +52,40 @@ describe('jasmine-promise', function() {
     setTimeout(function() {deferred.resolve();}, 100);
     return deferred.promise;
   });
-  // These are expected to fail. Remove the x from xit to test that.
-  xit('fails if the deferred is rejected', function() {
-    var deferred = Q.defer();
-    deferred.reject();
-    return deferred.promise;
+  it('lets specs that return nothing pass', function() {
+
   });
-  xit('fails if the deferred takes too long to resolve', function() {
-    var deferred = Q.defer();
-    setTimeout(function() {deferred.resolve()}, 5 * 1000);
-    return deferred.promise;
+  it('lets specs that return non-promises pass', function() {
+    return {'some object': 'with values'};
   });
+  it('works ok with specs that return crappy non-Q promises', function() {
+    return {
+      'then': function(callback) {
+        callback();
+      }
+    }
+  });
+  // These are expected to fail. Remove the x from xdescribe to test that.
+  describe('failure cases (expected to fail)', function() {
+    it('fails if the deferred is rejected', function() {
+      var deferred = Q.defer();
+      deferred.reject();
+      return deferred.promise;
+    });
+    it('fails if the deferred takes too long to resolve', function() {
+      var deferred = Q.defer();
+      setTimeout(function() {deferred.resolve()}, 5 * 1000);
+      return deferred.promise;
+    });
+    it('fails if a returned crappy non-Q promise is rejected', function() {
+      return {
+        'then': function(_, callback) {callback()}
+      }
+    });
+    it('fails if a returned crappy promise is never resolved', function() {
+      return {
+        'then': function() {}
+      }
+    });
+  })
 });
