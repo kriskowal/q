@@ -66,7 +66,7 @@ describe('jasmine-promise', function() {
     }
   });
   // These are expected to fail. Remove the x from xdescribe to test that.
-  describe('failure cases (expected to fail)', function() {
+  xdescribe('failure cases (expected to fail)', function() {
     it('fails if the deferred is rejected', function() {
       var deferred = Q.defer();
       deferred.reject();
