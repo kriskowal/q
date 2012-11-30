@@ -557,7 +557,7 @@ describe("promises for objects", function () {
 
     });
 
-    describe("invoke", function () {
+    describe("send", function () {
 
         it("fulfills a promise", function () {
             var foo;
@@ -570,7 +570,7 @@ describe("promises for objects", function () {
                     return this.foo(_bar);
                 }
             };
-            return Q.invoke(subject, 'bar', 1, 2)
+            return Q.send(subject, 'bar', 1, 2)
             .then(function (two) {
                 expect(foo).toEqual(1);
                 expect(two).toEqual(2);
@@ -580,7 +580,7 @@ describe("promises for objects", function () {
         it("is rejected for undefined method", function () {
             var subject = {};
             return Q.resolve(subject)
-            .invoke('foo')
+            .send('foo')
             .then(function () {
                 expect("here").toEqual("not here");
             }, function (exception) {
@@ -589,7 +589,7 @@ describe("promises for objects", function () {
 
         it("is rejected for undefined object", function () {
             return Q.resolve()
-            .invoke('foo')
+            .send('foo')
             .then(function () {
                 expect("here").toEqual("not here");
             }, function (exception) {
@@ -1591,24 +1591,24 @@ describe("node support", function () {
 
     });
 
-    describe("ninvoke", function (done) {
+    describe("nsend", function (done) {
 
         it("fulfills with callback result", function () {
-            return Q.ninvoke(obj, "method", 1, 2, 3)
+            return Q.nsend(obj, "method", 1, 2, 3)
             .then(function (sum) {
                 expect(sum).toEqual(6);
             });
         });
 
         it("gets the correct thisp", function () {
-            return Q.ninvoke(obj, "thispChecker")
+            return Q.nsend(obj, "thispChecker")
             .then(function (result) {
                 expect(result).toBe(true);
             });
         });
 
         it("rejects with callback error", function () {
-            return Q.ninvoke(obj, "errorCallbacker", 1, 2, 3)
+            return Q.nsend(obj, "errorCallbacker", 1, 2, 3)
             .then(function (sum) {
                 expect("blue").toBe("no, yellow!");
             }, function (_exception) {
@@ -1617,7 +1617,7 @@ describe("node support", function () {
         });
 
         it("rejects with thrown error", function () {
-            return Q.ninvoke(obj, "errorThrower", 1, 2, 3)
+            return Q.nsend(obj, "errorThrower", 1, 2, 3)
             .then(function (sum) {
                 expect(true).toBe(false);
             }, function (_exception) {
@@ -1627,7 +1627,7 @@ describe("node support", function () {
 
         it("works on promises for objects with Node methods", function () {
             return Q.resolve(obj)
-            .ninvoke("method", 1, 2, 3)
+            .nsend("method", 1, 2, 3)
             .then(function (sum) {
                 expect(sum).toEqual(6);
             });
