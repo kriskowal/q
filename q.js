@@ -1322,7 +1322,7 @@ function fin(promise, callback) {
 exports.end = deprecate(done, "end", "done"); // XXX deprecated, use done
 exports.done = done;
 function done(promise, fulfilled, rejected, progress) {
-    function onUnhandledError(error) {
+    var onUnhandledError = function (error) {
         // forward to a future turn so that ``when``
         // does not catch it and turn it into a rejection.
         nextTick(function () {
@@ -1334,13 +1334,16 @@ function done(promise, fulfilled, rejected, progress) {
                 throw error;
             }
         });
-    }
+    };
 
     // Avoid unnecessary `nextTick`ing via an unnecessary `when`.
     var promiseToHandle = fulfilled || rejected || progress ?
         when(promise, fulfilled, rejected, progress) :
         promise;
 
+    if (typeof process === "object" && process && process.domain) {
+        onUnhandledError = process.domain.bind(onUnhandledError);
+    }
     fail(promiseToHandle, onUnhandledError);
 }
 
