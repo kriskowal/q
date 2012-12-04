@@ -454,6 +454,25 @@ describe("progress", function () {
         return promise;
     });
 
+    it("should re-throw all errors thrown by listeners to Q.onerror", function () {
+        var theError = new Error("boo!");
+
+        var def = Q.defer();
+        def.promise.progress(function () {
+            throw theError;
+        });
+
+        var deferred = Q.defer();
+        Q.onerror = function (error) {
+            expect(error).toBe(theError);
+            deferred.resolve();
+        };
+        Q.delay(100).then(deferred.reject);
+
+        def.notify();
+
+        return deferred.promise;
+    });
 });
 
 describe("promises for objects", function () {
@@ -927,6 +946,33 @@ describe("propagation", function () {
         d.resolve();
 
         return promise;
+    });
+
+
+    it("should stop progress propagation if an error is thrown", function () {
+        var def = Q.defer();
+        var p2 = def.promise.progress(function () {
+            throw new Error("boo!");
+        });
+
+        Q.onerror = function () { /* just swallow it for this test */ };
+
+        var progressValues = [];
+        var result = p2.then(
+            function () {
+                expect(progressValues).toEqual([]);
+            },
+            function () {
+                expect(true).toBe(false);
+            },
+            function (progressValue) {
+                progressValues.push(progressValue);
+            }
+        );
+
+        def.notify();
+        def.resolve();
+        return result;
     });
 });
 
@@ -1701,11 +1747,21 @@ if (typeof require === "function") {
     } catch (e) { }
 
     if (domain) {
+        var EventEmitter = require("events").EventEmitter;
+
         describe("node domain support", function () {
+            var d;
+
+            beforeEach(function () {
+                d = domain.create();
+            });
+            afterEach(function() {
+                d.dispose();
+            });
+
             it("should work for non-promise async inside a promise handler",
                function (done) {
                 var error = new Error("should be caught by the domain");
-                var d = domain.create();
 
                 d.run(function () {
                     Q.resolve().then(function () {
@@ -1729,7 +1785,6 @@ if (typeof require === "function") {
             it("should transfer errors from `done` into the domain",
                function (done) {
                 var error = new Error("should be caught by the domain");
-                var d = domain.create();
 
                 d.run(function () {
                     Q.reject(error).done();
@@ -1744,6 +1799,38 @@ if (typeof require === "function") {
                     clearTimeout(errorTimeout);
                     done();
                 });
+            });
+
+            it("should take care of re-used event emitters", function (done) {
+                // See discussion in https://github.com/kriskowal/q/issues/120
+                var error = new Error("should be caught by the domain");
+
+                var e = new EventEmitter();
+
+                d.run(function () {
+                    callAsync().done();
+                });
+                setTimeout(function () {
+                    e.emit("beep");
+                }, 100);
+
+                var errorTimeout = setTimeout(function () {
+                    done(new Error("Wasn't caught"));
+                }, 500);
+
+                d.on("error", function (theError) {
+                    expect(theError).toBe(error);
+                    clearTimeout(errorTimeout);
+                    done();
+                });
+
+                function callAsync() {
+                    var def = Q.defer();
+                    e.once("beep", function () {
+                        def.reject(error);
+                    });
+                    return def.promise;
+                }
             });
         });
     }

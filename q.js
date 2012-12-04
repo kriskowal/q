@@ -821,12 +821,24 @@ function when(value, fulfilled, rejected, progressed) {
     });
 
     // Progress propagator need to be attached in the current tick.
-    resolvedValue.promiseDispatch(void 0, "when", [
-        void 0,
-        function (value) {
-            deferred.notify(_progressed(value));
+    resolvedValue.promiseDispatch(void 0, "when", [void 0, function (value) {
+        var newValue;
+        var threw = false;
+        try {
+            newValue = _progressed(value);
+        } catch (e) {
+            threw = true;
+            if (Q.onerror) {
+                Q.onerror(e);
+            } else {
+                throw e;
+            }
         }
-    ]);
+
+        if (!threw) {
+            deferred.notify(newValue);
+        }
+    }]);
 
     return deferred.promise;
 }
@@ -1196,7 +1208,7 @@ function fin(promise, callback) {
  */
 Q.done = done;
 function done(promise, fulfilled, rejected, progress) {
-    function onUnhandledError(error) {
+    var onUnhandledError = function (error) {
         // forward to a future turn so that ``when``
         // does not catch it and turn it into a rejection.
         nextTick(function () {
@@ -1208,13 +1220,16 @@ function done(promise, fulfilled, rejected, progress) {
                 throw error;
             }
         });
-    }
+    };
 
     // Avoid unnecessary `nextTick`ing via an unnecessary `when`.
     var promiseToHandle = fulfilled || rejected || progress ?
         when(promise, fulfilled, rejected, progress) :
         promise;
 
+    if (typeof process === "object" && process && process.domain) {
+        onUnhandledError = process.domain.bind(onUnhandledError);
+    }
     fail(promiseToHandle, onUnhandledError);
 }
 
