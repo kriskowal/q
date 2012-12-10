@@ -109,10 +109,23 @@ if (typeof process !== "undefined") {
         channel.port2.postMessage(0);
     };
 } else {
-    // old browsers
-    nextTick = function (task) {
-        setTimeout(task, 0);
-    };
+    var vertx = null;
+
+    try {
+        vertx = require('vertx.js');
+    } catch (exception) {
+        // no require or no vertx
+        vertx = null;
+    }
+
+    if (vertx) {
+        nextTick = vertx.runOnLoop;
+    } else {
+        // old browsers
+        nextTick = function (task) {
+            setTimeout(task, 0);
+        };
+    }
 }
 
 // Attempt to make generics safe in the face of downstream
