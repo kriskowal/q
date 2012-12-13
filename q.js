@@ -534,7 +534,7 @@ array_reduce(
         "ncall", "napply", "nbind",
         "npost", "nsend",
         "ninvoke", // XXX deprecated
-        "nend", "nodeify"
+        "nodeify"
     ],
     function (undefined, name) {
         makePromise.prototype[name] = function () {
