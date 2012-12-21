@@ -577,6 +577,15 @@ function isPromise(object) {
 }
 
 /**
+ * @returns whether the given object can be coerced to a promise.
+ * Otherwise it is a fulfilled value.
+ */
+exports.isPromiseAlike = isPromiseAlike;
+function isPromiseAlike(object) {
+    return object && typeof object.then === "function";
+}
+
+/**
  * @returns whether the given object is a resolved promise.
  */
 exports.isResolved = isResolved;
@@ -590,7 +599,7 @@ function isResolved(object) {
  */
 exports.isFulfilled = isFulfilled;
 function isFulfilled(object) {
-    return !isPromise(valueOf(object));
+    return !isPromiseAlike(valueOf(object));
 }
 
 /**
@@ -676,7 +685,7 @@ function resolve(object) {
     // implementations on primordial prototypes are harmless.
     object = valueOf(object);
     // assimilate thenables, CommonJS/Promises/A
-    if (object && typeof object.then === "function") {
+    if (isPromiseAlike(object)) {
         var deferred = defer();
         object.then(deferred.resolve, deferred.reject, deferred.notify);
         return deferred.promise;
