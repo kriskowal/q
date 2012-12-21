@@ -583,6 +583,11 @@ function isPromise(object) {
     return object && typeof object.promiseDispatch === "function";
 }
 
+Q.isPromiseAlike = isPromiseAlike;
+function isPromiseAlike(object) {
+    return object && typeof object.then === "function";
+}
+
 /**
  * @returns whether the given object is a resolved promise.
  */
@@ -597,7 +602,7 @@ function isResolved(object) {
  */
 Q.isFulfilled = isFulfilled;
 function isFulfilled(object) {
-    return !isPromise(valueOf(object));
+    return !isPromiseAlike(valueOf(object));
 }
 
 /**
@@ -717,7 +722,7 @@ function resolve(value) {
     // implementations on primordial prototypes are harmless.
     value = valueOf(value);
     // assimilate thenables, CommonJS/Promises/A+
-    if (value && typeof value.then === "function") {
+    if (isPromiseAlike(value)) {
         return coerce(value);
     } else {
         return fulfill(value);
