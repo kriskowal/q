@@ -59,6 +59,15 @@ replacements are listed here:
 (*) Use of ``thisp`` is discouraged. For calling methods, use ``post`` or
 ``invoke``.
 
+## 0.8.12
+- Treat foreign promises as unresolved in `Q.isFulfilled`; this lets `Q.all`
+  work on arrays containing foreign promises. #154
+- Fix minor incompliances with the [Promises/A+ spec][] and [test suite][]. #157
+  #158
+
+[Promises/A+ spec]: http://promises-aplus.github.com/promises-spec/
+[test suite]: https://github.com/promises-aplus/promises-tests
+
 ## 0.8.11
  - Added ``nfcall``, ``nfapply``, and ``nfbind`` as ``thisp``-less versions of
    ``ncall``, ``napply``, and ``nbind``. The latter are now deprecated. #142
