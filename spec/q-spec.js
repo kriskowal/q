@@ -951,6 +951,16 @@ describe("all", function () {
         .timeout(1000);
     });
 
+    it("resolves foreign promises", function () {
+        var normal = Q.resolve(1);
+        var foreign = { then: function (f) { f(2); } };
+
+        return Q.all([normal, foreign])
+        .then(function (result) {
+            expect(result).toEqual([1, 2]);
+        });
+    });
+
 });
 
 describe("allResolved", function () {
