@@ -43,10 +43,11 @@
         "jshint": ">=0.9.1",
         "cover": "*",
         "jasmine-node": "*",
-        "opener": "*"
+        "opener": "*",
+        "promises-aplus-tests": "~1.0"
     },
     "scripts": {
-        "test": "jasmine-node spec",
+        "test": "jasmine-node spec && promises-aplus-tests spec/aplus-adapter",
         "test-browser": "opener spec/q-spec.html",
         "lint": "jshint q.js",
         "cover": "cover run node_modules/jasmine-node/bin/jasmine-node spec && cover report html && opener cover_html/index.html"
