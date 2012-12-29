@@ -636,7 +636,6 @@ function displayErrors() {
  */
 exports.reject = reject;
 function reject(exception) {
-    exception = exception || new Error();
     var rejection = makePromise({
         "when": function (rejected) {
             // note that the error has been handled
