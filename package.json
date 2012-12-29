@@ -7,9 +7,13 @@
     "keywords": [
         "q",
         "promise",
+        "promises",
+        "promises-a",
+        "promises-a-plus",
         "deferred",
         "future",
         "async",
+        "flow control",
         "fluent",
         "browser",
         "node"
