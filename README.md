@@ -83,17 +83,17 @@ Promises have a ``then`` method, which you can use to get the eventual
 return value (fulfillment) or thrown exception (rejection).
 
 ```javascript
-foo()
+promiseMeSomething()
 .then(function (value) {
 }, function (reason) {
 })
 ```
 
-If ``foo`` returns a promise that gets fulfilled later with a return
-value, the first function (the value handler) will be called with the
-value.  However, if the ``foo`` function gets rejected later by a
-thrown exception, the second function (the error handler) will be
-called with the error.
+If ``promiseMeSomething`` returns a promise that gets fulfilled later
+with a return value, the first function (the value handler) will be
+called with the value.  However, if the ``promiseMeSomething`` function
+gets rejected later by a thrown exception, the second function (the
+error handler) will be called with the error.
 
 Note that resolution of a promise is always asynchronous: that is, the
 value or error handler will always be called in the next turn of the
@@ -105,42 +105,44 @@ guarantee when mentally tracing the flow of your code, namely that
 ### Propagation
 
 The ``then`` method returns a promise, which in this example, I’m
-assigning to ``bar``.
+assigning to ``outputPromise``.
 
 ```javascript
-var bar = foo()
-.then(function (value) {
+var outputPromise = getInputPromise()
+.then(function (input) {
 }, function (reason) {
 })
 ```
 
-The ``bar`` variable becomes a new promise for the return value of
-either handler.  Since a function can only either return a value or
-throw an exception, only one handler will ever be called and it will
-be responsible for resolving ``bar``.
+The ``outputPromise`` variable becomes a new promise for the return
+value of either handler.  Since a function can only either return a
+value or throw an exception, only one handler will ever be called and it
+will be responsible for resolving ``outputPromise``.
 
--   If you return a value in a handler, ``bar`` will get fulfilled.
+-   If you return a value in a handler, ``outputPromise`` will get
+    fulfilled.
 
--   If you throw an exception in a handler ``bar`` will get rejected.
+-   If you throw an exception in a handler ``outputPromise`` will get
+    rejected.
 
--   If you return a **promise** in a handler, ``bar`` will “become”
-    that promise.  Being able to become a new promise is useful for
-    managing delays, combining results, or recovering from errors.
+-   If you return a **promise** in a handler, ``outputPromise`` will
+    “become” that promise.  Being able to become a new promise is useful
+    for managing delays, combining results, or recovering from errors.
 
-If the ``foo()`` promise gets rejected and you omit the error handler,
-the **error** will go to ``bar``:
+If the ``getInputPromise()`` promise gets rejected and you omit the
+error handler, the **error** will go to ``outputPromise``:
 
 ```javascript
-var bar = foo()
+var outputPromise = getInputPromise()
 .then(function (value) {
 })
 ```
 
-If the ``foo()`` promise gets fulfilled and you omit the value
-handler, the **value** will go to ``bar``:
+If the input promise gets fulfilled and you omit the value handler, the
+**value** will go to ``outputPromise``:
 
 ```javascript
-var bar = foo()
+var outputPromise = getInputPromise()
 .then(null, function (error) {
 })
 ```
@@ -149,29 +151,37 @@ Q promises provide a ``fail`` shorthand for ``then`` when you are only
 interested in handling the error:
 
 ```javascript
-var bar = foo()
+var outputPromise = getInputPromise()
 .fail(function (error) {
 })
 ```
 
-They also have a ``fin`` function that is like a ``finally`` clause.
+If you are writing JavaScript for modern engines only or using
+CoffeeScript, you may use `catch` instead of `fail`.
+
+Promises also have a ``fin`` function that is like a ``finally`` clause.
 The final handler gets called, with no arguments, when the promise
-returned by ``foo()`` either returns a value or throws an error.  The
-value returned or error thrown by ``foo()`` passes directly to ``bar``.
+returned by ``getInputPromise()`` either returns a value or throws an
+error.  The value returned or error thrown by ``getInputPromise()``
+passes directly to ``outputPromise`` unless the final handler fails, and
+may be delayed if the final handler returns a promise.
 
 ```javascript
-var bar = foo()
+var outputPromise = getInputPromise()
 .fin(function () {
     // close files, database connections, stop servers, conclude tests
 })
 ```
 
 -   If the handler returns a value, the value is ignored
--   If the handler throws an error, the error passes to ``bar``
--   If the handler returns a promise, ``bar`` gets postponed.  The
+-   If the handler throws an error, the error passes to ``outputPromise``
+-   If the handler returns a promise, ``outputPromise`` gets postponed.  The
     eventual value or error has the same effect as an immediate return
     value or thrown error: a value would be ignored, an error would be
     forwarded.
+
+If you are writing JavaScript for modern engines only or using
+CoffeeScript, you may use `finally` instead of `fin`.
 
 ### Chaining
 
@@ -179,10 +189,10 @@ There are two ways to chain promises.  You can chain promises either
 inside or outside handlers.  The next two examples are equivalent.
 
 ```javascript
-return foo()
-.then(function (fooValue) {
-    return bar(fooValue)
-    .then(function (barValue) {
+return getUsername()
+.then(function (username) {
+    return getUser(username)
+    .then(function (user) {
         // if we get here without an error,
         // the value returned here
         // or the exception thrown here
@@ -193,11 +203,11 @@ return foo()
 ```
 
 ```javascript
-return foo()
-.then(function (fooValue) {
-    return bar(fooValue);
+return getUsername()
+.then(function (username) {
+    return getUser(username);
 })
-.then(function (barValue) {
+.then(function (user) {
     // if we get here without an error,
     // the value returned here
     // or the exception thrown here
@@ -207,14 +217,22 @@ return foo()
 ```
 
 The only difference is nesting.  It’s useful to nest handlers if you
-need to capture both ``fooValue`` and ``barValue`` in the last
-handler.
+need to capture multiple input values in your closure.
 
 ```javascript
-function eventualAdd(a, b) {
-    return a.then(function (a) {
-        return b.then(function (b) {
-            return a + b;
+function authenticate() {
+    return getUsername()
+    .then(function (username) {
+        return getUser(username);
+    })
+    // chained because we will not need the user name in the next event
+    .then(function (user) {
+        return getPassword()
+        // nested because we need both user and password next
+        .then(function (password) {
+            if (user.passwordHash !== hash(password)) {
+                throw new Error("Can't authenticate");
+            }
         });
     });
 }
@@ -250,13 +268,11 @@ function eventualAdd(a, b) {
 But ``spread`` calls ``all`` initially, so you can skip it in chains.
 
 ```javascript
-return foo()
-.then(function (info) {
-    return [info.name, FS.read(info.location, "utf-8")];
-    // FS.read returns a promise, so this array
-    // mixes values and promises
+return getUsername()
+.then(function (username) {
+    return [username, getUser(username)];
 })
-.spread(function (name, text) {
+.spread(function (username, user) {
 })
 ```
 
@@ -286,14 +302,14 @@ If you have a number of promise-producing functions that need
 to be run sequentially, you can of course do so manually:
 
 ```javascript
-return foo(initialVal).then(bar).then(baz).then(quux);
+return foo(initialVal).then(bar).then(baz).then(qux);
 ```
 
 However, if you want to run a dynamically constructed sequence of
 functions, you'll want something like this:
 
 ```javascript
-var funcs = [foo, bar, baz, quux];
+var funcs = [foo, bar, baz, qux];
 
 var result = Q.resolve(initialVal);
 funcs.forEach(function (f) {
@@ -466,6 +482,37 @@ function timeout(promise, ms) {
     });
     return deferred.promise;
 }
+```
+
+For illustration, this is a wrapper for XML HTTP requests in the browser. Note
+that a more [thorough][XHR] implementation would be in order in practice.
+
+[XHR]: https://github.com/montagejs/mr/blob/71e8df99bb4f0584985accd6f2801ef3015b9763/browser.js#L29-L73
+
+```javascript
+function requestOkText(url) {
+    var request = new XMLHttpRequest();
+    var deferred = Q.defer();
+
+    request.open("GET", url, true);
+    request.onload = onload;
+    request.onerror = onerror;
+    request.send();
+
+    function onload() {
+        if (request.status === 200) {
+            deferred.resolve(request.responseText);
+        } else {
+            onerror();
+        }
+    }
+
+    function onerror() {
+        deferred.reject("Can't XHR " + JSON.stringify(url));
+    }
+
+    return deferred.promise;
+};
 ```
 
 
