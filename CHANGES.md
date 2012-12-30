@@ -60,7 +60,7 @@ Their replacements are listed here:
       </tr>
       <tr>
          <td><code>node</code></td>
-         <td><code>nbind</code></td>
+         <td><code>nfbind</code></td>
       </tr>
       <tr>
          <td><code>nend</code></td>
