@@ -1,0 +1,6 @@
+{
+    "name": "q",
+    "version": "0.8.12",
+    "main": "q.js",
+    "dependencies": {}
+}
