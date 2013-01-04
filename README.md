@@ -71,6 +71,8 @@ The Q module can be loaded as:
 -   a Node.js and CommonJS module available from NPM as the ``q``
     package
 -   a RequireJS module
+-   A [component](https://github.com/component/component) as ``microjs/q``
+-   Using [bower](http://twitter.github.com/bower/) as ``microjs/q``
 
 Q can exchange promises with jQuery, Dojo, When.js, WinJS, and more.
 Additionally, there are many libraries that produce and consume Q promises for
