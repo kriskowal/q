@@ -757,7 +757,7 @@ describe("promise states", function () {
     it("of fulfilled value", function () {
         expect(Q.isFulfilled(void 0)).toBe(true);
         expect(Q.isRejected(false)).toBe(false);
-        expect(Q.isResolved(true)).toBe(true);
+        expect(Q.isPending(true)).toBe(false);
     });
 
     it("of fulfillment", function () {
@@ -766,8 +766,8 @@ describe("promise states", function () {
         expect(promise.isFulfilled()).toBe(true);
         expect(Q.isRejected(promise)).toBe(false);
         expect(promise.isRejected()).toBe(false);
-        expect(Q.isResolved(promise)).toBe(true);
-        expect(promise.isResolved()).toBe(true);
+        expect(Q.isPending(promise)).toBe(false);
+        expect(promise.isPending()).toBe(false);
     });
 
     it("of rejection", function () {
@@ -775,7 +775,7 @@ describe("promise states", function () {
         var promise = Q.reject(error);
         expect(promise.isFulfilled()).toBe(false);
         expect(promise.isRejected()).toBe(true);
-        expect(promise.isResolved()).toBe(true);
+        expect(promise.isPending()).toBe(false);
     });
 
     it("of deferred", function () {
@@ -783,7 +783,7 @@ describe("promise states", function () {
         var promise = deferred.promise;
         expect(promise.isFulfilled()).toBe(false);
         expect(promise.isRejected()).toBe(false);
-        expect(promise.isResolved()).toBe(false);
+        expect(promise.isPending()).toBe(true);
     });
 
     it("of deferred rejection", function () {
@@ -793,7 +793,7 @@ describe("promise states", function () {
         var promise = deferred.promise;
         expect(promise.isFulfilled()).toBe(false);
         expect(promise.isRejected()).toBe(true);
-        expect(promise.isResolved()).toBe(true);
+        expect(promise.isPending()).toBe(false);
     });
 
     it("of deferred fulfillment", function () {
@@ -802,7 +802,7 @@ describe("promise states", function () {
         var promise = deferred.promise;
         expect(promise.isFulfilled()).toBe(true);
         expect(promise.isRejected()).toBe(false);
-        expect(promise.isResolved()).toBe(true);
+        expect(promise.isPending()).toBe(false);
     });
 
     it("of deferred deferred", function () {
@@ -812,7 +812,7 @@ describe("promise states", function () {
         var promise = a.promise;
         expect(promise.isFulfilled()).toBe(false);
         expect(promise.isRejected()).toBe(false);
-        expect(promise.isResolved()).toBe(false);
+        expect(promise.isPending()).toBe(true);
     });
 });
 
@@ -990,9 +990,9 @@ describe("allResolved", function () {
             expect(Q.isPromise(promises[1])).toBe(true);
             expect(Q.isPromise(promises[2])).toBe(true);
 
-            expect(Q.isResolved(promises[0])).toBe(true);
-            expect(Q.isResolved(promises[1])).toBe(true);
-            expect(Q.isResolved(promises[2])).toBe(true);
+            expect(Q.isPending(promises[0])).toBe(false);
+            expect(Q.isPending(promises[1])).toBe(false);
+            expect(Q.isPending(promises[2])).toBe(false);
 
             expect(Q.isFulfilled(promises[0])).toBe(true);
             expect(Q.isFulfilled(promises[1])).toBe(true);
@@ -1117,7 +1117,7 @@ describe("fin", function () {
                         return promise;
                     })
                     .then(function (result) {
-                        expect(Q.isResolved(promise)).toBe(true);
+                        expect(Q.isPending(promise)).toBe(false);
                         expect(result).toBe("foo");
                     });
                 });
@@ -1201,7 +1201,7 @@ describe("fin", function () {
                     },
                     function (exception) {
                         expect(exception).toBe(exception1);
-                        expect(Q.isResolved(promise)).toBe(true);
+                        expect(Q.isPending(promise)).toBe(false);
                     });
                 });
             });
@@ -1828,10 +1828,10 @@ describe("possible regressions", function () {
 
     describe("gh-9", function () {
         it("treats falsy values as resolved values without error", function () {
-            expect(Q.isResolved(null)).toEqual(true);
-            expect(Q.isResolved(void 0)).toEqual(true);
-            expect(Q.isResolved(false)).toEqual(true);
-            expect(Q.isResolved()).toEqual(true);
+            expect(Q.isPending(null)).toEqual(false);
+            expect(Q.isPending(void 0)).toEqual(false);
+            expect(Q.isPending(false)).toEqual(false);
+            expect(Q.isPending()).toEqual(false);
         });
     });
 
