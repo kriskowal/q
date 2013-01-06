@@ -513,7 +513,8 @@ makePromise.prototype.thenResolve = function (value) {
 // Chainable methods
 array_reduce(
     [
-        "isResolved", "isFulfilled", "isRejected",
+        "isResolved", // deprecated
+        "isFulfilled", "isRejected", "isPending",
         "when", "spread", "send",
         "get", "put", "del",
         "post", "invoke",
@@ -588,9 +589,18 @@ function isPromiseAlike(object) {
 /**
  * @returns whether the given object is a resolved promise.
  */
-exports.isResolved = isResolved;
+exports.isResolved = deprecate(isResolved, "isResolved", "!isPending");
 function isResolved(object) {
     return isFulfilled(object) || isRejected(object);
+}
+
+/**
+ * @returns whether the given object is a pending promise, meaning not
+ * fulfilled or rejected.
+ */
+exports.isPending = isPending;
+function isPending(object) {
+    return !isFulfilled(object) && !isRejected(object);
 }
 
 /**
