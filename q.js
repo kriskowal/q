@@ -1555,6 +1555,14 @@ function ninvoke(object, name /*, ...args*/) {
     return deferred.promise;
 }
 
+/**
+ * Conditionally forward fulfillment and rejection to a Node-style
+ * continuation.  That is, the "nodeback" with `error` and `value` arguments.
+ *
+ * With no callback provided, returns the given promise, so this is suitable
+ * for constructing functions that can be used with either Node-style
+ * continuation passing, or returning a promise.
+ */
 exports.nend = deprecate(nodeify, "nend", "nodeify"); // XXX deprecated, use nodeify
 exports.nodeify = nodeify;
 function nodeify(promise, nodeback) {
@@ -1566,6 +1574,36 @@ function nodeify(promise, nodeback) {
         }, function (error) {
             nextTick(function () {
                 nodeback(error);
+            });
+        });
+    } else {
+        return promise;
+    }
+}
+
+/**
+ * Conditionally forward fulfillment and rejection by traditional continuation
+ * passing style, that is, with a normal callback and optional errback.  Throws
+ * exceptions if there is no errback.
+ *
+ * With no callback or errback provided, returns the given promise, so this is
+ * suitable for constructing functions that can be used with either
+ * continuation passing or promises.
+ */
+exports.pass = pass;
+function pass(promise, callback, errback) {
+    if (callback || errback) {
+        promise.then(function (value) {
+            nextTick(function () {
+                callback(value);
+            });
+        }, function (error) {
+            nextTick(function () {
+                if (errback) {
+                    errback(error);
+                } else {
+                    throw error;
+                }
             });
         });
     } else {
