@@ -503,12 +503,12 @@ describe("promises for objects", function () {
 
     });
 
-    describe("put", function () {
+    describe("set", function () {
 
         it("fulfills a promise", function () {
             var object = {};
             return Q.resolve(object)
-            .put('a', 1)
+            .set('a', 1)
             .then(function (result) {
                 expect(result).toBe(undefined);
                 expect(object.a).toBe(1);
@@ -518,7 +518,7 @@ describe("promises for objects", function () {
         it("propagates a rejection", function () {
             var exception = new Error("Gah!");
             return Q.reject(exception)
-            .put("a", 1)
+            .set("a", 1)
             .then(function (result) {
                 expect("frozen over").toBe("quite warm");
             }, function (_exception) {

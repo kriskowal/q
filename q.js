@@ -1016,7 +1016,6 @@ Q.get = dispatcher("get");
  * @param value     new value of property
  * @return promise for the return value
  */
-Q.put = // XXX deprecated
 Q.set = dispatcher("set");
 
 /**
