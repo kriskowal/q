@@ -524,8 +524,7 @@ array_reduce(
         "dispatch",
         "when", "spread",
         "get", "put", "set", "del", "delete",
-        "post", "send",
-        "invoke", // XXX deprecated
+        "post", "send", "invoke",
         "keys",
         "fapply", "fcall", "fbind",
         "all", "allResolved",
@@ -533,8 +532,7 @@ array_reduce(
         "catch", "finally", "fail", "fin", "progress", "done",
         "nfcall", "nfapply", "nfbind",
         "ncall", "napply", "nbind",
-        "npost", "nsend",
-        "ninvoke", // XXX deprecated
+        "npost", "nsend", "ninvoke",
         "nodeify"
     ],
     function (undefined, name) {
@@ -1046,12 +1044,12 @@ var post = Q.post = dispatcher("post");
  * @param ...args   array of invocation arguments
  * @return promise for the return value
  */
-Q.send = function (value, name) {
+Q.send = send;
+Q.invoke = send; // synonyms
+function send(value, name) {
     var args = array_slice(arguments, 2);
     return post(value, name, args);
-};
-// XXX deprecated
-Q.invoke = deprecate(Q.send, "invoke", "send");
+}
 
 /**
  * Applies the promised function in a future turn.
@@ -1375,6 +1373,7 @@ function npost(object, name, args) {
  * @returns a promise for the value or error
  */
 Q.nsend = nsend;
+Q.ninvoke = Q.nsend; // synonyms
 function nsend(object, name /*, ...args*/) {
     var nodeArgs = array_slice(arguments, 2);
     var deferred = defer();
@@ -1382,8 +1381,6 @@ function nsend(object, name /*, ...args*/) {
     post(object, name, nodeArgs).fail(deferred.reject);
     return deferred.promise;
 }
-// XXX deprecated
-Q.ninvoke = deprecate(nsend, "ninvoke", "nsend");
 
 Q.nodeify = nodeify;
 function nodeify(promise, nodeback) {
