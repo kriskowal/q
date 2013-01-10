@@ -520,7 +520,6 @@ makePromise.prototype.thenResolve = function (value) {
 // Chainable methods
 array_reduce(
     [
-        "isResolved", // deprecated
         "isFulfilled", "isRejected", "isPending",
         "dispatch",
         "when", "spread",
@@ -588,14 +587,6 @@ function isPromise(object) {
 Q.isPromiseAlike = isPromiseAlike;
 function isPromiseAlike(object) {
     return object && typeof object.then === "function";
-}
-
-/**
- * @returns whether the given object is a resolved promise.
- */
-Q.isResolved = deprecate(isResolved, "isResolved", "!isPending");
-function isResolved(object) {
-    return isFulfilled(object) || isRejected(object);
 }
 
 /**
