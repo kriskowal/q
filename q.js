@@ -683,8 +683,14 @@ function fulfill(object) {
             delete object[name];
             return object;
         },
-        "post": function (name, value) {
-            return object[name].apply(object, value);
+        "post": function (name, args) {
+            // Mark Miller proposes that post with no name should apply a
+            // promised function.
+            if (name == null) { // iff name is null or undefined
+                return object.apply(void 0, args);
+            } else {
+                return object[name].apply(object, args);
+            }
         },
         "apply": function (args) {
             return object.apply(void 0, args);
