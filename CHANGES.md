@@ -60,7 +60,7 @@ Their replacements are listed here:
       </tr>
       <tr>
          <td><code>node</code></td>
-         <td><code>nbind</code></td>
+         <td><code>nfbind</code></td>
       </tr>
       <tr>
          <td><code>nend</code></td>
@@ -104,6 +104,15 @@ Their replacements are listed here:
     argument slicing.
 -   The internal protocol uses different operands.  "put" is now "set".
     "del" is now "delete".  "view" and "viewInfo" have been removed.
+
+## 0.8.12
+- Treat foreign promises as unresolved in `Q.isFulfilled`; this lets `Q.all`
+  work on arrays containing foreign promises. #154
+- Fix minor incompliances with the [Promises/A+ spec][] and [test suite][]. #157
+  #158
+
+[Promises/A+ spec]: http://promises-aplus.github.com/promises-spec/
+[test suite]: https://github.com/promises-aplus/promises-tests
 
 ## 0.8.11
 

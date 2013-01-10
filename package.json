@@ -1,15 +1,19 @@
 {
     "name": "q",
-    "version": "0.8.11",
+    "version": "0.8.12",
     "description": "A library for promises (CommonJS/Promises/A,B,D)",
     "homepage": "https://github.com/kriskowal/q",
     "author": "Kris Kowal <kris@cixar.com> (https://github.com/kriskowal)",
     "keywords": [
         "q",
         "promise",
+        "promises",
+        "promises-a",
+        "promises-a-plus",
         "deferred",
         "future",
         "async",
+        "flow control",
         "fluent",
         "browser",
         "node"
@@ -43,10 +47,11 @@
         "jshint": ">=0.9.1",
         "cover": "*",
         "jasmine-node": "*",
-        "opener": "*"
+        "opener": "*",
+        "promises-aplus-tests": "~1.0"
     },
     "scripts": {
-        "test": "jasmine-node spec",
+        "test": "jasmine-node spec && promises-aplus-tests spec/aplus-adapter",
         "test-browser": "opener spec/q-spec.html",
         "lint": "jshint q.js",
         "cover": "cover run node_modules/jasmine-node/bin/jasmine-node spec && cover report html && opener cover_html/index.html"

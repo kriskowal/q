@@ -1,5 +1,10 @@
 [![Build Status](https://secure.travis-ci.org/kriskowal/q.png)](http://travis-ci.org/kriskowal/q)
 
+<a href="http://promises-aplus.github.com/promises-spec">
+    <img src="http://promises-aplus.github.com/promises-spec/assets/logo-small.png"
+         align="right" alt="Promises/A+ logo" />
+</a>
+
 If a function cannot return a value or throw an exception without
 blocking, it can return a promise instead.  A promise is an object
 that represents the return value or the thrown exception that the
@@ -66,6 +71,8 @@ The Q module can be loaded as:
 -   a Node.js and CommonJS module available from NPM as the ``q``
     package
 -   a RequireJS module
+-   A [component](https://github.com/component/component) as ``microjs/q``
+-   Using [bower](http://twitter.github.com/bower/) as ``microjs/q``
 
 Q can exchange promises with jQuery, Dojo, When.js, WinJS, and more.
 Additionally, there are many libraries that produce and consume Q promises for

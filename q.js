@@ -640,7 +640,6 @@ function displayErrors() {
  */
 Q.reject = reject;
 function reject(exception) {
-    exception = exception || new Error();
     var rejection = makePromise({
         "when": function (rejected) {
             // note that the error has been handled
@@ -784,14 +783,14 @@ function when(value, fulfilled, rejected, progressed) {
 
     function _fulfilled(value) {
         try {
-            return fulfilled ? fulfilled(value) : value;
+            return typeof fulfilled === "function" ? fulfilled(value) : value;
         } catch (exception) {
             return reject(exception);
         }
     }
 
     function _rejected(exception) {
-        if (rejected) {
+        if (typeof rejected === "function") {
             makeStackTraceLong(exception, resolvedValue);
             try {
                 return rejected(exception);
@@ -803,7 +802,7 @@ function when(value, fulfilled, rejected, progressed) {
     }
 
     function _progressed(value) {
-        return progressed ? progressed(value) : value;
+        return typeof progressed === "function" ? progressed(value) : value;
     }
 
     var resolvedValue = resolve(value);
@@ -1289,8 +1288,7 @@ function delay(promise, timeout) {
  * Passes a continuation to a Node function, which is called with the given
  * arguments provided as an array, and returns a promise.
  *
- *      var readFile = require("fs").readFile;
- *      Q.nfapply(readFile, [__filename])
+ *      Q.nfapply(FS.readFile, [__filename])
  *      .then(function (content) {
  *      })
  *
@@ -1309,8 +1307,7 @@ function nfapply(callback, args) {
  * Passes a continuation to a Node function, which is called with the given
  * arguments provided individually, and returns a promise.
  *
- *      var readFile = require("fs").readFile;
- *      Q.nfcall(readFile, __filename)
+ *      Q.nfcall(FS.readFile, __filename)
  *      .then(function (content) {
  *      })
  *
