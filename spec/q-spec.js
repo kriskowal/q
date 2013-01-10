@@ -510,7 +510,7 @@ describe("promises for objects", function () {
             return Q.resolve(object)
             .put('a', 1)
             .then(function (result) {
-                expect(result).toBe(object);
+                expect(result).toBe(undefined);
                 expect(object.a).toBe(1);
             });
         });

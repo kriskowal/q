@@ -679,7 +679,6 @@ function fulfill(object) {
         },
         "set": function (name, value) {
             object[name] = value;
-            return object;
         },
         "delete": function (name) {
             delete object[name];
