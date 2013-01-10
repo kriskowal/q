@@ -372,7 +372,8 @@ function defer() {
         if (pending) {
             return promise;
         }
-        return value.valueOf();
+        value = valueOf(value); // shorten chain
+        return value;
     };
 
     if (Error.captureStackTrace) {
