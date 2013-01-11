@@ -70,18 +70,8 @@ var qFileName;
 
 // shims
 
-// used for fallback "defend" and in "allResolved"
+// used for fallback in "allResolved"
 var noop = function () {};
-
-// for the security conscious, defend may be a deep freeze as provided
-// by cajaVM.  Otherwise we try to provide a shallow freeze just to
-// discourage promise changes that are not compatible with secure
-// usage.  If Object.freeze does not exist, fall back to doing nothing
-// (no op).
-var defend = Object.freeze || noop;
-if (typeof cajaVM !== "undefined") {
-    defend = cajaVM.def;
-}
 
 // use the fastest possible means to execute a task in a future turn
 // of the event loop.
@@ -399,8 +389,6 @@ function defer() {
         progressListeners = void 0;
     }
 
-    defend(promise);
-
     deferred.promise = promise;
     deferred.resolve = become;
     deferred.fulfill = function (value) {
@@ -503,8 +491,6 @@ function makePromise(descriptor, fallback, valueOf, exception) {
         promise.exception = exception;
     }
 
-    defend(promise);
-
     return promise;
 }
 
@@ -553,8 +539,6 @@ makePromise.prototype.toSource = function () {
 makePromise.prototype.toString = function () {
     return "[object Promise]";
 };
-
-defend(makePromise.prototype);
 
 /**
  * If an object is not a promise, it is as "near" as possible.
