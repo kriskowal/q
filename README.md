@@ -666,6 +666,61 @@ will [be ameliorated][streamsnext].
 [streams]: https://groups.google.com/d/topic/q-continuum/xr8znxc_K5E/discussion
 [streamsnext]: http://maxogden.com/node-streams#streams.next
 
+### Long Stack Traces
+
+Q comes with *experimental* support for “long stack traces,” wherein the `stack`
+property of `Error` rejection reasons is rewritten to be traced along
+asynchronous jumps instead of stopping at the most recent one. As an example:
+
+```js
+function theDepthsOfMyProgram() {
+  Q.delay(100).done(function explode() {
+    throw new Error("boo!");
+  });
+}
+
+theDepthsOfMyProgram();
+```
+
+gives a strack trace of:
+
+```
+Error: boo!
+    at explode (/path/to/test.js:3:11)
+From previous event:
+    at theDepthsOfMyProgram (/path/to/test.js:2:16)
+    at Object.<anonymous> (/path/to/test.js:7:1)
+```
+
+Note how you can see the the function that triggered the async operation in the
+stack trace! This is very helpful for debugging, as otherwise you end up getting
+only the first line, plus a bunch of Q internals, with no sign of where the
+operation started.
+
+This feature comes with some caveats, however. First, it does not (<em>yet!</em>)
+stitch together multiple asynchronous steps. You only get the one immediately
+prior to the operation that throws. Secondly, it comes with a performance
+penalty, and so if you are using Q to create many promises in a
+performance-critical situation, you will probably want to turn it off.
+
+To turn it off, set
+
+```js
+Q.longStackJumpLimit = 0;
+```
+
+Then you stack traces will revert to their usual unhelpful selves:
+
+```
+Error: boo!
+    at explode (/path/to/test.js:3:11)
+    at _fulfilled (/path/to/test.js:q:54)
+    at resolvedValue.promiseDispatch.done (/path/to/q.js:823:30)
+    at makePromise.promise.promiseDispatch (/path/to/q.js:496:13)
+    at pending (/path/to/q.js:397:39)
+    at process.startup.processNextTick.process._tickCallback (node.js:244:9)
+```
+
 ## Reference
 
 A method-by-method [Q API reference][reference] is available on the wiki.
