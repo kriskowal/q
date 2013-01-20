@@ -622,7 +622,8 @@ function displayErrors() {
         !errorsDisplayed &&
         typeof window !== "undefined" &&
         !window.Touch &&
-        window.console
+        window.console &&
+        errors.length
     ) {
         // This promise library consumes exceptions thrown in handlers so
         // they can be handled by a subsequent promise.  The rejected
