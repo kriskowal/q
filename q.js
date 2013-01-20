@@ -220,6 +220,8 @@ if (typeof ReturnValue !== "undefined") {
 
 // long stack traces
 
+Q.longStackJumpLimit = 1;
+
 var STACK_JUMP_SEPARATOR = "From previous event:";
 
 function makeStackTraceLong(error, promise) {
@@ -366,7 +368,7 @@ function defer() {
         return value;
     };
 
-    if (Error.captureStackTrace) {
+    if (Error.captureStackTrace && Q.longStackJumpLimit > 0) {
         Error.captureStackTrace(promise, defer);
 
         // Reify the stack into a string by using the accessor; this prevents
