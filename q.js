@@ -119,7 +119,7 @@ if (typeof process !== "undefined") {
 var uncurryThis = function (f) {
     var call = Function.call;
     return function () {
-        return f.call.apply(f, arguments);
+        return call.apply(f, arguments);
     };
 };
 
