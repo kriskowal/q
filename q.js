@@ -198,7 +198,7 @@ var object_keys = Object.keys || function (object) {
     return keys;
 };
 
-var object_toString = Object.prototype.toString;
+var object_toString = uncurryThis(Object.prototype.toString);
 
 // generator related shims
 
