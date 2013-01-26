@@ -116,19 +116,12 @@ if (typeof process !== "undefined") {
 // hard-to-minify characters.
 // See Mark Miller’s explanation of what this does.
 // http://wiki.ecmascript.org/doku.php?id=conventions:safe_meta_programming
-var uncurryThis;
-// I have kept both variations because the first is theoretically
-// faster, if bind is available.
-if (Function.prototype.bind) {
-    var Function_bind = Function.prototype.bind;
-    uncurryThis = Function_bind.bind(Function_bind.call);
-} else {
-    uncurryThis = function (f) {
-        return function () {
-            return f.call.apply(f, arguments);
-        };
+var uncurryThis = function (f) {
+    var call = Function.call;
+    return function () {
+        return f.call.apply(f, arguments);
     };
-}
+};
 
 var array_slice = uncurryThis(Array.prototype.slice);
 
