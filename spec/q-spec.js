@@ -22,7 +22,7 @@ describe("Q function", function () {
 
     it("should be the identity when given promise", function () {
         var f = Q.fulfill(5);
-        var r = Q.reject(10);
+        var r = Q.reject(new Error("aaargh"));
         var p = Q.promise();
 
         expect(Q(f)).toBe(f);
