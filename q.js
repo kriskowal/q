@@ -620,8 +620,13 @@ function displayErrors() {
 // without the Emitter on interface)
 if (typeof process !== "undefined" && process.on) {
     process.on("exit", function () {
-        if (errors.length) {
-            throw errors[0];
+        for (var i = 0; i < errors.length; i++) {
+            var error = errors[i];
+            if (typeof error.stack !== "undefined") {
+                console.warn("Unhandled rejected promise:", error.stack);
+            } else {
+                console.warn("Unhandled rejected promise (no stack):", error);
+            }
         }
     });
 }
