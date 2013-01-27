@@ -555,7 +555,7 @@ describe("promises for objects", function () {
             .del('a')
             .then(function (result) {
                 expect('a' in object).toBe(false);
-                expect(result).toBe(object);
+                expect(result).toBe(void 0);
             }, function (exception) {
                 expect("up").toBe("down");
             });
