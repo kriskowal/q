@@ -616,8 +616,9 @@ function displayErrors() {
 }
 
 // Show unhandled rejection if Node exits without handling an outstanding
-// rejection.
-if (typeof process !== "undefined") {
+// rejection.  (Note that Browserify presently produces a process global
+// without the Emitter on interface)
+if (typeof process !== "undefined" && process.on) {
     process.on("exit", function () {
         if (errors.length) {
             throw errors[0];
