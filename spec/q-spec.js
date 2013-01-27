@@ -1,4 +1,5 @@
 "use strict";
+/*jshint newcap: false*/
 /*global Q: true, describe: false, it: false, expect: false, afterEach: false,
          require: false, jasmine: false, waitsFor: false, runs: false */
 
@@ -12,6 +13,22 @@ var REASON = "this is not an error, but it might show up in the console";
 
 afterEach(function () {
     Q.onerror = null;
+});
+
+describe("Q function", function () {
+    it("should result in a fulfilled promise when given a value", function () {
+        expect(Q(5).isFulfilled()).toBe(true);
+    });
+
+    it("should be the identity when given promise", function () {
+        var f = Q.fulfill(5);
+        var r = Q.reject(10);
+        var p = Q.promise();
+
+        expect(Q(f)).toBe(f);
+        expect(Q(r)).toBe(r);
+        expect(Q(p)).toBe(p);
+    });
 });
 
 describe("defer and when", function () {
@@ -574,6 +591,16 @@ describe("promises for objects", function () {
             });
         });
 
+        it("works as apply when given no name", function () {
+            return Q.resolve(function (a, b, c) {
+                return a + b + c;
+            })
+            .post(undefined, [1, 2, 3])
+            .then(function (sum) {
+                expect(sum).toEqual(6);
+            });
+        });
+
     });
 
     describe("send", function () {
@@ -753,7 +780,7 @@ describe("valueOf", function () {
 
     it("of deferred fulfillment", function () {
         var deferred = Q.defer();
-        deferred.resolve(10);
+        deferred.fulfill(10);
         expect(deferred.promise.valueOf()).toBe(10);
     });
 
@@ -1422,6 +1449,38 @@ describe("done", function () {
     });
 });
 
+describe("timeout", function () {
+    it("should do nothing if the promise fulfills quickly", function () {
+        return Q.delay(10).timeout(200);
+    });
+
+    it("should do nothing if the promise rejects quickly", function () {
+        var goodError = new Error("haha!");
+        return Q.delay(10)
+        .then(function () {
+            throw goodError;
+        })
+        .timeout(200)
+        .then(undefined, function (error) {
+            expect(error).toBe(goodError);
+        });
+    });
+
+    it("should reject with a timeout error if the promise is too slow", function () {
+        var goodError = new Error("haha!");
+        return Q.delay(100)
+        .timeout(10)
+        .then(
+            function () {
+                expect(true).toBe(false);
+            },
+            function (error) {
+                expect(/time/i.test(error.message)).toBe(true);
+            }
+        );
+    });
+});
+
 describe("thenResolve", function () {
     describe("Resolving with an object", function () {
         it("returns a promise for that object once the promise is resolved", function () {
@@ -1721,12 +1780,21 @@ describe("node support", function () {
 
     describe("deferred.makeNodeResolver", function () {
 
-        it("fulfills a promise", function () {
+        it("fulfills a promise with a single callback argument", function () {
             var deferred = Q.defer();
             var callback = deferred.makeNodeResolver();
             callback(null, 10);
             return deferred.promise.then(function (value) {
                 expect(value).toBe(10);
+            });
+        });
+
+        it("fulfills a promise with multiple callback arguments", function () {
+            var deferred = Q.defer();
+            var callback = deferred.makeNodeResolver();
+            callback(null, 10, 20);
+            return deferred.promise.then(function (value) {
+                expect(value).toEqual([10, 20]);
             });
         });
 
