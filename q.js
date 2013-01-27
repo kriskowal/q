@@ -615,6 +615,16 @@ function displayErrors() {
     errorsDisplayed = true;
 }
 
+// Show unhandled rejection if Node exits without handling an outstanding
+// rejection.
+if (typeof process !== "undefined") {
+    process.on("exit", function () {
+        if (errors.length) {
+            throw errors[0];
+        }
+    });
+}
+
 /**
  * Constructs a rejected promise.
  * @param exception value describing the failure
@@ -631,7 +641,7 @@ function reject(exception) {
                     rejections.splice(at, 1);
                 }
             }
-            return rejected ? rejected(exception) : reject(exception);
+            return rejected ? rejected(exception) : this;
         }
     }, function fallback() {
         return reject(exception);
