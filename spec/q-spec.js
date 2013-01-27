@@ -1520,6 +1520,34 @@ describe("thenables", function () {
         });
     });
 
+    it("assimilates a thenable in allResolved", function () {
+        return Q.allResolved([
+            {then: function (win, fail) {
+                win(10);
+            }}
+        ])
+        .then(function (promises) {
+            expect(promises[0].isPending()).toBe(false);
+            expect(promises[0].isFulfilled()).toBe(true);
+            expect(promises[0].isRejected()).toBe(false);
+        });
+    });
+
+    it("assimilates a pending thenable in allResolved", function () {
+        return Q.allResolved([
+            {then: function (win, fail) {
+                setTimeout(function () {
+                    win(10);
+                }, 100);
+            }}
+        ])
+        .then(function (promises) {
+            expect(promises[0].isPending()).toBe(false);
+            expect(promises[0].isFulfilled()).toBe(true);
+            expect(promises[0].isRejected()).toBe(false);
+        });
+    });
+
 });
 
 describe("node support", function () {
