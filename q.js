@@ -674,7 +674,6 @@ function fulfill(object) {
         },
         "delete": function (name) {
             delete object[name];
-            return object;
         },
         "post": function (name, args) {
             // Mark Miller proposes that post with no name should apply a
