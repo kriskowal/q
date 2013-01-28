@@ -622,7 +622,7 @@ if (typeof process !== "undefined" && process.on) {
     process.on("exit", function () {
         for (var i = 0; i < errors.length; i++) {
             var error = errors[i];
-            if (typeof error.stack !== "undefined") {
+            if (error && typeof error.stack !== "undefined") {
                 console.warn("Unhandled rejected promise:", error.stack);
             } else {
                 console.warn("Unhandled rejected promise (no stack):", error);
