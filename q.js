@@ -81,7 +81,11 @@ if (typeof process !== "undefined") {
     nextTick = process.nextTick;
 } else if (typeof setImmediate === "function") {
     // In IE10, or use https://github.com/NobleJS/setImmediate
-    nextTick = setImmediate;
+    if (typeof window !== "undefined") {
+        nextTick = setImmediate.bind(window);
+    } else {
+        nextTick = setImmediate;
+    }
 } else if (typeof MessageChannel !== "undefined") {
     // modern browsers
     // http://www.nonblocking.io/2011/06/windownexttick.html
