@@ -11,6 +11,13 @@ if (typeof Q === "undefined" && typeof require !== "undefined") {
 
 var REASON = "this is not an error, but it might show up in the console";
 
+var global = this;
+
+var STRICT_MODE_CAPABLE = (function(){
+    "use strict";
+    return !this;
+})();
+
 afterEach(function () {
     Q.onerror = null;
 });
@@ -406,7 +413,7 @@ describe("progress", function () {
             deferred.promise,
             function () {
                 expect(progressed).toBe(true);
-                expect(progressContext).toBe(undefined);
+                expect(progressContext).toBe(STRICT_MODE_CAPABLE ? undefined : global);
             },
             function () {
                 expect(true).toBe(false);
@@ -2080,4 +2087,3 @@ describe("possible regressions", function () {
     });
 
 });
-
