@@ -99,7 +99,7 @@ if (typeof process !== "undefined") {
         task();
     };
     nextTick = function (task) {
-        tail = tail.next = {task: task};
+        tail = tail.next = {task: task, next: null};
         channel.port2.postMessage(0);
     };
 } else {
