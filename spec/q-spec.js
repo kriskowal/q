@@ -653,10 +653,16 @@ describe("promises for objects", function () {
 
     describe("keys", function () {
 
+        function Klass (a, b) {
+            this.a = a;
+            this.b = b;
+        }
+        Klass.prototype.notOwn = 1;
+
         it("fulfills a promise", function () {
-            return Q.keys({a: 10, b: 20})
+            return Q.keys(new Klass(10, 20))
             .then(function (keys) {
-                expect(keys).toEqual(['a', 'b']);
+                expect(keys.sort()).toEqual(['a', 'b']);
             });
         });
 
