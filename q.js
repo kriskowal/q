@@ -92,17 +92,22 @@ if (typeof process !== "undefined") {
         ticking = false, tick;
 
     function onTick() {
+        ticking = false;
+
         if (head.next) {
-            tick();
+            // In case of multiple tasks we first call tick to ensure all tasks
+            // are handled even if one throws.
+            if (head.next.next) {
+                tick();
+                ticking = true;
+            }
+
             do {
                 head = head.next;
                 var task = head.task;
                 head.task = void 0;
                 task();
             } while (head.next)
-
-        } else {
-            ticking = false;
         }
     }
 
