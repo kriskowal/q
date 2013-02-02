@@ -184,12 +184,6 @@ var array_map = uncurryThis(
     }
 );
 
-var object_create = Object.create || function (prototype) {
-    function Type() { }
-    Type.prototype = prototype;
-    return new Type();
-};
-
 var object_keys = Object.keys || function (object) {
     var keys = [];
     for (var key in object) {
@@ -343,10 +337,10 @@ function defer() {
     // resolved values and other promises gracefully.
     var pending = [], progressListeners = [], value;
 
-    var deferred = object_create(defer.prototype);
-    var promise = object_create(makePromise.prototype);
+    var promise = new Promise(promiseDispatch, promiseValueOf);
+    var deferred = new Deferred(promise, become, notify);
 
-    promise.promiseDispatch = function (resolve, op, operands) {
+    function promiseDispatch (resolve, op, operands) {
         var args = array_slice(arguments);
         if (pending) {
             pending.push(args);
@@ -358,15 +352,15 @@ function defer() {
                 value.promiseDispatch.apply(value, args);
             });
         }
-    };
+    }
 
-    promise.valueOf = function () {
+    function promiseValueOf () {
         if (pending) {
             return promise;
         }
         value = valueOf(value); // shorten chain
         return value;
-    };
+    }
 
     if (Error.captureStackTrace && Q.longStackJumpLimit > 0) {
         Error.captureStackTrace(promise, defer);
@@ -391,15 +385,7 @@ function defer() {
         progressListeners = void 0;
     }
 
-    deferred.promise = promise;
-    deferred.resolve = become;
-    deferred.fulfill = function (value) {
-        become(fulfill(value));
-    };
-    deferred.reject = function (exception) {
-        become(reject(exception));
-    };
-    deferred.notify = function (progress) {
+    function notify(progress) {
         if (pending) {
             array_reduce(progressListeners, function (undefined, progressListener) {
                 nextTick(function () {
@@ -407,27 +393,45 @@ function defer() {
                 });
             }, void 0);
         }
-    };
+    }
 
     return deferred;
 }
 
-/**
- * Creates a Node-style callback that will resolve or reject the deferred
- * promise.
- * @returns a nodeback
- */
-defer.prototype.makeNodeResolver = function () {
-    var self = this;
-    return function (error, value) {
-        if (error) {
-            self.reject(error);
-        } else if (arguments.length > 2) {
-            self.resolve(array_slice(arguments, 1));
-        } else {
-            self.resolve(value);
-        }
+function Deferred (promise, become, notify) {
+    this.promise = promise;
+    this.resolve = become;
+    this.notify = notify;
+
+    this.fulfill = function (value) {
+        return become(fulfill(value));
     };
+
+    this.reject = function (exception) {
+        return become(reject(exception));
+    };
+}
+
+Deferred.prototype = {
+    // constructor not exposed
+
+    /**
+     * Creates a Node-style callback that will resolve or reject the deferred
+     * promise.
+     * @returns a nodeback
+     */
+    makeNodeResolver: function () {
+        var self = this;
+        return function (error, value) {
+            if (error) {
+                self.reject(error);
+            } else if (arguments.length > 2) {
+                self.resolve(array_slice(arguments, 1));
+            } else {
+                self.resolve(value);
+            }
+        };
+    }
 };
 
 /**
@@ -448,6 +452,13 @@ function promise(makePromise) {
     return deferred.promise;
 }
 
+function Promise (promiseDispatch, valueOf, exception) {
+    this.promiseDispatch = promiseDispatch;
+    this.valueOf = valueOf;
+    this.exception = exception;
+    this.stack = null;
+}
+
 /**
  * Constructs a Promise with a promise descriptor object and optional fallback
  * function.  The descriptor contains methods like when(rejected), get(name),
@@ -462,14 +473,12 @@ function promise(makePromise) {
 Q.makePromise = makePromise;
 function makePromise(descriptor, fallback, valueOf, exception) {
     if (fallback === void 0) {
-        fallback = function (op) {
-            return reject(new Error("Promise does not support operation: " + op));
-        };
+        fallback = defaultPromiseFallback;
     }
 
-    var promise = object_create(makePromise.prototype);
+    var promise = new Promise(promiseDispatch, valueOf, exception);
 
-    promise.promiseDispatch = function (resolve, op, args) {
+    function promiseDispatch(resolve, op, args) {
         var result;
         try {
             if (descriptor[op]) {
@@ -483,26 +492,29 @@ function makePromise(descriptor, fallback, valueOf, exception) {
         if (resolve) {
             resolve(result);
         }
-    };
-
-    if (valueOf) {
-        promise.valueOf = valueOf;
-    }
-
-    if (exception) {
-        promise.exception = exception;
     }
 
     return promise;
 }
 
-// provide thenables, CommonJS/Promises/A
-makePromise.prototype.then = function (fulfilled, rejected, progressed) {
-    return when(this, fulfilled, rejected, progressed);
-};
+function defaultPromiseFallback (op) {
+    return reject(new Error("Promise does not support operation: " + op));
+}
 
-makePromise.prototype.thenResolve = function (value) {
-    return when(this, function () { return value; });
+Promise.prototype = {
+    // constructor not exposed
+    then: function (fulfilled, rejected, progressed) {
+        return when(this, fulfilled, rejected, progressed);
+    },
+    thenResolve: function (value) {
+        return when(this, function () { return value; });
+    },
+    toSource: function () {
+        return this.toString();
+    },
+    toString: function () {
+        return "[object Promise]";
+    }
 };
 
 // Chainable methods
@@ -524,7 +536,7 @@ array_reduce(
         "nodeify"
     ],
     function (undefined, name) {
-        makePromise.prototype[name] = function () {
+        Promise.prototype[name] = function () {
             return Q[name].apply(
                 Q,
                 [this].concat(array_slice(arguments))
@@ -533,14 +545,6 @@ array_reduce(
     },
     void 0
 );
-
-makePromise.prototype.toSource = function () {
-    return this.toString();
-};
-
-makePromise.prototype.toString = function () {
-    return "[object Promise]";
-};
 
 /**
  * If an object is not a promise, it is as "near" as possible.
@@ -597,7 +601,7 @@ function isFulfilled(object) {
 Q.isRejected = isRejected;
 function isRejected(object) {
     object = valueOf(object);
-    return isPromise(object) && 'exception' in object;
+    return isPromise(object) && !!object.exception;
 }
 
 var rejections = [];
