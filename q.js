@@ -95,11 +95,11 @@ if (typeof process !== "undefined") {
         ticking = false;
 
         if (head.next) {
-            // In case of multiple tasks we first call tick to ensure all tasks
-            // are handled even if one throws.
+            // In case of multiple tasks we firstly tick
+            // to handle remaining tasks if one throws.
             if (head.next.next) {
-                tick();
                 ticking = true;
+                tick();
             }
 
             do {
