@@ -86,28 +86,50 @@ if (typeof process !== "undefined") {
     } else {
         nextTick = setImmediate;
     }
-} else if (typeof MessageChannel !== "undefined") {
-    // modern browsers
-    // http://www.nonblocking.io/2011/06/windownexttick.html
-    var channel = new MessageChannel();
+} else (function(){
     // linked list of tasks (single, with head node)
-    var head = {}, tail = head;
-    channel.port1.onmessage = function () {
-        head = head.next;
-        var task = head.task;
-        delete head.task;
-        task();
-    };
-    nextTick = function (task) {
-        tail = tail.next = {task: task};
-        channel.port2.postMessage(0);
-    };
-} else {
-    // old browsers
-    nextTick = function (task) {
-        setTimeout(task, 0);
-    };
-}
+    var head = { task: void 0, next: null }, tail = head,
+        ticking = false, tick;
+
+    function onTick() {
+        if (head.next) {
+            tick();
+            do {
+                head = head.next;
+                var task = head.task;
+                head.task = void 0;
+                task();
+            } while (head.next)
+
+        } else {
+            ticking = false;
+        }
+    }
+
+    nextTick = function(task) {
+        tail = tail.next = {task: task, next: null};
+        if ( !ticking ) {
+            ticking = true;
+            tick();
+        }
+    }
+
+    if (typeof MessageChannel !== "undefined") {
+        // modern browsers
+        // http://www.nonblocking.io/2011/06/windownexttick.html
+        var channel = new MessageChannel();
+        channel.port1.onmessage = onTick;
+        tick = function() {
+            channel.port2.postMessage(0);
+        };
+
+    } else {
+        // old browsers
+        tick = function() {
+            setTimeout(onTick, 0);
+        }
+    }
+})();
 
 // Attempt to make generics safe in the face of downstream
 // modifications.
