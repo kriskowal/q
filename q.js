@@ -108,7 +108,7 @@ if (typeof process !== "undefined") {
 
     nextTick = function(task) {
         tail = tail.next = {task: task, next: null};
-        if ( !ticking ) {
+        if (!ticking) {
             ticking = true;
             tick();
         }
