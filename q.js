@@ -88,7 +88,7 @@ if (typeof process !== "undefined") {
     }
 } else (function(){
     // linked list of tasks (single, with head node)
-    var head = { task: void 0, next: null }, tail = head,
+    var head = {task: void 0, next: null}, tail = head,
         ticking = false, tick;
 
     function onTick() {
