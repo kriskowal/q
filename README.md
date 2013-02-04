@@ -369,32 +369,28 @@ foo()
 
 ### Progress Notification
 
-It's possible for some promises to report their progress, especially
-if it's a task that takes a long time, or iterates. Not all promises
-may implement progress notifications.
+It's possible for promises to report their progress, e.g. for tasks that take a
+long time like a file upload. Not all promises will implement progress
+notifications, but for those that do, you can consume the progress values using
+a third parameter to ``then``:
 
 ```javascript
-foo()
-.then(function (value) {
-    // Success processing foo and getting a value
-}, function(err) {
+uploadFile()
+.then(function () {
+    // Success uploading the file
+}, function (err) {
     // There was an error, and we get the reason for error
-}, function(progress) {
-    // We get notified of foo()'s progress as it's executed
+}, function (progress) {
+    // We get notified of the upload's progress as it is executed
 })
 ```
 
-like `fail`, Q also provides a shorthand for progress callbacks 
-called `progress`. 
+Like `fail`, Q also provides a shorthand for progress callbacks
+called `progress`:
 
 ```javascript
-foo()
-.then(function (value) {
-    // Success processing foo()
-}).fail(function(err) {
-    // There was an error
-}).progress(function(prog) {
-    // We get notified of foo'd progress
+uploadFile().progress(function (progress) {
+    // We get notified of the upload's progress
 })
 ```
 
