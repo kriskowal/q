@@ -517,6 +517,9 @@ function timeout(promise, ms) {
 }
 ```
 
+Finally, you can send a progress notification to the promise with
+``defered.notify``.
+
 For illustration, this is a wrapper for XML HTTP requests in the browser. Note
 that a more [thorough][XHR] implementation would be in order in practice.
 
@@ -530,6 +533,7 @@ function requestOkText(url) {
     request.open("GET", url, true);
     request.onload = onload;
     request.onerror = onerror;
+    request.onprogress = onprogress;
     request.send();
 
     function onload() {
@@ -542,6 +546,10 @@ function requestOkText(url) {
 
     function onerror() {
         deferred.reject("Can't XHR " + JSON.stringify(url));
+    }
+
+    function onprogress(event) {
+        deferred.notify(event.loaded / event.total);
     }
 
     return deferred.promise;
