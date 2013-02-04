@@ -1,7 +1,8 @@
 "use strict";
 /*jshint newcap: false*/
-/*global Q: true, describe: false, it: false, expect: false, afterEach: false,
-         require: false, jasmine: false, waitsFor: false, runs: false */
+/*global Q: true, describe: false, it: false, expect: false, beforeEach: false,
+         afterEach: false, require: false, jasmine: false, waitsFor: false,
+         runs: false */
 
 if (typeof Q === "undefined" && typeof require !== "undefined") {
     // For Node compatibility.
@@ -11,10 +12,7 @@ if (typeof Q === "undefined" && typeof require !== "undefined") {
 
 var REASON = "this is not an error, but it might show up in the console";
 
-var global = this;
-
 var STRICT_MODE_CAPABLE = (function(){
-    "use strict";
     return !this;
 })();
 
@@ -246,6 +244,9 @@ describe("progress", function () {
                 progressed1 = true;
             }
         );
+
+        Q.onerror = function () { };
+
         Q.when(deferred.promise, null, null, function () {
             progressed2 = true;
             throw new Error("just a test, ok if it shows up in the console");
@@ -256,15 +257,6 @@ describe("progress", function () {
 
         deferred.notify();
         deferred.resolve();
-
-        // In Node, swallow the eventually-thrown error.
-        function uncaughtExceptionHandler() { }
-        if (typeof process === "object") {
-            process.on("uncaughtException", uncaughtExceptionHandler);
-            promise.fin(function () {
-                process.removeListener("uncaughtException", uncaughtExceptionHandler);
-            });
-        }
 
         return promise;
     });
