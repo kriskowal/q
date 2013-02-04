@@ -46,7 +46,7 @@
     "devDependencies": {
         "jshint": ">=0.9.1",
         "cover": "*",
-        "jasmine-node": "*",
+        "jasmine-node": "1.1.1",
         "opener": "*",
         "promises-aplus-tests": "~1.0"
     },
