@@ -93,7 +93,7 @@ return value (fulfillment) or thrown exception (rejection).
 promiseMeSomething()
 .then(function (value) {
 }, function (reason) {
-})
+});
 ```
 
 If ``promiseMeSomething`` returns a promise that gets fulfilled later
@@ -118,7 +118,7 @@ assigning to ``outputPromise``.
 var outputPromise = getInputPromise()
 .then(function (input) {
 }, function (reason) {
-})
+});
 ```
 
 The ``outputPromise`` variable becomes a new promise for the return
@@ -142,7 +142,7 @@ error handler, the **error** will go to ``outputPromise``:
 ```javascript
 var outputPromise = getInputPromise()
 .then(function (value) {
-})
+});
 ```
 
 If the input promise gets fulfilled and you omit the value handler, the
@@ -151,7 +151,7 @@ If the input promise gets fulfilled and you omit the value handler, the
 ```javascript
 var outputPromise = getInputPromise()
 .then(null, function (error) {
-})
+});
 ```
 
 Q promises provide a ``fail`` shorthand for ``then`` when you are only
@@ -160,7 +160,7 @@ interested in handling the error:
 ```javascript
 var outputPromise = getInputPromise()
 .fail(function (error) {
-})
+});
 ```
 
 If you are writing JavaScript for modern engines only or using
@@ -177,7 +177,7 @@ may be delayed if the final handler returns a promise.
 var outputPromise = getInputPromise()
 .fin(function () {
     // close files, database connections, stop servers, conclude tests
-})
+});
 ```
 
 -   If the handler returns a value, the value is ignored
@@ -206,7 +206,7 @@ return getUsername()
         // resolves the promise returned
         // by the first line
     })
-})
+});
 ```
 
 ```javascript
@@ -220,7 +220,7 @@ return getUsername()
     // or the exception thrown here
     // resolves the promise returned
     // by the first line
-})
+});
 ```
 
 The only difference is nesting.  It’s useful to nest handlers if you
@@ -255,7 +255,7 @@ fulfilled array using ``all``.
 return Q.all([
     eventualAdd(2, 2),
     eventualAdd(10, 20)
-])
+]);
 ```
 
 If you have a promise for an array, you can use ``spread`` as a
@@ -280,7 +280,7 @@ return getUsername()
     return [username, getUser(username)];
 })
 .spread(function (username, user) {
-})
+});
 ```
 
 The ``all`` function returns a promise for an array of values.  If one
@@ -299,7 +299,7 @@ Q.allResolved(promises)
             var exception = promise.valueOf().exception;
         }
     })
-})
+});
 ```
 
 
@@ -341,12 +341,12 @@ exception in the value handler, it will not be be caught by the error
 handler.
 
 ```javascript
-foo()
+return foo()
 .then(function (value) {
     throw new Error("Can't bar.");
 }, function (error) {
     // We only get here if "foo" fails
-})
+});
 ```
 
 To see why this is, consider the parallel between promises and
@@ -358,13 +358,13 @@ That code then needs its own ``try``/``catch`` block.
 In terms of promises, this means chaining your error handler:
 
 ```javascript
-foo()
+return foo()
 .then(function (value) {
     throw new Error("Can't bar.");
 })
 .fail(function (error) {
     // We get here with either foo's error or bar's error
-})
+});
 ```
 
 ### Progress Notification
@@ -375,23 +375,23 @@ notifications, but for those that do, you can consume the progress values using
 a third parameter to ``then``:
 
 ```javascript
-uploadFile()
+return uploadFile()
 .then(function () {
     // Success uploading the file
 }, function (err) {
     // There was an error, and we get the reason for error
 }, function (progress) {
     // We get notified of the upload's progress as it is executed
-})
+});
 ```
 
 Like `fail`, Q also provides a shorthand for progress callbacks
 called `progress`:
 
 ```javascript
-uploadFile().progress(function (progress) {
+return uploadFile().progress(function (progress) {
     // We get notified of the upload's progress
-})
+});
 ```
 
 ### The End
@@ -407,7 +407,7 @@ So, either return it,
 return foo()
 .then(function () {
     return "bar";
-})
+});
 ```
 
 Or, end it.
@@ -417,7 +417,7 @@ foo()
 .then(function () {
     return "bar";
 })
-.done()
+.done();
 ```
 
 Ending a promise chain makes sure that, if an error doesn’t get
@@ -449,7 +449,7 @@ You can also use ``fcall`` to get a promise for an exception.
 ```javascript
 return Q.fcall(function () {
     throw new Error("Can't do it");
-})
+});
 ```
 
 As the name implies, ``fcall`` can call functions, or even promised
@@ -545,7 +545,7 @@ function requestOkText(url) {
     }
 
     return deferred.promise;
-};
+}
 ```
 
 
@@ -588,7 +588,7 @@ This thankfully is all we need to turn them into vibrant Q promises.
 ```javascript
 return Q.when($.ajax(...))
 .then(function () {
-})
+});
 ```
 
 If there is any chance that the promise you receive is not a Q promise
@@ -598,7 +598,7 @@ You can even use ``Q.invoke`` as a shorthand.
 ```javascript
 return Q.invoke($, 'ajax', ...)
 .then(function () {
-})
+});
 ```
 
 
@@ -637,7 +637,7 @@ return Q.fcall(function () {
 })
 .then(function (value) {
     return value[0].foo;
-})
+});
 ```
 
 with
@@ -647,7 +647,7 @@ return Q.fcall(function () {
     return [{ foo: "bar" }, { foo: "baz" }];
 })
 .get(0)
-.get("foo")
+.get("foo");
 ```
 
 
