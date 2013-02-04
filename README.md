@@ -518,7 +518,7 @@ function timeout(promise, ms) {
 ```
 
 Finally, you can send a progress notification to the promise with
-``defered.notify``.
+``deferred.notify``.
 
 For illustration, this is a wrapper for XML HTTP requests in the browser. Note
 that a more [thorough][XHR] implementation would be in order in practice.
