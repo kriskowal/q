@@ -89,16 +89,16 @@ if (typeof process !== "undefined") {
 } else (function(){
     // linked list of tasks (single, with head node)
     var head = {task: void 0, next: null}, tail = head,
-        ticking = false, requestTick;
+        ticking = 0, requestTick;
 
     function onTick() {
-        ticking = false;
+        --ticking;
 
         if (head.next) {
-            // In case of multiple tasks we firstly requestTick
-            // to handle remaining tasks if one throws.
-            if (head.next.next) {
-                ticking = true;
+            // In case of multiple tasks ensure a subsequent tick
+            // to handle remaining tasks in case one throws.
+            if (!ticking && head.next.next) {
+                ++ticking;
                 requestTick();
             }
 
@@ -113,8 +113,10 @@ if (typeof process !== "undefined") {
 
     nextTick = function(task) {
         tail = tail.next = {task: task, next: null};
-        if (!ticking) {
-            ticking = true;
+        // Ensure we are ticking. Also, in case of multiple tasks,
+        // request a second "preventive" tick now to minimize his latency.
+        if (!ticking || ticking === 1 && head.next.next) {
+            ++ticking;
             requestTick();
         }
     }
