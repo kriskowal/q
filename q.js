@@ -114,8 +114,8 @@ if (typeof process !== "undefined") {
     nextTick = function(task) {
         tail = tail.next = {task: task, next: null};
         // Ensure we are ticking. Also, in case of multiple tasks,
-        // request a second "preventive" tick now to minimize his latency.
-        while (!ticking || ticking === 1 && head.next.next) {
+        // request a second "preventive" tick now to minimize its latency.
+        if (!ticking || ticking === 1 && head.next.next) {
             ++ticking;
             requestTick();
         }
