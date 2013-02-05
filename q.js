@@ -89,17 +89,17 @@ if (typeof process !== "undefined") {
 } else (function(){
     // linked list of tasks (single, with head node)
     var head = {task: void 0, next: null}, tail = head,
-        ticking = false, tick;
+        ticking = false, requestTick;
 
     function onTick() {
         ticking = false;
 
         if (head.next) {
-            // In case of multiple tasks we firstly tick
+            // In case of multiple tasks we firstly requestTick
             // to handle remaining tasks if one throws.
             if (head.next.next) {
                 ticking = true;
-                tick();
+                requestTick();
             }
 
             do {
@@ -115,7 +115,7 @@ if (typeof process !== "undefined") {
         tail = tail.next = {task: task, next: null};
         if (!ticking) {
             ticking = true;
-            tick();
+            requestTick();
         }
     }
 
@@ -124,13 +124,13 @@ if (typeof process !== "undefined") {
         // http://www.nonblocking.io/2011/06/windownexttick.html
         var channel = new MessageChannel();
         channel.port1.onmessage = onTick;
-        tick = function() {
+        requestTick = function() {
             channel.port2.postMessage(0);
         };
 
     } else {
         // old browsers
-        tick = function() {
+        requestTick = function() {
             setTimeout(onTick, 0);
         }
     }
