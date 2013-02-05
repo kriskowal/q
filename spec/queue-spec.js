@@ -1,6 +1,8 @@
 
 var Q = require("../q");
 var Queue = require("../queue");
+
+global.Q = Q;
 require("./lib/jasmine-promise");
 
 describe("queue", function () {
@@ -142,7 +144,36 @@ describe("queue", function () {
         })
         .catch(function (error) {
             expect(error.message).toBe("Can't get value from closed queue");
-        });
+        })
+        .then(function () {
+            return queue.closed;
+        })
+        .then(function (error) {
+            expect(error.message).toBe("Can't get value from closed queue");
+        })
+    });
+
+    it("should close with alternate error", function () {
+
+        var queue = Queue();
+        queue.close(new Error("Alternate reason"));
+
+        return Q.try(function () {
+            return queue.get();
+        })
+        .catch(function (error) {
+            expect(error.message).toBe("Alternate reason");
+            return queue.get();
+        })
+        .catch(function (error) {
+            expect(error.message).toBe("Alternate reason");
+        })
+        .then(function () {
+            return queue.closed;
+        })
+        .then(function (error) {
+            expect(error.message).toBe("Alternate reason");
+        })
     });
 
 });

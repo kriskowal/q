@@ -17,15 +17,15 @@ function Queue() {
         get: function () {
             var result = ends.promise.get("head");
             ends.promise = ends.promise.get("tail");
-            return result.fail(function (reason) {
-                closed.resolve();
-                throw reason;
+            return result.fail(function (error) {
+                closed.resolve(error);
+                throw error;
             });
         },
         closed: closed.promise,
-        close: function (reason) {
-            reason = reason || new Error("Can't get value from closed queue");
-            var end = {head: Q.reject(reason)};
+        close: function (error) {
+            error = error || new Error("Can't get value from closed queue");
+            var end = {head: Q.reject(error)};
             end.tail = end;
             ends.resolve(end);
             return closed.promise;
