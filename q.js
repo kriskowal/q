@@ -97,7 +97,9 @@ if (typeof process !== "undefined") {
         if (head.next) {
             // In case of multiple tasks ensure a subsequent tick
             // to handle remaining tasks in case one throws.
-            if (!ticking && head.next.next) {
+            // In our case, we are pre-requesting a second tick
+            // to minimize its latency.
+            if (head.next.next) {
                 ++ticking;
                 requestTick();
             }
@@ -114,7 +116,7 @@ if (typeof process !== "undefined") {
     nextTick = function(task) {
         tail = tail.next = {task: task, next: null};
         // Ensure we are ticking. Also, in case of multiple tasks,
-        // request a second "preventive" tick now to minimize its latency.
+        // pre-request a second tick to minimize its latency.
         if (!ticking || ticking === 1 && head.next.next) {
             ++ticking;
             requestTick();
