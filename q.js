@@ -225,10 +225,14 @@ var object_create = Object.create || function (prototype) {
     return new Type();
 };
 
+var object_hasOwnProperty = uncurryThis(Object.prototype.hasOwnProperty);
+
 var object_keys = Object.keys || function (object) {
     var keys = [];
     for (var key in object) {
-        keys.push(key);
+        if (object_hasOwnProperty(object, key)) {
+            keys.push(key);
+        }
     }
     return keys;
 };

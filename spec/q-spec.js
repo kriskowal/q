@@ -1,7 +1,8 @@
 "use strict";
 /*jshint newcap: false*/
-/*global Q: true, describe: false, it: false, expect: false, afterEach: false,
-         require: false, jasmine: false, waitsFor: false, runs: false */
+/*global Q: true, describe: false, it: false, expect: false, beforeEach: false,
+         afterEach: false, require: false, jasmine: false, waitsFor: false,
+         runs: false */
 
 if (typeof Q === "undefined" && typeof require !== "undefined") {
     // For Node compatibility.
@@ -10,6 +11,10 @@ if (typeof Q === "undefined" && typeof require !== "undefined") {
 }
 
 var REASON = "this is not an error, but it might show up in the console";
+
+var STRICT_MODE_CAPABLE = (function(){
+    return !this;
+})();
 
 afterEach(function () {
     Q.onerror = null;
@@ -239,6 +244,9 @@ describe("progress", function () {
                 progressed1 = true;
             }
         );
+
+        Q.onerror = function () { };
+
         Q.when(deferred.promise, null, null, function () {
             progressed2 = true;
             throw new Error("just a test, ok if it shows up in the console");
@@ -249,15 +257,6 @@ describe("progress", function () {
 
         deferred.notify();
         deferred.resolve();
-
-        // In Node, swallow the eventually-thrown error.
-        function uncaughtExceptionHandler() { }
-        if (typeof process === "object") {
-            process.on("uncaughtException", uncaughtExceptionHandler);
-            promise.fin(function () {
-                process.removeListener("uncaughtException", uncaughtExceptionHandler);
-            });
-        }
 
         return promise;
     });
@@ -406,7 +405,7 @@ describe("progress", function () {
             deferred.promise,
             function () {
                 expect(progressed).toBe(true);
-                expect(progressContext).toBe(undefined);
+                expect(progressContext).toBe(STRICT_MODE_CAPABLE ? undefined : global);
             },
             function () {
                 expect(true).toBe(false);
@@ -646,10 +645,16 @@ describe("promises for objects", function () {
 
     describe("keys", function () {
 
+        function Klass (a, b) {
+            this.a = a;
+            this.b = b;
+        }
+        Klass.prototype.notOwn = 1;
+
         it("fulfills a promise", function () {
-            return Q.keys({a: 10, b: 20})
+            return Q.keys(new Klass(10, 20))
             .then(function (keys) {
-                expect(keys).toEqual(['a', 'b']);
+                expect(keys.sort()).toEqual(['a', 'b']);
             });
         });
 
@@ -2080,4 +2085,3 @@ describe("possible regressions", function () {
     });
 
 });
-
