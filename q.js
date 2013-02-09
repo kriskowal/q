@@ -112,28 +112,28 @@ if (typeof process !== "undefined") {
         }
     }
 
-    nextTick = function(task) {
+    nextTick = function (task) {
         tail = tail.next = {task: task, next: null};
         if (ticking < ++pending && ticking < maxTicking) {
             ++ticking;
             requestTick();
         }
-    }
+    };
 
     if (typeof MessageChannel !== "undefined") {
         // modern browsers
         // http://www.nonblocking.io/2011/06/windownexttick.html
         var channel = new MessageChannel();
         channel.port1.onmessage = onTick;
-        requestTick = function() {
+        requestTick = function () {
             channel.port2.postMessage(0);
         };
 
     } else {
         // old browsers
-        requestTick = function() {
+        requestTick = function () {
             setTimeout(onTick, 0);
-        }
+        };
     }
 })();
 
