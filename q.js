@@ -89,35 +89,32 @@ if (typeof process !== "undefined") {
 } else (function(){
     // linked list of tasks (single, with head node)
     var head = {task: void 0, next: null}, tail = head,
-        ticking = 0, requestTick;
+        maxTicking = 2, ticking = 0, pending = 0, requestTick;
 
     function onTick() {
-        --ticking;
-
-        if (head.next) {
-            // In case of multiple tasks ensure a subsequent tick
-            // to handle remaining tasks in case one throws.
-            // In our case, we are pre-requesting a second tick
-            // to minimize its latency.
-            if (head.next.next) {
+        // In case of multiple tasks ensure a subsequent tick
+        // to handle remaining tasks in case one throws.
+        if (--ticking === 0 && pending > 1) {
+            // Amortize latency after thrown exceptions.
+            maxTicking *= 2;
+            while (ticking < pending-1 && ticking < maxTicking) {
                 ++ticking;
                 requestTick();
             }
+        }
 
-            do {
-                head = head.next;
-                var task = head.task;
-                head.task = void 0;
-                task();
-            } while (head.next)
+        while (pending) {
+            --pending; // decrement here to ensure it's never negative
+            head = head.next;
+            var task = head.task;
+            head.task = void 0;
+            task();
         }
     }
 
     nextTick = function(task) {
         tail = tail.next = {task: task, next: null};
-        // Ensure we are ticking. Also, in case of multiple tasks,
-        // pre-request a second tick to minimize its latency.
-        if (!ticking || ticking === 1 && head.next.next) {
+        if (ticking < ++pending && ticking < maxTicking) {
             ++ticking;
             requestTick();
         }
