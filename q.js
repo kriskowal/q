@@ -100,7 +100,7 @@ if (typeof process !== "undefined") {
         if (++cycle >= maxTicking) {
             // Amortize latency after thrown exceptions.
             cycle = 0;
-            maxTicking *= 2;
+            maxTicking *= 4; // fast grow!
             var n = pending && Math.min(pending - 1, maxTicking);
             while (ticking < n) {
                 ++ticking;
