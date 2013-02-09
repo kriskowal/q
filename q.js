@@ -89,15 +89,19 @@ if (typeof process !== "undefined") {
 } else (function(){
     // linked list of tasks (single, with head node)
     var head = {task: void 0, next: null}, tail = head,
-        maxTicking = 2, ticking = 0, pending = 0, requestTick;
+        maxTicking = 2, ticking = 0, pending = 0, cycle = 0,
+        requestTick;
 
     function onTick() {
-        // In case of multiple tasks ensure a subsequent tick
+        // In case of multiple tasks ensure at least one subsequent tick
         // to handle remaining tasks in case one throws.
-        if (--ticking === 0 && pending > 1) {
+        --ticking;
+
+        if (++cycle >= maxTicking) {
             // Amortize latency after thrown exceptions.
+            cycle = 0;
             maxTicking *= 2;
-            var n = ticking = Math.min(pending - 1, maxTicking);
+            var n = ticking = pending && Math.min(pending - 1, maxTicking);
             while (n--) {
                 requestTick();
             }
@@ -110,6 +114,8 @@ if (typeof process !== "undefined") {
             head.task = void 0;
             task();
         }
+
+        cycle = 0;
     }
 
     nextTick = function (task) {
