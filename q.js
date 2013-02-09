@@ -101,8 +101,9 @@ if (typeof process !== "undefined") {
             // Amortize latency after thrown exceptions.
             cycle = 0;
             maxTicking *= 2;
-            var n = ticking = pending && Math.min(pending - 1, maxTicking);
-            while (n--) {
+            var n = pending && Math.min(pending - 1, maxTicking);
+            while (ticking < n) {
+                ++ticking;
                 requestTick();
             }
         }
