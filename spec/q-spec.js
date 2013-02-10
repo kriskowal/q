@@ -838,6 +838,13 @@ describe("promise states", function () {
         expect(promise.isPending()).toBe(false);
     });
 
+    it("of rejection with a falsy value", function () {
+        var promise = Q.reject(undefined);
+        expect(promise.isFulfilled()).toBe(false);
+        expect(promise.isRejected()).toBe(true);
+        expect(promise.isPending()).toBe(false);
+    });
+
     it("of deferred", function () {
         var deferred = Q.defer();
         var promise = deferred.promise;

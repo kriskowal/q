@@ -464,7 +464,7 @@ function promise(makePromise) {
  * bought and sold.
  */
 Q.makePromise = makePromise;
-function makePromise(descriptor, fallback, valueOf, exception) {
+function makePromise(descriptor, fallback, valueOf, exception, isException) {
     if (fallback === void 0) {
         fallback = function (op) {
             return reject(new Error("Promise does not support operation: " + op));
@@ -493,7 +493,7 @@ function makePromise(descriptor, fallback, valueOf, exception) {
         promise.valueOf = valueOf;
     }
 
-    if (exception) {
+    if (isException) {
         promise.exception = exception;
     }
 
@@ -661,7 +661,7 @@ function reject(exception) {
         return reject(exception);
     }, function valueOf() {
         return this;
-    }, exception);
+    }, exception, true);
     // note that the error has not been handled
     displayErrors();
     rejections.push(rejection);
