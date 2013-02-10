@@ -17,7 +17,6 @@ spec
 .npmignore
 .travis.yml
 CHANGES.md
-LICENSE
 VERSIONS.md
 q.min.js
 q.min.js.gz
