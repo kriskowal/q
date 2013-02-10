@@ -697,8 +697,8 @@ function fulfill(object) {
                 return object[name].apply(object, args);
             }
         },
-        "apply": function (args) {
-            return object.apply(void 0, args);
+        "apply": function (thisP, args) {
+            return object.apply(thisP, args);
         },
         "keys": function () {
             return object_keys(object);
@@ -1066,7 +1066,10 @@ function send(value, name) {
  * @param object    promise or immediate reference for target function
  * @param args      array of application arguments
  */
-var fapply = Q.fapply = dispatcher("apply");
+Q.fapply = fapply;
+function fapply(value, args) {
+    return dispatch(value, "apply", [void 0, args]);
+}
 
 /**
  * Calls the promised function in a future turn.
@@ -1091,7 +1094,7 @@ function fbind(value) {
     var args = array_slice(arguments, 1);
     return function fbound() {
         var allArgs = args.concat(array_slice(arguments));
-        return fapply(value, allArgs);
+        return dispatch(value, "apply", [this, allArgs]);
     };
 }
 

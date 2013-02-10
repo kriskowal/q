@@ -752,6 +752,15 @@ describe("promises for functions", function () {
             return bound(y);
         });
 
+        it("doesn't bind `this`", function () {
+            var theThis = { me: "this" };
+            var bound = Q.fbind(function () {
+                expect(this).toBe(theThis);
+            });
+
+            return bound.call(theThis);
+        });
+
     });
 
 });
