@@ -752,6 +752,15 @@ describe("promises for functions", function () {
             return bound(y);
         });
 
+        it("doesn't bind `this`", function () {
+            var theThis = { me: "this" };
+            var bound = Q.fbind(function () {
+                expect(this).toBe(theThis);
+            });
+
+            return bound.call(theThis);
+        });
+
     });
 
 });
@@ -824,6 +833,13 @@ describe("promise states", function () {
     it("of rejection", function () {
         var error = new Error("Oh, snap.");
         var promise = Q.reject(error);
+        expect(promise.isFulfilled()).toBe(false);
+        expect(promise.isRejected()).toBe(true);
+        expect(promise.isPending()).toBe(false);
+    });
+
+    it("of rejection with a falsy value", function () {
+        var promise = Q.reject(undefined);
         expect(promise.isFulfilled()).toBe(false);
         expect(promise.isRejected()).toBe(true);
         expect(promise.isPending()).toBe(false);

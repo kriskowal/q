@@ -464,7 +464,7 @@ function promise(makePromise) {
  * bought and sold.
  */
 Q.makePromise = makePromise;
-function makePromise(descriptor, fallback, valueOf, exception) {
+function makePromise(descriptor, fallback, valueOf, exception, isException) {
     if (fallback === void 0) {
         fallback = function (op) {
             return reject(new Error("Promise does not support operation: " + op));
@@ -493,7 +493,7 @@ function makePromise(descriptor, fallback, valueOf, exception) {
         promise.valueOf = valueOf;
     }
 
-    if (exception) {
+    if (isException) {
         promise.exception = exception;
     }
 
@@ -661,7 +661,7 @@ function reject(exception) {
         return reject(exception);
     }, function valueOf() {
         return this;
-    }, exception);
+    }, exception, true);
     // note that the error has not been handled
     displayErrors();
     rejections.push(rejection);
@@ -697,8 +697,8 @@ function fulfill(object) {
                 return object[name].apply(object, args);
             }
         },
-        "apply": function (args) {
-            return object.apply(void 0, args);
+        "apply": function (thisP, args) {
+            return object.apply(thisP, args);
         },
         "keys": function () {
             return object_keys(object);
@@ -1072,7 +1072,10 @@ function send(value, name) {
  * @param object    promise or immediate reference for target function
  * @param args      array of application arguments
  */
-var fapply = Q.fapply = dispatcher("apply");
+Q.fapply = fapply;
+function fapply(value, args) {
+    return dispatch(value, "apply", [void 0, args]);
+}
 
 /**
  * Calls the promised function in a future turn.
@@ -1097,7 +1100,7 @@ function fbind(value) {
     var args = array_slice(arguments, 1);
     return function fbound() {
         var allArgs = args.concat(array_slice(arguments));
-        return fapply(value, allArgs);
+        return dispatch(value, "apply", [this, allArgs]);
     };
 }
 
