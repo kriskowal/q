@@ -76,37 +76,69 @@ var noop = function () {};
 // use the fastest possible means to execute a task in a future turn
 // of the event loop.
 var nextTick;
-if (typeof process !== "undefined") {
-    // node
+// Node implementation:
+if (typeof process !== "undefined" && process.nextTick) {
     nextTick = process.nextTick;
-} else if (typeof setImmediate === "function") {
-    // In IE10, or use https://github.com/NobleJS/setImmediate
-    if (typeof window !== "undefined") {
-        nextTick = setImmediate.bind(window);
-    } else {
-        nextTick = setImmediate;
-    }
-} else if (typeof MessageChannel !== "undefined") {
-    // modern browsers
-    // http://www.nonblocking.io/2011/06/windownexttick.html
-    var channel = new MessageChannel();
-    // linked list of tasks (single, with head node)
-    var head = {}, tail = head;
-    channel.port1.onmessage = function () {
-        head = head.next;
-        var task = head.task;
-        delete head.task;
-        task();
-    };
-    nextTick = function (task) {
-        tail = tail.next = {task: task};
-        channel.port2.postMessage(0);
-    };
+// Browser implementation: based on MessageChannel, setImmediate, or setTimeout
 } else {
-    // old browsers
+
+    // queue of tasks implemented as a singly linked list with a head node
+    var head = {}, tail = head;
+    // whether a task is pending is represented by the existence of head.next
+
     nextTick = function (task) {
-        setTimeout(task, 0);
+        var alreadyPending = head.next;
+        tail = tail.next = {task: task};
+        if (!alreadyPending) {
+            // setImmediate,
+            // postMessage, or
+            // setTimeout:
+            requestTick(flush, 0);
+        }
     };
+
+    var flush = function () {
+        try {
+            // unroll all pending events
+            while (head.next) {
+                head = head.next;
+                // guarantee consistent queue state
+                // before task, because it may throw
+                head.task(); // may throw
+            }
+        } finally {
+            // if a task throws an exception and
+            // there are more pending tasks, dispatch
+            // another event
+            if (head.next) {
+                // setImmediate,
+                // postMessage, or
+                // setTimeout:
+                requestTick(flush, 0);
+            }
+        }
+    };
+
+    var requestTick; // must always be called like requestTick(flush, 0);
+    // in order of desirability:
+    if (typeof setImmediate !== "undefined") {
+        // In IE10, or use https://github.com/NobleJS/setImmediate
+        if (typeof window !== "undefined") {
+            requestTick = setImmediate.bind(window);
+        } else {
+            requestTick = setImmediate;
+        }
+    } else if (typeof MessageChannel !== "undefined") {
+        // http://www.nonblocking.io/2011/06/windownexttick.html
+        var channel = new MessageChannel();
+        channel.port1.onmessage = flush;
+        requestTick = function (flush, zero) {
+            channel.port2.postMessage(0);
+        };
+    } else {
+        requestTick = setTimeout;
+    }
+
 }
 
 // Attempt to make generics safe in the face of downstream
