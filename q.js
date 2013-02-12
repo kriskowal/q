@@ -106,7 +106,7 @@ if (typeof process !== "undefined" && process.nextTick) {
                 // before task, because it may throw
                 head.task(); // may throw
             }
-        } finally {
+        } catch (exception) {
             // if a task throws an exception and
             // there are more pending tasks, dispatch
             // another event
@@ -116,6 +116,7 @@ if (typeof process !== "undefined" && process.nextTick) {
                 // setTimeout:
                 requestTick(flush, 0);
             }
+            throw exception;
         }
     };
 
