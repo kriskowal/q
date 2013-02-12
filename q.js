@@ -89,40 +89,40 @@ if (typeof process !== "undefined") {
 } else (function(){
     // linked list of tasks (single, with head node)
     var head = {task: void 0, next: null}, tail = head,
-        maxTicking = 2, ticking = 0, pending = 0, cycle = 0,
+        maxPendingTicks = 2, pendingTicks = 0, queuedTasks = 0, usedTicks = 0,
         requestTick;
 
     function onTick() {
         // In case of multiple tasks ensure at least one subsequent tick
         // to handle remaining tasks in case one throws.
-        --ticking;
+        --pendingTicks;
 
-        if (++cycle >= maxTicking) {
+        if (++usedTicks >= maxPendingTicks) {
             // Amortize latency after thrown exceptions.
-            cycle = 0;
-            maxTicking *= 4; // fast grow!
-            var n = pending && Math.min(pending - 1, maxTicking);
-            while (ticking < n) {
-                ++ticking;
+            usedTicks = 0;
+            maxPendingTicks *= 4; // fast grow!
+            var expectedTicks = queuedTasks && Math.min(queuedTasks - 1, maxPendingTicks);
+            while (pendingTicks < expectedTicks) {
+                ++pendingTicks;
                 requestTick();
             }
         }
 
-        while (pending) {
-            --pending; // decrement here to ensure it's never negative
+        while (queuedTasks) {
+            --queuedTasks; // decrement here to ensure it's never negative
             head = head.next;
             var task = head.task;
             head.task = void 0;
             task();
         }
 
-        cycle = 0;
+        usedTicks = 0;
     }
 
     nextTick = function (task) {
         tail = tail.next = {task: task, next: null};
-        if (ticking < ++pending && ticking < maxTicking) {
-            ++ticking;
+        if (pendingTicks < ++queuedTasks && pendingTicks < maxPendingTicks) {
+            ++pendingTicks;
             requestTick();
         }
     };
