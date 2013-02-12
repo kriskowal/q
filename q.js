@@ -91,15 +91,15 @@ if (typeof process !== "undefined") {
     // http://www.nonblocking.io/2011/06/windownexttick.html
     var channel = new MessageChannel();
     // linked list of tasks (single, with head node)
-    var head = {}, tail = head;
+    var head = {task: void 0, next: null}, tail = head;
     channel.port1.onmessage = function () {
         head = head.next;
         var task = head.task;
-        delete head.task;
+        head.task = void 0;
         task();
     };
     nextTick = function (task) {
-        tail = tail.next = {task: task};
+        tail = tail.next = {task: task, next: null};
         channel.port2.postMessage(0);
     };
 } else {
