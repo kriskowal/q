@@ -86,28 +86,63 @@ if (typeof process !== "undefined") {
     } else {
         nextTick = setImmediate;
     }
-} else if (typeof MessageChannel !== "undefined") {
-    // modern browsers
-    // http://www.nonblocking.io/2011/06/windownexttick.html
-    var channel = new MessageChannel();
+} else (function(){
     // linked list of tasks (single, with head node)
-    var head = {}, tail = head;
-    channel.port1.onmessage = function () {
-        head = head.next;
-        var task = head.task;
-        delete head.task;
-        task();
-    };
+    var head = {task: void 0, next: null}, tail = head,
+        maxPendingTicks = 2, pendingTicks = 0, queuedTasks = 0, usedTicks = 0,
+        requestTick;
+
+    function onTick() {
+        // In case of multiple tasks ensure at least one subsequent tick
+        // to handle remaining tasks in case one throws.
+        --pendingTicks;
+
+        if (++usedTicks >= maxPendingTicks) {
+            // Amortize latency after thrown exceptions.
+            usedTicks = 0;
+            maxPendingTicks *= 4; // fast grow!
+            var expectedTicks = queuedTasks && Math.min(queuedTasks - 1, maxPendingTicks);
+            while (pendingTicks < expectedTicks) {
+                ++pendingTicks;
+                requestTick();
+            }
+        }
+
+        while (queuedTasks) {
+            --queuedTasks; // decrement here to ensure it's never negative
+            head = head.next;
+            var task = head.task;
+            head.task = void 0;
+            task();
+        }
+
+        usedTicks = 0;
+    }
+
     nextTick = function (task) {
-        tail = tail.next = {task: task};
-        channel.port2.postMessage(0);
+        tail = tail.next = {task: task, next: null};
+        if (pendingTicks < ++queuedTasks && pendingTicks < maxPendingTicks) {
+            ++pendingTicks;
+            requestTick();
+        }
     };
-} else {
-    // old browsers
-    nextTick = function (task) {
-        setTimeout(task, 0);
-    };
-}
+
+    if (typeof MessageChannel !== "undefined") {
+        // modern browsers
+        // http://www.nonblocking.io/2011/06/windownexttick.html
+        var channel = new MessageChannel();
+        channel.port1.onmessage = onTick;
+        requestTick = function () {
+            channel.port2.postMessage(0);
+        };
+
+    } else {
+        // old browsers
+        requestTick = function () {
+            setTimeout(onTick, 0);
+        };
+    }
+})();
 
 // Attempt to make generics safe in the face of downstream
 // modifications.
