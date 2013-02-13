@@ -1409,7 +1409,7 @@ function nfbind(callback/*, ...args */) {
  */
 Q.npost = npost;
 function npost(object, name, args) {
-    var nodeArgs = array_slice(args);
+    var nodeArgs = array_slice(args || []);
     var deferred = defer();
     nodeArgs.push(deferred.makeNodeResolver());
 
