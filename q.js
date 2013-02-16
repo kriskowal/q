@@ -1388,6 +1388,7 @@ function nfcall(callback/*, ...args */) {
  *
  */
 Q.nfbind = nfbind;
+Q.denodeify = Q.nfbind; // synonyms
 function nfbind(callback/*, ...args */) {
     var baseArgs = array_slice(arguments, 1);
     return function () {
