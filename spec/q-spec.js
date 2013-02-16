@@ -12,9 +12,8 @@ if (typeof Q === "undefined" && typeof require !== "undefined") {
 
 var REASON = "this is not an error, but it might show up in the console";
 
-var STRICT_MODE_CAPABLE = (function(){
-    return !this;
-})();
+// In browsers that support strict mode, it'll be `undefined`; otherwise, the global.
+var calledAsFunctionThis = (function () { return this; }());
 
 afterEach(function () {
     Q.onerror = null;
@@ -405,7 +404,7 @@ describe("progress", function () {
             deferred.promise,
             function () {
                 expect(progressed).toBe(true);
-                expect(progressContext).toBe(STRICT_MODE_CAPABLE ? undefined : global);
+                expect(progressContext).toBe(calledAsFunctionThis);
             },
             function () {
                 expect(true).toBe(false);
