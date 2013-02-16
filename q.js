@@ -559,7 +559,7 @@ array_reduce(
         "all", "allResolved",
         "timeout", "delay",
         "catch", "finally", "fail", "fin", "progress", "done",
-        "nfcall", "nfapply", "nfbind",
+        "nfcall", "nfapply", "nfbind", "denodeify",
         "ncall", "napply", "nbind",
         "npost", "nsend", "ninvoke",
         "nodeify"
