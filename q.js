@@ -559,7 +559,7 @@ array_reduce(
         "all", "allResolved",
         "timeout", "delay",
         "catch", "finally", "fail", "fin", "progress", "done",
-        "nfcall", "nfapply", "nfbind", "denodeify",
+        "nfcall", "nfapply", "nfbind", "denodeify", "nbind",
         "ncall", "napply", "nbind",
         "npost", "nsend", "ninvoke",
         "nodeify"
@@ -1397,6 +1397,24 @@ function nfbind(callback/*, ...args */) {
         nodeArgs.push(deferred.makeNodeResolver());
 
         fapply(callback, nodeArgs).fail(deferred.reject);
+        return deferred.promise;
+    };
+}
+
+Q.nbind = nbind;
+function nbind(callback/*, ... args*/) {
+    var baseArgs = array_slice(arguments, 1);
+    return function () {
+        var nodeArgs = baseArgs.concat(array_slice(arguments));
+        var deferred = defer();
+        nodeArgs.push(deferred.makeNodeResolver());
+
+        var thisArg = this;
+        function bound() {
+            return callback.apply(thisArg, arguments);
+        }
+
+        fapply(bound, nodeArgs).fail(deferred.reject);
         return deferred.promise;
     };
 }

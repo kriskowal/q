@@ -1711,6 +1711,18 @@ describe("node support", function () {
 
     });
 
+    describe("nbind", function () {
+
+        it("binds this, and mixes partial application with complete application", function () {
+            return Q.nbind(function (a, b, c, d, callback) {
+                callback(null, this + a + b + c + d);
+            }, 1, 2).call(3, 4, 5)
+            .then(function (fifteen) {
+                expect(fifteen).toBe(15);
+            });
+        });
+
+    });
     describe("npost", function (done) {
 
         it("fulfills with callback result", function () {
