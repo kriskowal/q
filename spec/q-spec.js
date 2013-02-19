@@ -1054,6 +1054,14 @@ describe("all", function () {
         });
     });
 
+    it("resolves when called on a promise", function () {
+        return Q(10)
+        .all([Q(1), Q(2)])
+        .then(function (args) {
+            expect(args).toEqual([1, 2]);
+        });
+    });
+
 });
 
 describe("allResolved", function () {
