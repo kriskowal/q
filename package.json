@@ -65,5 +65,9 @@
     },
     "directories": {
         "test": "./spec"
+    },
+    "jam": {
+        "dependencies": {},
+        "main": "q.js"
     }
 }
