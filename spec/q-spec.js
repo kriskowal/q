@@ -1054,6 +1054,20 @@ describe("all", function () {
         });
     });
 
+    it("resolves when passed an sparse array", function () {
+        var toResolve = Q.defer();
+        var promises = [];
+        promises[0] = Q.resolve(0);
+        promises[2] = toResolve.promise;
+        var promise = Q.all(promises);
+
+        toResolve.resolve(2);
+
+        return promise.then(function (result) {
+            expect(result).toEqual([0, void 0, 2]);
+        });
+    });
+
 });
 
 describe("allResolved", function () {
