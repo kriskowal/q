@@ -1161,27 +1161,24 @@ Q.keys = dispatcher("keys");
 Q.all = all;
 function all(promises) {
     return when(promises, function (promises) {
-        var countDown = promises.length;
-        if (countDown === 0) {
-            return resolve(promises);
-        }
+        var countDown = 0;
         var deferred = defer();
         array_reduce(promises, function (undefined, promise, index) {
             if (isFulfilled(promise)) {
                 promises[index] = valueOf(promise);
-                if (--countDown === 0) {
-                    deferred.resolve(promises);
-                }
             } else {
+                ++countDown;
                 when(promise, function (value) {
                     promises[index] = value;
                     if (--countDown === 0) {
                         deferred.resolve(promises);
                     }
-                })
-                .fail(deferred.reject);
+                }, deferred.reject);
             }
         }, void 0);
+        if (countDown === 0) {
+            deferred.resolve(promises);
+        }
         return deferred.promise;
     });
 }
