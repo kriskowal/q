@@ -1063,15 +1063,9 @@ describe("all", function () {
 
         toResolve.resolve(2);
 
-        promise.then(function (result) {
+        return promise.then(function (result) {
             expect(result).toEqual([0, void 0, 2]);
         });
-
-        return Q.delay(250)
-        .then(function () {
-            expect(promise.isFulfilled()).toBe(true);
-        })
-        .timeout(1000);
     });
 
 });
