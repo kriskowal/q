@@ -33,6 +33,21 @@ describe("Q function", function () {
         expect(Q(r)).toBe(r);
         expect(Q(p)).toBe(p);
     });
+
+    it("should coerce thenables which resoved value is also thenable", function() {
+        var fulfilledThenable = {
+            then: function(callback) {
+                callback(reurnedValue);
+                // Avoid inifinite resolving in case of bad implementations.
+                reurnedValue = {};
+            }
+        };
+        var reurnedValue = fulfilledThenable;
+
+        return Q(fulfilledThenable).then(function (value) {
+            expect(value).toBe(fulfilledThenable);
+        });
+    });
 });
 
 describe("defer and when", function () {

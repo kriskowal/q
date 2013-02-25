@@ -784,7 +784,7 @@ function coerce(promise) {
     var deferred = defer();
     nextTick(function () {
         try {
-            promise.then(deferred.resolve, deferred.reject, deferred.notify);
+            promise.then(deferred.fulfill, deferred.reject, deferred.notify);
         } catch (exception) {
             deferred.reject(exception);
         }
@@ -1310,7 +1310,7 @@ function timeout(promise, ms) {
 
     when(promise, function (value) {
         clearTimeout(timeoutId);
-        deferred.resolve(value);
+        deferred.fulfill(value);
     }, function (exception) {
         clearTimeout(timeoutId);
         deferred.reject(exception);
