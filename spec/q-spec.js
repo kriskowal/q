@@ -37,12 +37,12 @@ describe("Q function", function () {
     it("should coerce thenables which resoved value is also thenable", function() {
         var fulfilledThenable = {
             then: function(callback) {
-                callback(reurnedValue);
+                callback(returnedValue);
                 // Avoid inifinite resolving in case of bad implementations.
-                reurnedValue = {};
+                returnedValue = {};
             }
         };
-        var reurnedValue = fulfilledThenable;
+        var returnedValue = fulfilledThenable;
 
         return Q(fulfilledThenable).then(function (value) {
             expect(value).toBe(fulfilledThenable);
