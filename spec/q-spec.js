@@ -1516,7 +1516,7 @@ describe("timeout", function () {
 });
 
 describe("thenResolve", function () {
-    describe("Resolving with an object", function () {
+    describe("Resolving with a non-thenable value", function () {
         it("returns a promise for that object once the promise is resolved", function () {
             var waited = false;
             return Q.delay(20)
@@ -1528,6 +1528,21 @@ describe("thenResolve", function () {
                     expect(waited).toBe(true);
                     expect(val).toBe('foo');
                 });
+        });
+
+        describe("based off a rejected promise", function () {
+            it("does nothing, letting the rejection flow through", function () {
+                return Q.reject('boo')
+                    .thenResolve('foo')
+                    .then(
+                        function () {
+                            expect(true).toBe(false);
+                        },
+                        function (reason) {
+                            expect(reason).toBe('boo');
+                        }
+                    );
+            });
         });
     });
 
