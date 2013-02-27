@@ -1519,7 +1519,7 @@ describe("thenResolve", function () {
     describe("Resolving with an object", function () {
         it("returns a promise for that object once the promise is resolved", function () {
             var waited = false;
-            Q.delay(20)
+            return Q.delay(20)
                 .then(function () {
                     waited = true;
                 })
@@ -1534,7 +1534,7 @@ describe("thenResolve", function () {
     describe("Resolving with an promise", function () {
         it("returns a promise for the result of that promise once the promise is resolved", function () {
             var waited = false;
-            Q.delay(20)
+            return Q.delay(20)
                 .then(function () {
                     waited = true;
                 })
