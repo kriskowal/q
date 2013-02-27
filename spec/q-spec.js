@@ -1562,6 +1562,44 @@ describe("thenResolve", function () {
     });
 });
 
+describe("thenReject", function () {
+    describe("Rejecting with a reason", function () {
+        it("returns a promise rejected with that object once the original promise is resolved", function () {
+            var waited = false;
+            return Q.delay(20)
+                .then(function () {
+                    waited = true;
+                })
+                .thenReject('foo')
+                .then(
+                    function () {
+                        expect(true).toBe(false);
+                    },
+                    function (reason) {
+                        expect(waited).toBe(true);
+                        expect(reason).toBe('foo');
+                    }
+                );
+        });
+
+        describe("based off a rejected promise", function () {
+            it("does nothing, letting the rejection flow through", function () {
+                return Q.reject('boo')
+                    .thenResolve('foo')
+                    .then(
+                        function () {
+                            expect(true).toBe(false);
+                        },
+                        function (reason) {
+                            expect(reason).toBe('boo');
+                        }
+                    );
+            });
+        });
+    });
+});
+
+
 describe("thenables", function () {
 
     it("assimilates a thenable with fulfillment with resolve", function () {

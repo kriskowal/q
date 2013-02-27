@@ -546,6 +546,10 @@ makePromise.prototype.thenResolve = function (value) {
     return when(this, function () { return value; });
 };
 
+makePromise.prototype.thenReject = function (reason) {
+    return when(this, function () { throw reason; });
+};
+
 // Chainable methods
 array_reduce(
     [
