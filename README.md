@@ -98,13 +98,13 @@ promiseMeSomething()
 ```
 
 If ``promiseMeSomething`` returns a promise that gets fulfilled later
-with a return value, the first function (the value handler) will be
+with a return value, the first function (the fulfillment handler) will be
 called with the value.  However, if the ``promiseMeSomething`` function
 gets rejected later by a thrown exception, the second function (the
-error handler) will be called with the error.
+rejection handler) will be called with the exception.
 
 Note that resolution of a promise is always asynchronous: that is, the
-value or error handler will always be called in the next turn of the
+fulfillment or rejection handler will always be called in the next turn of the
 event loop (i.e. `process.nextTick` in Node). This gives you a nice
 guarantee when mentally tracing the flow of your code, namely that
 ``then`` will always return before either handler is executed.
@@ -130,7 +130,7 @@ will be responsible for resolving ``outputPromise``.
 -   If you return a value in a handler, ``outputPromise`` will get
     fulfilled.
 
--   If you throw an exception in a handler ``outputPromise`` will get
+-   If you throw an exception in a handler, ``outputPromise`` will get
     rejected.
 
 -   If you return a **promise** in a handler, ``outputPromise`` will
@@ -138,7 +138,7 @@ will be responsible for resolving ``outputPromise``.
     for managing delays, combining results, or recovering from errors.
 
 If the ``getInputPromise()`` promise gets rejected and you omit the
-error handler, the **error** will go to ``outputPromise``:
+rejection handler, the **error** will go to ``outputPromise``:
 
 ```javascript
 var outputPromise = getInputPromise()
@@ -146,7 +146,7 @@ var outputPromise = getInputPromise()
 });
 ```
 
-If the input promise gets fulfilled and you omit the value handler, the
+If the input promise gets fulfilled and you omit the fulfillment handler, the
 **value** will go to ``outputPromise``:
 
 ```javascript
@@ -261,9 +261,9 @@ return Q.all([
 
 If you have a promise for an array, you can use ``spread`` as a
 replacement for ``then``.  The ``spread`` function “spreads” the
-values over the arguments of the value handler.  The error handler
+values over the arguments of the fulfillment handler.  The rejection handler
 will get called at the first sign of failure.  That is, whichever of
-the recived promises fails first gets handled by the error handler.
+the recived promises fails first gets handled by the rejection handler.
 
 ```javascript
 function eventualAdd(a, b) {
@@ -338,7 +338,7 @@ return funcs.reduce(function (soFar, f) {
 ### Handling Errors
 
 One sometimes-unintuive aspect of promises is that if you throw an
-exception in the value handler, it will not be be caught by the error
+exception in the fulfillment handler, it will not be be caught by the error
 handler.
 
 ```javascript
@@ -352,11 +352,11 @@ return foo()
 
 To see why this is, consider the parallel between promises and
 ``try``/``catch``. We are ``try``-ing to execute ``foo()``: the error
-handler represents a ``catch`` for ``foo()``, while the value handler
+handler represents a ``catch`` for ``foo()``, while the fulfillment handler
 represents code that happens *after* the ``try``/``catch`` block.
 That code then needs its own ``try``/``catch`` block.
 
-In terms of promises, this means chaining your error handler:
+In terms of promises, this means chaining your rejection handler:
 
 ```javascript
 return foo()
@@ -637,7 +637,7 @@ advantage of promises for remote objects, check out [Q-Comm][].
 [Q-Comm]: https://github.com/kriskowal/q-comm
 
 Even in the case of non-remote objects, these methods can be used as
-shorthand for particularly-simple value handlers. For example, you
+shorthand for particularly-simple fulfillment handlers. For example, you
 can replace
 
 ```javascript
