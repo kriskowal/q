@@ -66,13 +66,14 @@ rest and spread arguments.
 
 The Q module can be loaded as:
 
--   a ``<script>`` tag (creating a ``Q`` global variable):
-    ~3 KB minified and gzipped.
--   a Node.js and CommonJS module available from NPM as the ``q``
-    package
--   a RequireJS module
+-   A ``<script>`` tag (creating a ``Q`` global variable): ~3 KB minified and
+    gzipped.
+-   A Node.js and CommonJS module, available in [npm](https://npmjs.org/) as
+    the [q](https://npmjs.org/package/q) package
+-   An AMD module
 -   A [component](https://github.com/component/component) as ``microjs/q``
 -   Using [bower](http://twitter.github.com/bower/) as ``microjs/q``
+-   Using [NuGet](http://nuget.org/) as [Q](https://nuget.org/packages/q)
 
 Q can exchange promises with jQuery, Dojo, When.js, WinJS, and more.
 Additionally, there are many libraries that produce and consume Q promises for
