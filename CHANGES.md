@@ -1,35 +1,16 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
-## v1.0.0 (unreleased)
+## 0.9.0
 
-The following deprecated methods will be removed.
-
-<table>
-    <thead>
-        <tr>
-            <th>0.9.x method</th>
-            <th>1.x replacement</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><code>invoke</code></td>
-            <td><code>send</code></td>
-        </tr>
-        <tr>
-            <td><code>ninvoke</code></td>
-            <td><code>nsend</code></td>
-        </tr>
-    </tbody>
-</table>
-
-## v0.9.0 (unreleased)
-
-This release removes many layers of deprecated methods and brings Q
-closer to alignment with Mark Miller’s TC39 [strawman][] for
-concurrency.
+This release removes many layers of deprecated methods and brings Q closer to
+alignment with Mark Miller’s TC39 [strawman][] for concurrency. At the same
+time, it fixes many bugs and adds a few features around error handling. Finally,
+it comes with an updated and comprehensive [API Reference][].
 
 [strawman]: http://wiki.ecmascript.org/doku.php?id=strawman:concurrency
+[API Reference]: https://github.com/kriskowal/q/wiki/API-Reference
+
+### API Cleanup
 
 The following deprecated or undocumented methods have been removed.
 Their replacements are listed here:
@@ -43,28 +24,36 @@ Their replacements are listed here:
    </thead>
    <tbody>
       <tr>
+         <td><code>Q.ref</code></td>
+         <td><code>Q</code></td>
+      </tr>
+      <tr>
          <td><code>call</code>, <code>apply</code>, <code>bind</code> (*)</td>
          <td><code>fcall</code>/<code>invoke</code>, <code>fapply</code>/<code>post</code>, <code>fbind</code></td>
       </tr>
       <tr>
-         <td><code>ncall</code>, <code>napply</code>, <code>bind</code> (*)</td>
-         <td><code>nfcall</code>/<code>ninvoke</code>, <code>nfapply</code>/<code>npost</code>, <code>nfbind</code></td>
+         <td><code>ncall</code>, <code>napply</code> (*)</td>
+         <td><code>nfcall</code>/<code>ninvoke</code>, <code>nfapply</code>/<code>npost</code></td>
       </tr>
       <tr>
          <td><code>end</code></td>
          <td><code>done</code></td>
       </tr>
       <tr>
-         <td><code>ref</code></td>
-         <td><code>resolve</code></td>
+         <td><code>put</code></td>
+         <td><code>set</code></td>
       </tr>
       <tr>
          <td><code>node</code></td>
-         <td><code>nfbind</code></td>
+         <td><code>nbind</code></td>
       </tr>
       <tr>
          <td><code>nend</code></td>
          <td><code>nodeify</code></td>
+      </tr>
+      <tr>
+         <td><code>isResolved</code></td>
+         <td><code>isPending</code></td>
       </tr>
       <tr>
          <td><code>deferred.node</code></td>
@@ -85,25 +74,61 @@ Their replacements are listed here:
    </tbody>
 </table>
 
+
 (*) Use of ``thisp`` is discouraged. For calling methods, use ``post`` or
 ``invoke``.
 
+### Alignment with the Concurrency Strawman
+
 -   Q now exports a `Q(value)` function, an alias for `resolve`.
     `Q.call`, `Q.apply`, and `Q.bind` were removed to make room for the
-    same methods on the function prototype.  This aligns with the
-    concurrency strawman.
--   `invoke` has been renamed `send` in all its forms.  The old methods
-    are deprecated.  This aligns with the concurrency strawman.
--   `Q.fulfill` has been added.  It is distinct from `Q.resolve` in that
-    it does not pass promises through, nor coerces promises from other
-    systems.  The promise becomes the fulfillment value.
--   `Q.put` has been renamed `Q.set`.
+    same methods on the function prototype.
+-   `invoke` has been aliased to `send` in all its forms.
+-   `post` with no method name acts like `fapply`.
+
+### Error Handling
+
+-   Long stack traces can be turned off by setting `Q.stackJumpLimit` to zero.
+    In the future, this property will be used to fine tune how many stack jumps
+    are retained in long stack traces; for now, anything nonzero is treated as
+    one (since Q only tracks one stack jump at the moment, see #144). #168
+-   In Node.js, if there are unhandled rejections when the process exits, they
+    are output to the console. #115
+
+### Other
+
+-   `delete` and `set` (née `put`) no longer have a fulfillment value.
+-   Q promises are no longer frozen, which
+    [helps with performance](http://code.google.com/p/v8/issues/detail?id=1858).
+-   `thenReject` is now included, as a counterpart to `thenResolve`.
+-   The included browser `nextTick` shim is now faster. #195 @rkatic.
+
+### Bug Fixes
+
+-   Q now works in Internet Explorer 10. #186 @ForbesLindesay
+-   `fbind` no longer hard-binds the returned function's `this` to `undefined`.
+    #202
+-   `Q.reject` no longer leaks memory. #148
+-   `npost` with no arguments now works. #207
+-   `allResolved` now works with non-Q promises ("thenables"). #179
+-   `keys` behavior is now correct even in browsers without native
+    `Object.keys`. #192 @rkatic
+-   `isRejected` and the `exception` property now work correctly if the
+    rejection reason is falsy. #198
+
+### Internals and Advanced
+
 -   The internal interface for a promise now uses
     `dispatchPromise(resolve, op, operands)` instead of `sendPromise(op,
     resolve, ...operands)`, which reduces the cases where Q needs to do
     argument slicing.
--   The internal protocol uses different operands.  "put" is now "set".
-    "del" is now "delete".  "view" and "viewInfo" have been removed.
+-   The internal protocol uses different operands. "put" is now "set".
+    "del" is now "delete". "view" and "viewInfo" have been removed.
+-   `Q.fulfill` has been added. It is distinct from `Q.resolve` in that
+    it does not pass promises through, nor coerces promises from other
+    systems. The promise becomes the fulfillment value. This is only
+    recommended for use when trying to fulfill a promise with an object that has
+    a `then` function that is at the same time not a promise.
 
 ## 0.8.12
 - Treat foreign promises as unresolved in `Q.isFulfilled`; this lets `Q.all`
