@@ -33,6 +33,21 @@ describe("Q function", function () {
         expect(Q(r)).toBe(r);
         expect(Q(p)).toBe(p);
     });
+
+    it("should coerce thenables which resoved value is also thenable", function () {
+        var fulfilledThenable = {
+            then: function (callback) {
+                callback(returnedValue);
+                // Avoid inifinite resolving in case of bad implementations.
+                returnedValue = {};
+            }
+        };
+        var returnedValue = fulfilledThenable;
+
+        return Q(fulfilledThenable).then(function (value) {
+            expect(value).toBe(fulfilledThenable);
+        });
+    });
 });
 
 describe("defer and when", function () {
@@ -1512,6 +1527,18 @@ describe("timeout", function () {
                 expect(/time/i.test(error.message)).toBe(true);
             }
         );
+    });
+
+    it("should propagate fulfilled value as it is", function () {
+        var fakeThenable = {
+            then: function () {
+                throw new Error("not a promise");
+            }
+        };
+        var toResolve = Q.defer();
+        var promise = toResolve.promise.timeout(10);
+        toResolve.resolve(Q.fulfill(fakeThenable));
+        return promise;
     });
 });
 
