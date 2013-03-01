@@ -1514,6 +1514,18 @@ describe("timeout", function () {
             }
         );
     });
+
+    it("should propagate fulfilled value as it is", function () {
+        var fakeThenable = {
+            then: function () {
+                throw new Error("not a promise")
+            }
+        };
+        var toResolve = Q.defer();
+        var promise = toResolve.promise.timeout(10);
+        toResolve.resolve(Q.fulfill(fakeThenable));
+        return promise;
+    });
 });
 
 describe("thenResolve", function () {
