@@ -34,9 +34,9 @@ describe("Q function", function () {
         expect(Q(p)).toBe(p);
     });
 
-    it("should coerce thenables which resoved value is also thenable", function() {
+    it("should coerce thenables which resoved value is also thenable", function () {
         var fulfilledThenable = {
-            then: function(callback) {
+            then: function (callback) {
                 callback(returnedValue);
                 // Avoid inifinite resolving in case of bad implementations.
                 returnedValue = {};
@@ -1518,7 +1518,7 @@ describe("timeout", function () {
     it("should propagate fulfilled value as it is", function () {
         var fakeThenable = {
             then: function () {
-                throw new Error("not a promise")
+                throw new Error("not a promise");
             }
         };
         var toResolve = Q.defer();
