@@ -405,8 +405,11 @@ function defer() {
         if (pending) {
             return promise;
         }
-        value = valueOf(value); // shorten chain
-        return value;
+        var nearer = valueOf(value);
+        if (isPromise(nearer)) {
+            value = nearer; // shorten chain
+        }
+        return nearer;
     };
 
     if (Error.captureStackTrace && Q.longStackJumpLimit > 0) {
