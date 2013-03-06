@@ -44,7 +44,7 @@
         module.exports = definition();
 
     // RequireJS
-    } else if (typeof define === "function") {
+    } else if (typeof define === "function" && define.amd) {
         define(definition);
 
     // SES (Secure EcmaScript)
