@@ -880,6 +880,37 @@ describe("promise states", function () {
         expect(promise.isRejected()).toBe(false);
         expect(promise.isPending()).toBe(true);
     });
+
+    it("of isFulfilled side effects", function () {
+        var deferred = Q.defer();
+        var finished = false;
+
+        waitsFor(function () {
+            return finished;
+        });
+
+        var parentPromise = deferred.promise;
+
+        var childPromise = parentPromise.then(function (value) {
+            expect(parentPromise.isFulfilled()).toBe(true);
+            expect(childPromise.isFulfilled()).toBe(false);
+
+            return parentPromise.then(function (value) {
+                finished = true;
+                return value + 1;
+            });
+        });
+
+        deferred.resolve(1);
+
+        runs(function () {
+            expect(childPromise.isPending()).toBe(false);
+            expect(childPromise.isRejected()).toBe(false);
+            expect(childPromise.isFulfilled()).toBe(true);
+            expect(childPromise.valueOf()).toBe(2);
+        });
+    });
+
 });
 
 describe("propagation", function () {
