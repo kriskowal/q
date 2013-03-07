@@ -1318,6 +1318,8 @@ function timeout(promise, ms) {
     }, function (exception) {
         clearTimeout(timeoutId);
         deferred.reject(exception);
+    }, function (progress) {
+        deferred.notify(progress);
     });
 
     return deferred.promise;
