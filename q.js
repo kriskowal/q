@@ -1318,7 +1318,7 @@ function timeout(promise, ms) {
     }, function (exception) {
         clearTimeout(timeoutId);
         deferred.reject(exception);
-    });
+    }, deferred.notify);
 
     return deferred.promise;
 }
