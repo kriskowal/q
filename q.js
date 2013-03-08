@@ -1337,10 +1337,14 @@ function delay(promise, timeout) {
         timeout = promise;
         promise = void 0;
     }
+
     var deferred = defer();
+
+    when(promise, undefined, undefined, deferred.notify);
     setTimeout(function () {
         deferred.resolve(promise);
     }, timeout);
+
     return deferred.promise;
 }
 
