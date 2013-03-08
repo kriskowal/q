@@ -1569,7 +1569,7 @@ describe("delay", function () {
         var promise = Q.resolve(5).delay(50);
 
         setTimeout(function () {
-            expect(promise.isPending()).toBeTrue();
+            expect(promise.isPending()).toBe(true);
         }, 40);
 
         return promise;
@@ -1579,7 +1579,7 @@ describe("delay", function () {
         var promise = Q.reject(5).delay(50);
 
         setTimeout(function () {
-            expect(promise.isPending()).toBeTrue();
+            expect(promise.isPending()).toBe(true);
         }, 40);
 
         return promise.then(undefined, function () { });
@@ -1589,7 +1589,7 @@ describe("delay", function () {
         var promise = Q.delay(50);
 
         setTimeout(function () {
-            expect(promise.isPending()).toBeTrue();
+            expect(promise.isPending()).toBe(true);
         }, 40);
 
         return promise;
@@ -1599,7 +1599,7 @@ describe("delay", function () {
         var promise = Q.delay("what", 50);
 
         setTimeout(function () {
-            expect(promise.isPending()).toBeTrue();
+            expect(promise.isPending()).toBe(true);
         }, 40);
 
         return promise.then(function (value) {
@@ -1612,8 +1612,8 @@ describe("delay", function () {
         var promise2 = Q.delay(promise1, 50);
 
         setTimeout(function () {
-            expect(promise1.isPending()).toBeFalse();
-            expect(promise2.isPending()).toBeTrue();
+            expect(promise1.isPending()).toBe(false);
+            expect(promise2.isPending()).toBe(true);
         }, 40);
 
         return promise2.then(function (value) {
@@ -1626,8 +1626,8 @@ describe("delay", function () {
         var promise2 = Q.delay(promise1, 50);
 
         setTimeout(function () {
-            expect(promise1.isPending()).toBeTrue();
-            expect(promise2.isPending()).toBeTrue();
+            expect(promise1.isPending()).toBe(true);
+            expect(promise2.isPending()).toBe(true);
         }, 60);
 
         return promise2.then(function (value) {
