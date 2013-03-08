@@ -1544,6 +1544,24 @@ describe("timeout", function () {
             }
         );
     });
+
+    it("should pass through progress notifications", function () {
+        var deferred = Q.defer();
+
+        var progressValsSeen = [];
+        var promise = Q.timeout(deferred.promise, 100).then(function () {
+            expect(progressValsSeen).toEqual([1, 2, 3]);
+        }, undefined, function (progressVal) {
+            progressValsSeen.push(progressVal);
+        });
+
+        Q.delay(5).then(function () { deferred.notify(1); });
+        Q.delay(15).then(function () { deferred.notify(2); });
+        Q.delay(25).then(function () { deferred.notify(3); });
+        Q.delay(35).then(function () { deferred.resolve(); });
+
+        return promise;
+    });
 });
 
 describe("thenResolve", function () {
