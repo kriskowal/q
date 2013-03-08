@@ -1564,6 +1564,78 @@ describe("timeout", function () {
     });
 });
 
+describe("delay", function () {
+    it("should delay fulfillment", function () {
+        var promise = Q.resolve(5).delay(50);
+
+        setTimeout(function () {
+            expect(promise.isPending()).toBeTrue();
+        }, 40);
+
+        return promise;
+    });
+
+    it("should delay rejection", function () {
+        var promise = Q.reject(5).delay(50);
+
+        setTimeout(function () {
+            expect(promise.isPending()).toBeTrue();
+        }, 40);
+
+        return promise.then(undefined, function () { });
+    });
+
+    it("should treat a single argument as a time", function () {
+        var promise = Q.delay(50);
+
+        setTimeout(function () {
+            expect(promise.isPending()).toBeTrue();
+        }, 40);
+
+        return promise;
+    });
+
+    it("should treat two arguments as a value + a time", function () {
+        var promise = Q.delay("what", 50);
+
+        setTimeout(function () {
+            expect(promise.isPending()).toBeTrue();
+        }, 40);
+
+        return promise.then(function (value) {
+            expect(value).toBe("what");
+        });
+    });
+
+    it("should delegate to faster passed promises, slowing them down", function () {
+        var promise1 = Q.delay("what", 30);
+        var promise2 = Q.delay(promise1, 50);
+
+        setTimeout(function () {
+            expect(promise1.isPending()).toBeFalse();
+            expect(promise2.isPending()).toBeTrue();
+        }, 40);
+
+        return promise2.then(function (value) {
+            expect(value).toBe("what");
+        });
+    });
+
+    it("should delegate to slower passed promises, staying at their speed", function () {
+        var promise1 = Q.delay("what", 70);
+        var promise2 = Q.delay(promise1, 50);
+
+        setTimeout(function () {
+            expect(promise1.isPending()).toBeTrue();
+            expect(promise2.isPending()).toBeTrue();
+        }, 60);
+
+        return promise2.then(function (value) {
+            expect(value).toBe("what");
+        });
+    });
+});
+
 describe("thenResolve", function () {
     describe("Resolving with a non-thenable value", function () {
         it("returns a promise for that object once the promise is resolved", function () {
