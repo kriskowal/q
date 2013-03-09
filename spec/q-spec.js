@@ -1927,6 +1927,17 @@ describe("node support", function () {
             });
         });
 
+        it("second arg binds this", function() {
+            var expectedThis = { test: null };
+
+            return Q.nbind(function(callback) {
+                callback(null, this);
+            }, expectedThis).call()
+            .then(function(actualThis) {
+                expect(actualThis).toEqual(expectedThis);
+            });
+        });
+
     });
     describe("npost", function (done) {
 
