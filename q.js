@@ -338,22 +338,13 @@ function captureLine() {
     }
 }
 
-function deprecate(callback, name, alternative) {
-    return function () {
-        if (typeof console !== "undefined" && typeof console.warn === "function") {
-            console.warn(name + " is deprecated, use " + alternative + " instead.", new Error("").stack);
-        }
-        return callback.apply(callback, arguments);
-    };
-}
-
 // end of shims
 // beginning of real work
 
 /**
  * Creates fulfilled promises from non-promises,
  * Passes Q promises through,
- * Coerces CommonJS/Promises/A+ promises to Q promises.
+ * Coerces thenables to Q promises.
  */
 function Q(value) {
     return resolve(value);
@@ -645,7 +636,7 @@ function isFulfilled(object) {
 Q.isRejected = isRejected;
 function isRejected(object) {
     object = valueOf(object);
-    return isPromise(object) && 'exception' in object;
+    return isPromise(object) && "exception" in object;
 }
 
 var rejections = [];
@@ -735,7 +726,7 @@ function fulfill(object) {
         "post": function (name, args) {
             // Mark Miller proposes that post with no name should apply a
             // promised function.
-            if (name == null) { // iff name is null or undefined
+            if (name === null || name === void 0) {
                 return object.apply(void 0, args);
             } else {
                 return object[name].apply(object, args);
@@ -997,7 +988,7 @@ function async(makeGenerator) {
  *      Q.return(foo + bar);
  * })
  */
-Q['return'] = _return;
+Q["return"] = _return;
 function _return(value) {
     throw new QReturnValue(value);
 }
