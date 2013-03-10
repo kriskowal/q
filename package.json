@@ -1,6 +1,6 @@
 {
   "name": "q",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "A library for promises (CommonJS/Promises/A,B,D)",
   "homepage": "https://github.com/kriskowal/q",
   "author": "Kris Kowal <kris@cixar.com> (https://github.com/kriskowal)",
