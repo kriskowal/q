@@ -1919,11 +1919,23 @@ describe("node support", function () {
     describe("nbind", function () {
 
         it("binds this, and mixes partial application with complete application", function () {
-            return Q.nbind(function (a, b, c, d, callback) {
-                callback(null, this + a + b + c + d);
-            }, 1, 2).call(3, 4, 5)
-            .then(function (fifteen) {
-                expect(fifteen).toBe(15);
+            return Q.nbind(function (a, b, c, callback) {
+                console.log(this, arguments);
+                callback(null, this + a + b + c);
+            }, 1, 2).call(3 /* effectively ignored as fn bound to 1 */, 4, 5)
+            .then(function (twelve) {
+                expect(twelve).toBe(12);
+            });
+        });
+
+        it("second arg binds this", function() {
+            var expectedThis = { test: null };
+
+            return Q.nbind(function(callback) {
+                callback(null, this);
+            }, expectedThis).call()
+            .then(function(actualThis) {
+                expect(actualThis).toEqual(expectedThis);
             });
         });
 

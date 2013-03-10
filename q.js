@@ -1410,14 +1410,13 @@ function nfbind(callback/*, ...args */) {
 }
 
 Q.nbind = nbind;
-function nbind(callback/*, ... args*/) {
-    var baseArgs = array_slice(arguments, 1);
+function nbind(callback, thisArg /*, ... args*/) {
+    var baseArgs = array_slice(arguments, 2);
     return function () {
         var nodeArgs = baseArgs.concat(array_slice(arguments));
         var deferred = defer();
         nodeArgs.push(deferred.makeNodeResolver());
 
-        var thisArg = this;
         function bound() {
             return callback.apply(thisArg, arguments);
         }
