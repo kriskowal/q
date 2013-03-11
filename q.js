@@ -847,6 +847,7 @@ function when(value, fulfilled, rejected, progressed) {
     }
 
     function _rejected(exception) {
+        console.log('rejected ' + exception.message)
         if (typeof rejected === "function") {
             makeStackTraceLong(exception, resolvedValue);
             try {
@@ -920,6 +921,13 @@ function spread(promise, fulfilled, rejected) {
         return all(valuesOrPromises).then(function (values) {
             return fulfilled.apply(void 0, values);
         }, rejected);
+    }, rejected);
+}
+
+Q.map = map;
+function map(promise, callback, fulfilled, rejected) {
+    return when(promise, function (valuesOrPromises) {
+    	return all(valuesOrPromises.map(callback));
     }, rejected);
 }
 
