@@ -1145,12 +1145,13 @@ function coerce(promise) {
  */
 Q.master = master;
 function master(object) {
+    var promise = Q(object);
     return Promise({
         "isDef": function () {}
     }, function fallback(op, args) {
-        return dispatch(object, op, args);
+        return promise.dispatch(op, args);
     }, function () {
-        return Q(object).inspect();
+        return promise.inspect();
     });
 }
 

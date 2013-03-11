@@ -1090,6 +1090,17 @@ describe("all", function () {
         return Q.all([]);
     });
 
+    it("fails if any of the promises fail", function() {
+        return Q.all([
+            function() {
+                throw new Error('raised from inner')
+            }
+        ])
+        .then(function() {
+            throw new Error('then handler should not run')
+        })
+    })
+
     it("resolves after any constituent promise is rejected", function () {
         var toResolve = Q.defer(); // never resolve
         var toReject = Q.defer();
@@ -1241,6 +1252,21 @@ describe("spread", function () {
             }
         );
     });
+
+});
+
+describe("map", function () {
+
+	it("maps an array to an array of promises", function() {
+		return Q.map(['one', 'two', 'three'], function(s) {
+			return s.length;
+		})
+		.then(function(lengths) {
+			expect(lengths[0]).toBe(3);
+			expect(lengths[1]).toBe(3);
+			expect(lengths[2]).toBe(5);
+		})
+	});
 
 });
 
