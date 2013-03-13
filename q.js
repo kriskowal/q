@@ -672,14 +672,14 @@ array_reduce(
         "dispatch",
         "when", "spread",
         "get", "set", "del", "delete",
-        "post", "send", "invoke",
+        "post", "send", "mapply", "invoke", "mcall",
         "keys",
         "fapply", "fcall", "fbind",
         "all", "allResolved",
         "timeout", "delay",
         "catch", "finally", "fail", "fin", "progress", "done",
         "nfcall", "nfapply", "nfbind", "denodeify", "nbind",
-        "npost", "nsend", "ninvoke",
+        "npost", "nsend", "nmapply", "ninvoke", "nmcall",
         "nodeify"
     ],
     function (undefined, name) {
@@ -1288,6 +1288,7 @@ Q.del = dispatcher("delete");
  */
 // bound locally because it is used by other methods
 var post = Q.post = dispatcher("post");
+Q.mapply = post; // experimental
 
 /**
  * Invokes a method in a future turn.
@@ -1298,6 +1299,7 @@ var post = Q.post = dispatcher("post");
  */
 Q.send = send;
 Q.invoke = send; // synonyms
+Q.mcall = send; // experimental
 function send(value, name) {
     var args = array_slice(arguments, 2);
     return post(value, name, args);
@@ -1650,6 +1652,7 @@ function nbind(callback, thisArg /*, ... args*/) {
  * @returns a promise for the value or error
  */
 Q.npost = npost;
+Q.nmapply = npost; // synonyms
 function npost(object, name, args) {
     var nodeArgs = array_slice(args || []);
     var deferred = defer();
@@ -1671,6 +1674,7 @@ function npost(object, name, args) {
  */
 Q.nsend = nsend;
 Q.ninvoke = Q.nsend; // synonyms
+Q.nmcall = Q.nsend; // synonyms
 function nsend(object, name /*, ...args*/) {
     var nodeArgs = array_slice(arguments, 2);
     var deferred = defer();
