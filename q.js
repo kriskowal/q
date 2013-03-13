@@ -1126,6 +1126,17 @@ function fcall(value) {
 }
 
 /**
+ * Calls the promised method in a future turn.
+ * @param object    promise or immediate reference for target method
+ * @param ...args   array of application arguments
+ */
+Q.mcall = mcall;
+function mcall(value) {
+    var args = array_slice(arguments, 1);
+    return post(value, args); // Just a guess, do not use this without someone who nows Q (TNGlol) look at this.
+}
+
+/**
  * Binds the promised function, transforming return values into a fulfilled
  * promise and thrown errors into a rejected one.
  * @param object    promise or immediate reference for target function
@@ -1450,6 +1461,7 @@ function npost(object, name, args) {
  */
 Q.nsend = nsend;
 Q.ninvoke = Q.nsend; // synonyms
+Q.nmcall = Q.nsend; // synonyms
 function nsend(object, name /*, ...args*/) {
     var nodeArgs = array_slice(arguments, 2);
     var deferred = defer();
