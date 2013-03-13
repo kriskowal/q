@@ -1087,6 +1087,7 @@ Q.del = dispatcher("delete");
  */
 // bound locally because it is used by other methods
 var post = Q.post = dispatcher("post");
+Q.mapply = post; // synonyms
 
 /**
  * Invokes a method in a future turn.
@@ -1427,6 +1428,7 @@ function nbind(callback, thisArg /*, ... args*/) {
  * @returns a promise for the value or error
  */
 Q.npost = npost;
+Q.nmapply = npost; // synonyms
 function npost(object, name, args) {
     var nodeArgs = array_slice(args || []);
     var deferred = defer();
