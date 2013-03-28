@@ -284,10 +284,12 @@ return getUsername()
 });
 ```
 
-The ``all`` function returns a promise for an array of values.  If one
-of the given promise fails, the whole returned promise fails, not
-waiting for the rest of the batch.  If you want to wait for all of the
-promises to either be fulfilled or rejected, you can use
+The ``all`` function returns a promise for an array of values. When this 
+promise is fulfilled the order of its success values are maintained relative 
+to the original promises which the promise was dependant on.
+If one of the given promise fails, the whole returned promise fails, 
+not waiting for the rest of the batch.  If you want to wait for all of 
+the promises to either be fulfilled or rejected, you can use
 ``allResolved``.
 
 ```javascript
