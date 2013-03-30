@@ -658,20 +658,27 @@ function displayErrors() {
     errorsDisplayed = true;
 }
 
-// Show unhandled rejection if Node exits without handling an outstanding
-// rejection.  (Note that Browserify presently produces a process global
-// without the Emitter on interface)
-if (typeof process !== "undefined" && process.on) {
-    process.on("exit", function () {
-        for (var i = 0; i < errors.length; i++) {
-            var error = errors[i];
-            if (error && typeof error.stack !== "undefined") {
-                console.warn("Unhandled rejected promise:", error.stack);
-            } else {
-                console.warn("Unhandled rejected promise (no stack):", error);
-            }
+function displayErrorsOnRelease() {
+    for (var i = 0; i < errors.length; i++) {
+        var error = errors[i];
+        if (error && typeof error.stack !== "undefined") {
+            console.warn("Unhandled rejected promise:", error.stack);
+        } else {
+            console.warn("Unhandled rejected promise (no stack):", error);
         }
-    });
+    }
+    errors.splice(0, errors.length);
+}
+
+/**
+ * Each time Q is instantiated, it may set up an event listener for unload or
+ * exit.  Calling release will explicitly flush any outstanding errors and
+ * remove these event listeners.
+ */
+var released = defer();
+Q.release = release;
+function release() {
+    released.resolve();
 }
 
 /**
@@ -1475,6 +1482,20 @@ function nodeify(promise, nodeback) {
 
 // All code before this point will be filtered from stack traces.
 var qEndingLine = captureLine();
+
+// Show unhandled rejection if Node exits without handling an outstanding
+// rejection.  (Note that Browserify presently produces a process global
+// without the Emitter on interface)
+if (typeof process !== "undefined" && process.on) {
+    process.on("exit", displayErrorsOnRelease);
+
+    // Arrange for cleanup if explicitly requested
+    released.promise.then(function () {
+        process.removeListener("exit", displayErrorsOnRelease);
+        displayErrorsOnRelease();
+    })
+    .done();
+}
 
 return Q;
 
