@@ -486,7 +486,7 @@ function promise(makePromise) {
 /**
  * Constructs a Promise with a promise descriptor object and optional fallback
  * function.  The descriptor contains methods like when(rejected), get(name),
- * put(name, value), post(name, args), and delete(name), which all
+ * set(name, value), post(name, args), and delete(name), which all
  * return either a value, a promise for a value, or a rejection.  The fallback
  * accepts the operation name, a resolver, and any further arguments that would
  * have been forwarded to the appropriate method above had a method been
@@ -550,7 +550,7 @@ array_reduce(
         "isFulfilled", "isRejected", "isPending",
         "dispatch",
         "when", "spread",
-        "get", "put", "set", "del", "delete",
+        "get", "set", "del", "delete",
         "post", "send", "invoke",
         "keys",
         "fapply", "fcall", "fbind",
@@ -1037,7 +1037,7 @@ function dispatch(object, op, args) {
  * Constructs a promise method that can be used to safely observe resolution of
  * a promise for an arbitrarily named method like "propfind" in a future turn.
  *
- * "dispatcher" constructs methods like "get(promise, name)" and "put(promise)".
+ * "dispatcher" constructs methods like "get(promise, name)" and "set(promise)".
  */
 Q.dispatcher = dispatcher;
 function dispatcher(op) {
