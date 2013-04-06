@@ -383,7 +383,7 @@ function defer() {
     // forward to the resolved promise.  We coerce the resolution value to a
     // promise using the ref promise because it handles both fully
     // resolved values and other promises gracefully.
-    var pending = [], progressListeners = [], value;
+    var pending = [], progressListeners = [], resolvedPromise;
 
     var deferred = object_create(defer.prototype);
     var promise = object_create(makePromise.prototype);
@@ -397,7 +397,7 @@ function defer() {
             }
         } else {
             nextTick(function () {
-                value.promiseDispatch.apply(value, args);
+                resolvedPromise.promiseDispatch.apply(resolvedPromise, args);
             });
         }
     };
@@ -406,9 +406,9 @@ function defer() {
         if (pending) {
             return promise;
         }
-        var nearer = valueOf(value);
+        var nearer = valueOf(resolvedPromise);
         if (isPromise(nearer)) {
-            value = nearer; // shorten chain
+            resolvedPromise = nearer; // shorten chain
         }
         return nearer;
     };
@@ -424,40 +424,56 @@ function defer() {
         );
     }
 
-    function become(resolvedValue) {
-        if (!pending) {
-            return;
-        }
-        value = resolve(resolvedValue);
+    // NOTE: we do the checks for `resolvedPromise` in each method, instead of
+    // consolidating them into `become`, since otherwise we'd create new
+    // promises with the lines `become(whatever(value))`. See e.g. GH-252.
+
+    function become(promise) {
+        resolvedPromise = promise;
+
         array_reduce(pending, function (undefined, pending) {
             nextTick(function () {
-                value.promiseDispatch.apply(value, pending);
+                promise.promiseDispatch.apply(promise, pending);
             });
         }, void 0);
+
         pending = void 0;
         progressListeners = void 0;
     }
 
     deferred.promise = promise;
-    deferred.resolve = become;
+    deferred.resolve = function (value) {
+        if (resolvedPromise) {
+            return;
+        }
+
+        become(resolve(value));
+    };
+
     deferred.fulfill = function (value) {
+        if (resolvedPromise) {
+            return;
+        }
+
         become(fulfill(value));
     };
-    deferred.reject = function (exception) {
-        become(reject(exception));
+    deferred.reject = function (reason) {
+        if (resolvedPromise) {
+            return;
+        }
+
+        become(reject(reason));
     };
     deferred.notify = function (progress) {
-        if (pending) {
-            array_reduce(
-                progressListeners,
-                function (undefined, progressListener) {
-                    nextTick(function () {
-                        progressListener(progress);
-                    });
-                },
-                void 0
-            );
+        if (resolvedPromise) {
+            return;
         }
+
+        array_reduce(progressListeners, function (undefined, progressListener) {
+            nextTick(function () {
+                progressListener(progress);
+            });
+        }, void 0);
     };
 
     return deferred;
