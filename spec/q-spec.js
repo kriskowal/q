@@ -1920,7 +1920,6 @@ describe("node support", function () {
 
         it("binds this, and mixes partial application with complete application", function () {
             return Q.nbind(function (a, b, c, callback) {
-                console.log(this, arguments);
                 callback(null, this + a + b + c);
             }, 1, 2).call(3 /* effectively ignored as fn bound to 1 */, 4, 5)
             .then(function (twelve) {
