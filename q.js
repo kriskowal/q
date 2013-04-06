@@ -315,9 +315,16 @@ function makeStackTraceLong(error, promise) {
         error.stack &&
         error.stack.indexOf(STACK_JUMP_SEPARATOR) === -1
     ) {
-        error.stack = filterStackString(error.stack) +
-            "\n" + STACK_JUMP_SEPARATOR + "\n" +
-            filterStackString(promise.stack);
+        var stacks = [];
+        for (var p = promise; !!p; p = p.source) {
+            if (p.stack) {
+                stacks.unshift(p.stack);
+            }
+        }
+        stacks.unshift(error.stack);
+
+        var concatedStacks = stacks.join("\n" + STACK_JUMP_SEPARATOR + "\n");
+        error.stack = filterStackString(concatedStacks);
     }
 }
 
@@ -504,12 +511,13 @@ function defer() {
     // consolidating them into `become`, since otherwise we'd create new
     // promises with the lines `become(whatever(value))`. See e.g. GH-252.
 
-    function become(promise) {
-        resolvedPromise = promise;
+    function become(newPromise) {
+        resolvedPromise = newPromise;
+        promise.source = newPromise;
 
         array_reduce(messages, function (undefined, message) {
             nextTick(function () {
-                promise.promiseDispatch.apply(promise, message);
+                newPromise.promiseDispatch.apply(newPromise, message);
             });
         }, void 0);
 
