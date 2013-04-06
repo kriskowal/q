@@ -63,6 +63,13 @@
 })(function () {
 "use strict";
 
+var hasStacks = false;
+try {
+    throw new Error();
+} catch (e) {
+    hasStacks = !!e.stack;
+}
+
 // All code after this point will be filtered from stack traces reported
 // by Q.
 var qStartingLine = captureLine();
@@ -282,10 +289,10 @@ Q.longStackJumpLimit = 1;
 var STACK_JUMP_SEPARATOR = "From previous event:";
 
 function makeStackTraceLong(error, promise) {
-    // If possible (that is, if in V8), transform the error stack
-    // trace by removing Node and Q cruft, then concatenating with
-    // the stack trace of the promise we are ``done``ing. See #57.
-    if (promise.stack &&
+    // If possible, transform the error stack trace by removing Node and Q
+    // cruft, then concatenating with the stack trace of `promise`. See #57.
+    if (hasStacks &&
+        promise.stack &&
         typeof error === "object" &&
         error !== null &&
         error.stack &&
@@ -303,7 +310,7 @@ function filterStackString(stackString) {
     for (var i = 0; i < lines.length; ++i) {
         var line = lines[i];
 
-        if (!isInternalFrame(line) && !isNodeFrame(line)) {
+        if (!isInternalFrame(line) && !isNodeFrame(line) && line) {
             desiredLines.push(line);
         }
     }
@@ -315,15 +322,36 @@ function isNodeFrame(stackLine) {
            stackLine.indexOf("(node.js:") !== -1;
 }
 
-function isInternalFrame(stackLine) {
-    var pieces = /at .+ \((.*):(\d+):\d+\)/.exec(stackLine);
+function getFileNameAndLineNumber(stackLine) {
+    // Named functions: "at functionName (filename:lineNumber:columnNumber)"
+    // In IE10 function name can have spaces ("Anonymous function") O_o
+    var attempt1 = /at .+ \((.+):(\d+):(?:\d+)\)$/.exec(stackLine);
+    if (attempt1) {
+        return [attempt1[1], Number(attempt1[2])];
+    }
 
-    if (!pieces) {
+    // Anonymous functions: "at filename:lineNumber:columnNumber"
+    var attempt2 = /at ([^ ]+):(\d+):(?:\d+)$/.exec(stackLine);
+    if (attempt2) {
+        return [attempt2[1], Number(attempt2[2])];
+    }
+
+    // Firefox style: "function@filename:lineNumber or @filename:lineNumber"
+    var attempt3 = /.*@(.+):(\d+)$/.exec(stackLine);
+    if (attempt3) {
+        return [attempt3[1], Number(attempt3[2])];
+    }
+}
+
+function isInternalFrame(stackLine) {
+    var fileNameAndLineNumber = getFileNameAndLineNumber(stackLine);
+
+    if (!fileNameAndLineNumber) {
         return false;
     }
 
-    var fileName = pieces[1];
-    var lineNumber = pieces[2];
+    var fileName = fileNameAndLineNumber[0];
+    var lineNumber = fileNameAndLineNumber[1];
 
     return fileName === qFileName &&
         lineNumber >= qStartingLine &&
@@ -333,24 +361,22 @@ function isInternalFrame(stackLine) {
 // discover own file name and line number range for filtering stack
 // traces
 function captureLine() {
-    if (Error.captureStackTrace) {
-        var fileName, lineNumber;
+    if (!hasStacks) {
+        return;
+    }
 
-        var oldPrepareStackTrace = Error.prepareStackTrace;
+    try {
+        throw new Error();
+    } catch (e) {
+        var lines = e.stack.split("\n");
+        var firstLine = lines[0].indexOf("@") > 0 ? lines[1] : lines[2];
+        var fileNameAndLineNumber = getFileNameAndLineNumber(firstLine);
+        if (!fileNameAndLineNumber) {
+            return;
+        }
 
-        Error.prepareStackTrace = function (error, frames) {
-            fileName = frames[1].getFileName();
-            lineNumber = frames[1].getLineNumber();
-        };
-
-        // teases call of temporary prepareStackTrace
-        // JSHint and Closure Compiler generate known warnings here
-        /*jshint expr: true */
-        new Error().stack;
-
-        Error.prepareStackTrace = oldPrepareStackTrace;
-        qFileName = fileName;
-        return lineNumber;
+        qFileName = fileNameAndLineNumber[0];
+        return fileNameAndLineNumber[1];
     }
 }
 
@@ -419,15 +445,18 @@ function defer() {
         return nearer;
     };
 
-    if (Error.captureStackTrace && Q.longStackJumpLimit > 0) {
-        Error.captureStackTrace(promise, defer);
-
-        // Reify the stack into a string by using the accessor; this prevents
-        // memory leaks as per GH-111. At the same time, cut off the first line;
-        // it's always just "[object Promise]\n", as per the `toString`.
-        promise.stack = promise.stack.substring(
-            promise.stack.indexOf("\n") + 1
-        );
+    if (Q.longStackJumpLimit > 0 && hasStacks) {
+        try {
+            throw new Error();
+        } catch (e) {
+            // NOTE: don't try to use `Error.captureStackTrace` or transfer the
+            // accessor around; that causes memory leaks as per GH-111. Just
+            // reify the stack trace as a string ASAP.
+            //
+            // At the same time, cut off the first line; it's always just
+            // "[object Promise]\n", as per the `toString`.
+            promise.stack = e.stack.substring(e.stack.indexOf("\n") + 1);
+        }
     }
 
     // NOTE: we do the checks for `resolvedPromise` in each method, instead of
