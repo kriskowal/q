@@ -33,7 +33,6 @@ describe("computing sum of integers using promises", function() {
             return pNext;
          });
       }, pZero);
-      console.log("made it to the end of reduce");
       result.then(function(value){
          expect(value).toEqual(iters*(iters+1)/2);
          done();
