@@ -76,16 +76,16 @@ var noop = function () {};
 // use the fastest possible means to execute a task in a future turn
 // of the event loop.
 var nextTick;
-if (typeof process !== "undefined") {
-    // node
-    nextTick = process.nextTick;
-} else if (typeof setImmediate === "function") {
+if (typeof setImmediate === "function") {
     // In IE10, or use https://github.com/NobleJS/setImmediate
     if (typeof window !== "undefined") {
         nextTick = setImmediate.bind(window);
     } else {
         nextTick = setImmediate;
     }
+} else if (typeof process !== "undefined") {
+        // node
+        nextTick = process.nextTick;
 } else {
     (function () {
         // linked list of tasks (single, with head node)
