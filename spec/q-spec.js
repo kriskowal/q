@@ -22,7 +22,7 @@ afterEach(function () {
 describe("computing sum of integers using promises", function() {
    it("should compute correct result without blowing stack", function () {
       var array = [];
-      var iters = 10000;
+      var iters = 1000;
       for (var i=1; i<=iters; i++){
        array.push(i)
       }
