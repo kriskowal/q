@@ -2329,3 +2329,15 @@ describe("possible regressions", function () {
     });
 
 });
+
+describe("unhandled rejection reporting", function () {
+    it("doesn't report a resolve, then reject (gh-252)", function () {
+        Q.unhandledReasons.length = 0;
+
+        var deferred = Q.defer();
+        deferred.resolve();
+        deferred.reject();
+
+        expect(Q.unhandledReasons.length).toEqual(0);
+    });
+});
