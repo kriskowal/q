@@ -657,36 +657,38 @@ function isRejected(object) {
     return isPromise(object) && "exception" in object;
 }
 
-var rejections = [];
-var errors = [];
-var errorsDisplayed;
-function displayErrors() {
+// This promise library consumes exceptions thrown in handlers so they can be
+// handled by a subsequent promise.  The exceptions get added to this array when
+// they are created, and removed when they are handled.  Note that in ES6 or
+// shimmed environments, this would naturally be a `Set`.
+var unhandledReasons = Q.unhandledReasons = [];
+var unhandledRejections = [];
+var unhandledReasonsDisplayed = false;
+function displayUnhandledReasons() {
     if (
-        !errorsDisplayed &&
+        !unhandledReasonsDisplayed &&
         typeof window !== "undefined" &&
         !window.Touch &&
         window.console
     ) {
-        // This promise library consumes exceptions thrown in handlers so
-        // they can be handled by a subsequent promise.  The rejected
-        // promises get added to this array when they are created, and
-        // removed when they are handled.
-        console.log("Should be empty:", errors);
+        console.warn("[Q] Unhandled rejection reasons (should be empty):",
+                     unhandledReasons);
     }
-    errorsDisplayed = true;
+
+    unhandledReasonsDisplayed = true;
 }
 
-// Show unhandled rejection if Node exits without handling an outstanding
-// rejection.  (Note that Browserify presently produces a process global
-// without the Emitter on interface)
+// Show unhandled rejection reasons if Node exits without handling an
+// outstanding rejection.  (Note that Browserify presently produces a process
+// global without the `EventEmitter` `on` method.)
 if (typeof process !== "undefined" && process.on) {
     process.on("exit", function () {
-        for (var i = 0; i < errors.length; i++) {
-            var error = errors[i];
-            if (error && typeof error.stack !== "undefined") {
-                console.warn("Unhandled rejected promise:", error.stack);
+        for (var i = 0; i < unhandledReasons.length; i++) {
+            var reason = unhandledReasons[i];
+            if (reason && typeof reason.stack !== "undefined") {
+                console.warn("Unhandled rejection reason:", reason.stack);
             } else {
-                console.warn("Unhandled rejected promise (no stack):", error);
+                console.warn("Unhandled rejection reason (no stack):", reason);
             }
         }
     });
@@ -694,31 +696,33 @@ if (typeof process !== "undefined" && process.on) {
 
 /**
  * Constructs a rejected promise.
- * @param exception value describing the failure
+ * @param reason value describing the failure
  */
 Q.reject = reject;
-function reject(exception) {
+function reject(reason) {
     var rejection = makePromise({
         "when": function (rejected) {
             // note that the error has been handled
             if (rejected) {
-                var at = array_indexOf(rejections, this);
+                var at = array_indexOf(unhandledRejections, this);
                 if (at !== -1) {
-                    errors.splice(at, 1);
-                    rejections.splice(at, 1);
+                    unhandledRejections.splice(at, 1);
+                    unhandledReasons.splice(at, 1);
                 }
             }
-            return rejected ? rejected(exception) : this;
+            return rejected ? rejected(reason) : this;
         }
     }, function fallback() {
-        return reject(exception);
+        return reject(reason);
     }, function valueOf() {
         return this;
-    }, exception, true);
-    // note that the error has not been handled
-    displayErrors();
-    rejections.push(rejection);
-    errors.push(exception);
+    }, reason, true);
+
+    // Note that the reason has not been handled.
+    displayUnhandledReasons();
+    unhandledRejections.push(rejection);
+    unhandledReasons.push(reason);
+
     return rejection;
 }
 
