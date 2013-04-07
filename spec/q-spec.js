@@ -48,7 +48,7 @@ describe("Q function", function () {
     it("should be the identity when given promise", function () {
         var f = Q.fulfill(5);
         var r = Q.reject(new Error("aaargh"));
-        var p = Q.promise();
+        var p = Q.promise(function () { });
 
         expect(Q(f)).toBe(f);
         expect(Q(r)).toBe(r);

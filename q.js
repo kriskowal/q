@@ -498,16 +498,20 @@ defer.prototype.makeNodeResolver = function () {
 };
 
 /**
- * @param makePromise {Function} a function that returns nothing and accepts
+ * @param resolver {Function} a function that returns nothing and accepts
  * the resolve, reject, and notify functions for a deferred.
  * @returns a promise that may be resolved with the given resolve and reject
- * functions, or rejected by a thrown exception in makePromise
+ * functions, or rejected by a thrown exception in resolver
  */
 Q.promise = promise;
-function promise(makePromise) {
+function promise(resolver) {
+    if (typeof resolver !== "function") {
+        throw new TypeError("resolver must be a function.");
+    }
+
     var deferred = defer();
     fcall(
-        makePromise,
+        resolver,
         deferred.resolve,
         deferred.reject,
         deferred.notify
