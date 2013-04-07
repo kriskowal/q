@@ -2352,12 +2352,22 @@ describe("possible regressions", function () {
 });
 
 describe("unhandled rejection reporting", function () {
-    it("doesn't report a resolve, then reject (gh-252)", function () {
-        Q.unhandledReasons.length = 0;
+    beforeEach(function () {
+        Q.resetUnhandledRejections();
+    });
 
+    it("doesn't report a resolve, then reject (gh-252)", function () {
         var deferred = Q.defer();
         deferred.resolve();
         deferred.reject();
+
+        expect(Q.unhandledReasons.length).toEqual(0);
+    });
+
+    it("doesn't report when you chain off a rejection", function () {
+        Q.reject("this will be handled").get("property").fail(function () {
+            // now it should be handled.
+        });
 
         expect(Q.unhandledReasons.length).toEqual(0);
     });

@@ -698,6 +698,12 @@ function displayUnhandledReasons() {
     unhandledReasonsDisplayed = true;
 }
 
+Q.resetUnhandledRejections = function () {
+    unhandledReasons.length = 0;
+    unhandledRejections.length = 0;
+    unhandledReasonsDisplayed = false;
+};
+
 // Show unhandled rejection reasons if Node exits without handling an
 // outstanding rejection.  (Note that Browserify presently produces a process
 // global without the `EventEmitter` `on` method.)
