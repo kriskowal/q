@@ -1,4 +1,4 @@
-"use strict";
+"seuse strict";
 /*jshint newcap: false*/
 /*global Q: true, describe: false, it: false, expect: false, beforeEach: false,
          afterEach: false, require: false, jasmine: false, waitsFor: false,
@@ -17,6 +17,27 @@ var calledAsFunctionThis = (function () { return this; }());
 
 afterEach(function () {
     Q.onerror = null;
+});
+
+describe("computing sum of integers using promises", function() {
+   it("should compute correct result without blowing stack", function () {
+      var array = [];
+      var iters = 1000;
+      for (var i=1; i<=iters; i++){
+       array.push(i)
+      }
+      var pZero = Q.fulfill(0); 
+      var result = array.reduce(function(promise, nextVal) {
+         return promise.then(function(currentVal) {
+            var pNext = Q.fulfill(currentVal + nextVal);
+            return pNext;
+         });
+      }, pZero);
+      result.then(function(value){
+         expect(value).toEqual(iters*(iters+1)/2);
+         done();
+      });
+   });
 });
 
 describe("Q function", function () {
@@ -2323,7 +2344,7 @@ describe("possible regressions", function () {
             }
 
             return Q.when(badPromise, onResolution, onResolution).then(function () {
-                expect(resolutions).toBe(1);
+              expect(resolutions).toBe(1);
             });
         });
     });
