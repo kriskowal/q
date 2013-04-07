@@ -89,9 +89,13 @@ if (typeof process !== "undefined") {
 } else {
     (function () {
         // linked list of tasks (single, with head node)
-        var head = {task: void 0, next: null}, tail = head,
-            maxPendingTicks = 2, pendingTicks = 0, queuedTasks = 0, usedTicks = 0,
-            requestTick;
+        var head = {task: void 0, next: null};
+        var tail = head;
+        var maxPendingTicks = 2;
+        var pendingTicks = 0;
+        var queuedTasks = 0;
+        var usedTicks = 0;
+        var requestTick = void 0;
 
         function onTick() {
             // In case of multiple tasks ensure at least one subsequent tick
@@ -102,7 +106,10 @@ if (typeof process !== "undefined") {
                 // Amortize latency after thrown exceptions.
                 usedTicks = 0;
                 maxPendingTicks *= 4; // fast grow!
-                var expectedTicks = queuedTasks && Math.min(queuedTasks - 1, maxPendingTicks);
+                var expectedTicks = queuedTasks && Math.min(
+                    queuedTasks - 1, 
+		    maxPendingTicks
+		);
                 while (pendingTicks < expectedTicks) {
                     ++pendingTicks;
                     requestTick();
@@ -122,7 +129,10 @@ if (typeof process !== "undefined") {
 
         nextTick = function (task) {
             tail = tail.next = {task: task, next: null};
-            if (pendingTicks < ++queuedTasks && pendingTicks < maxPendingTicks) {
+            if (
+	        pendingTicks < ++queuedTasks && 
+		pendingTicks < maxPendingTicks
+	    ) {
                 ++pendingTicks;
                 requestTick();
             }
@@ -409,7 +419,9 @@ function defer() {
         // Reify the stack into a string by using the accessor; this prevents
         // memory leaks as per GH-111. At the same time, cut off the first line;
         // it's always just "[object Promise]\n", as per the `toString`.
-        promise.stack = promise.stack.substring(promise.stack.indexOf("\n") + 1);
+        promise.stack = promise.stack.substring(
+	    promise.stack.indexOf("\n") + 1
+	);
     }
 
     function become(resolvedValue) {
@@ -436,11 +448,15 @@ function defer() {
     };
     deferred.notify = function (progress) {
         if (pending) {
-            array_reduce(progressListeners, function (undefined, progressListener) {
-                nextTick(function () {
-                    progressListener(progress);
-                });
-            }, void 0);
+            array_reduce(
+	        progressListeners, 
+	        function (undefined, progressListener) {
+                    nextTick(function () {
+                        progressListener(progress);
+                    });
+                }, 
+	        void 0
+	    );
         }
     };
 
@@ -498,7 +514,9 @@ Q.makePromise = makePromise;
 function makePromise(descriptor, fallback, valueOf, exception, isException) {
     if (fallback === void 0) {
         fallback = function (op) {
-            return reject(new Error("Promise does not support operation: " + op));
+            return reject(new Error(
+	        "Promise does not support operation: " + op
+	    ));
         };
     }
 
