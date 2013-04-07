@@ -28,7 +28,7 @@
 
 (function (definition) {
     // Turn off strict mode for this function so we can assign to global.Q
-    /*jshint strict: false*/
+    /*jshint strict: false, -W117*/
 
     // This file will function properly as a <script> tag, or a module
     // using CommonJS and NodeJS or RequireJS module formats.  In
@@ -107,9 +107,9 @@ if (typeof setImmediate === "function") {
                 usedTicks = 0;
                 maxPendingTicks *= 4; // fast grow!
                 var expectedTicks = queuedTasks && Math.min(
-                    queuedTasks - 1, 
-		    maxPendingTicks
-		);
+                    queuedTasks - 1,
+                    maxPendingTicks
+                );
                 while (pendingTicks < expectedTicks) {
                     ++pendingTicks;
                     requestTick();
@@ -130,9 +130,9 @@ if (typeof setImmediate === "function") {
         nextTick = function (task) {
             tail = tail.next = {task: task, next: null};
             if (
-	        pendingTicks < ++queuedTasks && 
-		pendingTicks < maxPendingTicks
-	    ) {
+                pendingTicks < ++queuedTasks &&
+                pendingTicks < maxPendingTicks
+            ) {
                 ++pendingTicks;
                 requestTick();
             }
@@ -420,8 +420,8 @@ function defer() {
         // memory leaks as per GH-111. At the same time, cut off the first line;
         // it's always just "[object Promise]\n", as per the `toString`.
         promise.stack = promise.stack.substring(
-	    promise.stack.indexOf("\n") + 1
-	);
+            promise.stack.indexOf("\n") + 1
+        );
     }
 
     function become(resolvedValue) {
@@ -449,14 +449,14 @@ function defer() {
     deferred.notify = function (progress) {
         if (pending) {
             array_reduce(
-	        progressListeners, 
-	        function (undefined, progressListener) {
+                progressListeners,
+                function (undefined, progressListener) {
                     nextTick(function () {
                         progressListener(progress);
                     });
-                }, 
-	        void 0
-	    );
+                },
+                void 0
+            );
         }
     };
 
@@ -515,8 +515,8 @@ function makePromise(descriptor, fallback, valueOf, exception, isException) {
     if (fallback === void 0) {
         fallback = function (op) {
             return reject(new Error(
-	        "Promise does not support operation: " + op
-	    ));
+                "Promise does not support operation: " + op
+            ));
         };
     }
 

@@ -16,7 +16,6 @@
         "bootstrap": false,
         "cajaVM": false,
         "define": false,
-        "Q": true,
         "ReturnValue": false,
         "ses": false,
         "setImmediate": false
