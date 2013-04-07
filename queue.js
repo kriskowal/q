@@ -20,7 +20,7 @@ function Queue() {
         get: function () {
             var result = ends.promise.get("head");
             ends.promise = ends.promise.get("tail");
-	    numGotten++;
+            numGotten++;
             return result;
         },
         close: function (reason) {
@@ -28,9 +28,9 @@ function Queue() {
             total.resolve(numPut);
         },
         getLength: function() {
-	    return total.promise.then(function(tot) {
-	        return tot - numGotten;
-	    });
-	}
+            return total.promise.then(function(tot) {
+                return tot - numGotten;
+            });
+        }
     };
 }
