@@ -4,8 +4,9 @@ var Q = require("./q");
 module.exports = Queue;
 function Queue() {
     var ends = Q.defer();
-    var nextIndex = 0;
-    var length = Q.defer();
+    var numPut = 0;
+    var numGotten = 0;
+    var total = Q.defer();
     return {
         put: function (value) {
             var next = Q.defer();
@@ -14,17 +15,22 @@ function Queue() {
                 tail: next.promise
             });
             ends.resolve = next.resolve;
-            nextIndex++;
+            numPut++;
         },
         get: function () {
             var result = ends.promise.get("head");
             ends.promise = ends.promise.get("tail");
+	    numGotten++;
             return result;
         },
         close: function (reason) {
             ends.reject(reason);
-            length.resolve(nextIndex);
+            total.resolve(numPut);
         },
-        length: length.promise
+        getLength: function() {
+	    return total.promise.then(function(tot) {
+	        return tot - numGotten;
+	    });
+	}
     };
 }

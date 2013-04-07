@@ -127,8 +127,8 @@ describe("queue", function () {
             });
         })
         .then(function () {
-            return queue.length.then(function(len) {
-                expect(len).toBe(2);
+            return queue.getLength().then(function(len) {
+                expect(len).toBe(1);
             });
         })
         .then(function () {
@@ -146,6 +146,11 @@ describe("queue", function () {
         .catch(function (error) {
             expect(error.message).toBe("Can't get value from closed queue");
             return queue.get();
+        })
+        .then(function () {
+            return queue.getLength().then(function(len) {
+                expect(len).toBe(0);
+            });
         })
         .catch(function (error) {
             expect(error.message).toBe("Can't get value from closed queue");
