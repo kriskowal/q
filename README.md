@@ -771,6 +771,12 @@ the Flickr API, Q is there for you.
 
 [examples]: https://github.com/kriskowal/q/wiki/Examples-Gallery
 
+## Tests
+
+You can view the results of the Q test suite [in your browser][tests]!
+
+[tests]: https://rawgithub.com/kriskowal/q/master/spec/q-spec.html
+
 ---
 
 Copyright 2009-2012 Kristopher Michael Kowal
