@@ -633,9 +633,9 @@ value(...args)              promise.fcall(...args)
 
 If the promise is a proxy for a remote object, you can shave
 round-trips by using these functions instead of ``then``.  To take
-advantage of promises for remote objects, check out [Q-Comm][].
+advantage of promises for remote objects, check out [Q-Connection][].
 
-[Q-Comm]: https://github.com/kriskowal/q-connection
+[Q-Connection]: https://github.com/kriskowal/q-connection
 
 Even in the case of non-remote objects, these methods can be used as
 shorthand for particularly-simple fulfillment handlers. For example, you
