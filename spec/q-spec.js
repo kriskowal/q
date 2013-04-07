@@ -20,24 +20,24 @@ afterEach(function () {
 });
 
 describe("computing sum of integers using promises", function() {
-   it("should compute correct result without blowing stack", function () {
-      var array = [];
-      var iters = 1000;
-      for (var i=1; i<=iters; i++){
-       array.push(i)
-      }
-      var pZero = Q.fulfill(0);
-      var result = array.reduce(function(promise, nextVal) {
-         return promise.then(function(currentVal) {
-            var pNext = Q.fulfill(currentVal + nextVal);
-            return pNext;
-         });
-      }, pZero);
-      result.then(function(value){
-         expect(value).toEqual(iters*(iters+1)/2);
-         done();
-      });
-   });
+    it("should compute correct result without blowing stack", function () {
+        var array = [];
+        var iters = 1000;
+        for (var i = 1; i <= iters; i++) {
+            array.push(i);
+        }
+
+        var pZero = Q.fulfill(0);
+        var result = array.reduce(function (promise, nextVal) {
+            return promise.then(function (currentVal) {
+                return Q.fulfill(currentVal + nextVal);
+            });
+        }, pZero);
+
+        return result.then(function (value) {
+            expect(value).toEqual(iters * (iters + 1) / 2);
+        });
+    });
 });
 
 describe("Q function", function () {
