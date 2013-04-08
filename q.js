@@ -506,14 +506,48 @@ defer.prototype.makeNodeResolver = function () {
 Q.promise = promise;
 function promise(makePromise) {
     var deferred = defer();
-    fcall(
-        makePromise,
-        deferred.resolve,
-        deferred.reject,
-        deferred.notify
-    ).fail(deferred.reject);
+    try {
+        makePromise(deferred.resolve, deferred.reject, deferred.notify);
+    } catch (reason) {
+        deferred.reject(reason);
+    }
     return deferred.promise;
 }
+
+/**
+ * Will be relevant for remote
+ */
+Q.passByCopy = passByCopy;
+//var passByCopies = WeakMap();
+function passByCopy(obj) {
+    //freeze(obj);
+    //passByCopies.set(obj, true);
+    return obj;
+}
+
+/**
+ * Consider making this variadic
+ */
+Q.join = join;
+function join(x, y) {
+    return Q.all([x, y]).spread(function(x, y) {
+        if (x === y) {
+	    // TODO: "===" should be Object.is or equiv
+	    return x;
+	}
+        throw new Error("not the same");
+    });
+}
+
+Q.race = race;
+function race(answerPs) {
+    return promise(function(resolve,reject) {
+        answerPs.forEach(function(answerP) {
+            Q(answerP).then(resolve,reject);
+        });
+    });
+}
+
 
 /**
  * Constructs a Promise with a promise descriptor object and optional fallback
