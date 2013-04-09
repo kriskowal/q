@@ -659,9 +659,14 @@ function join(x, y) {
 Q.race = race;
 function race(answerPs) {
     return promise(function(resolve,reject) {
-        answerPs.forEach(function(answerP) {
-            Q(answerP).then(resolve,reject);
-        });
+//        Switch to this once we can assume at least ES5
+//        answerPs.forEach(function(answerP) {
+//            Q(answerP).then(resolve,reject);
+//        });
+//        Use this in the meantime
+          for (var i = 0, len = answerPs.length; i < len; i++) {
+	      Q(answerPs[i]).then(resolve,reject);
+	  }
     });
 }
 
