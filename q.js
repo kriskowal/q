@@ -532,9 +532,9 @@ Q.join = join;
 function join(x, y) {
     return Q.all([x, y]).spread(function(x, y) {
         if (x === y) {
-	    // TODO: "===" should be Object.is or equiv
-	    return x;
-	}
+            // TODO: "===" should be Object.is or equiv
+            return x;
+        }
         throw new Error("not the same");
     });
 }
@@ -548,8 +548,8 @@ function race(answerPs) {
 //        });
 //        Use this in the meantime
           for (var i = 0, len = answerPs.length; i < len; i++) {
-	      Q(answerPs[i]).then(resolve,reject);
-	  }
+              Q(answerPs[i]).then(resolve,reject);
+          }
     });
 }
 
