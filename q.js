@@ -75,86 +75,98 @@ var noop = function () {};
 
 // use the fastest possible means to execute a task in a future turn
 // of the event loop.
-var nextTick;
-if (typeof setImmediate === "function") {
-    // In IE10, or use https://github.com/NobleJS/setImmediate
-    if (typeof window !== "undefined") {
-        nextTick = setImmediate.bind(window);
-    } else {
-        nextTick = setImmediate;
-    }
-} else if (typeof process !== "undefined") {
-        // node
-        nextTick = process.nextTick;
-} else {
-    (function () {
-        // linked list of tasks (single, with head node)
-        var head = {task: void 0, next: null};
-        var tail = head;
-        var maxPendingTicks = 2;
-        var pendingTicks = 0;
-        var queuedTasks = 0;
-        var usedTicks = 0;
-        var requestTick = void 0;
+var nextTick = (function () {
+    // linked list of tasks (single, with head node)
+    var head = {task: void 0, next: null};
+    var tail = head;
+    var maxPendingTicks = 2;
+    var pendingTicks = 0;
+    var queuedTasks = 0;
+    var usedTicks = 0;
+    var requestTick;
 
-        function onTick() {
-            // In case of multiple tasks ensure at least one subsequent tick
-            // to handle remaining tasks in case one throws.
-            --pendingTicks;
+    function onTick() {
+        // In case of multiple tasks ensure at least one subsequent tick
+        // to handle remaining tasks in case one throws.
+        --pendingTicks;
 
-            if (++usedTicks >= maxPendingTicks) {
-                // Amortize latency after thrown exceptions.
-                usedTicks = 0;
-                maxPendingTicks *= 4; // fast grow!
-                var expectedTicks = queuedTasks && Math.min(
-                    queuedTasks - 1,
-                    maxPendingTicks
-                );
-                while (pendingTicks < expectedTicks) {
-                    ++pendingTicks;
-                    requestTick();
-                }
-            }
-
-            while (queuedTasks) {
-                --queuedTasks; // decrement here to ensure it's never negative
-                head = head.next;
-                var task = head.task;
-                head.task = void 0;
-                task();
-            }
-
+        if (++usedTicks >= maxPendingTicks) {
+            // Amortize latency after thrown exceptions.
             usedTicks = 0;
-        }
-
-        nextTick = function (task) {
-            tail = tail.next = {task: task, next: null};
-            if (
-                pendingTicks < ++queuedTasks &&
-                pendingTicks < maxPendingTicks
-            ) {
+            maxPendingTicks *= 4; // fast grow!
+            var expectedTicks = queuedTasks && Math.min(
+                queuedTasks - 1,
+                maxPendingTicks
+            );
+            while (pendingTicks < expectedTicks) {
                 ++pendingTicks;
                 requestTick();
             }
-        };
-
-        if (typeof MessageChannel !== "undefined") {
-            // modern browsers
-            // http://www.nonblocking.io/2011/06/windownexttick.html
-            var channel = new MessageChannel();
-            channel.port1.onmessage = onTick;
-            requestTick = function () {
-                channel.port2.postMessage(0);
-            };
-
-        } else {
-            // old browsers
-            requestTick = function () {
-                setTimeout(onTick, 0);
-            };
         }
-    })();
-}
+
+        while (queuedTasks) {
+            --queuedTasks; // decrement here to ensure it's never negative
+            head = head.next;
+            var task = head.task;
+            head.task = void 0;
+            task();
+        }
+
+        usedTicks = 0;
+    }
+
+    function nextTick(task) {
+        tail = tail.next = {task: task, next: null};
+        if (
+            pendingTicks < ++queuedTasks &&
+            pendingTicks < maxPendingTicks
+        ) {
+            ++pendingTicks;
+            requestTick();
+        }
+    }
+
+    // Use the highest priority queue that the platform provides
+    if (typeof process !== "undefined") {
+        // NodeJS
+        // process.nextTick is a high priority queue as of version 0.10.
+        // It is low priority on older versions, but we mitigate that problem
+        requestTick = function () {
+            process.nextTick(onTick);
+        };
+    } else if (typeof MessageChannel !== "undefined") {
+        // modern browsers
+        // http://www.nonblocking.io/2011/06/windownexttick.html
+        // Message channels are high priority, meaning drawing and IO are not
+        // interleaved.
+        var channel = new MessageChannel();
+        channel.port1.onmessage = onTick;
+        requestTick = function () {
+            channel.port2.postMessage(0);
+        };
+    } else if (typeof setImmediate === "function") {
+        // setImmediate is low priority in both browsers and NodeJS.
+        // In IE10, or use https://github.com/NobleJS/setImmediate
+        var requestImmediate;
+        if (typeof window !== "undefined") {
+            requestImmediate = setImmediate.bind(window);
+        } else {
+            requestImmediate = setImmediate;
+        }
+        requestTick = function () {
+            requestImmediate(onTick);
+        };
+    } else {
+        // old browsers
+        // setTimeout is not only low priority, but has a minimum delay, but is
+        // the only show in town on old browsers
+        requestTick = function () {
+            setTimeout(onTick, 0);
+        };
+    }
+
+    return nextTick;
+})();
 
 // Attempt to make generics safe in the face of downstream
 // modifications.

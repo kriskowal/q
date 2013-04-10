@@ -28,7 +28,7 @@ jasmine.Block.prototype.execute = function (onComplete) {
             }, function (error) {
                 spec.fail(error);
                 onComplete();
-            });
+            })
         } else if (this.func.length === 0) {
             onComplete();
         }
