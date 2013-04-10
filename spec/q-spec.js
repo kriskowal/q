@@ -19,27 +19,6 @@ afterEach(function () {
     Q.onerror = null;
 });
 
-describe("computing sum of integers using promises", function() {
-    it("should compute correct result without blowing stack", function () {
-        var array = [];
-        var iters = 1000;
-        for (var i = 1; i <= iters; i++) {
-            array.push(i);
-        }
-
-        var pZero = Q.fulfill(0);
-        var result = array.reduce(function (promise, nextVal) {
-            return promise.then(function (currentVal) {
-                return Q.fulfill(currentVal + nextVal);
-            });
-        }, pZero);
-
-        return result.then(function (value) {
-            expect(value).toEqual(iters * (iters + 1) / 2);
-        });
-    });
-});
-
 describe("Q function", function () {
     it("should result in a fulfilled promise when given a value", function () {
         expect(Q(5).isFulfilled()).toBe(true);
@@ -2362,3 +2341,25 @@ describe("unhandled rejection reporting", function () {
         expect(Q.unhandledReasons.length).toEqual(0);
     });
 });
+
+describe("computing sum of integers using promises", function() {
+    it("should compute correct result without blowing stack", function () {
+        var array = [];
+        var iters = 1000;
+        for (var i = 1; i <= iters; i++) {
+            array.push(i);
+        }
+
+        var pZero = Q.fulfill(0);
+        var result = array.reduce(function (promise, nextVal) {
+            return promise.then(function (currentVal) {
+                return Q.fulfill(currentVal + nextVal);
+            });
+        }, pZero);
+
+        return result.then(function (value) {
+            expect(value).toEqual(iters * (iters + 1) / 2);
+        });
+    });
+});
+
