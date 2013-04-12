@@ -1583,6 +1583,22 @@ describe("timeout", function () {
 
         return promise;
     });
+
+    it("should reject with a custom timeout error if the promise is too slow and msg was provided", function () {
+        var goodError = new Error("haha!");
+        return Q.delay(100)
+        .timeout(10, "custom")
+        .then(
+            function () {
+                expect(true).toBe(false);
+            },
+            function (error) {
+                expect(/custom/i.test(error.message)).toBe(true);
+            }
+        );
+    });
+
+
 });
 
 describe("delay", function () {
