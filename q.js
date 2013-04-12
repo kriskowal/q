@@ -1335,14 +1335,15 @@ function done(promise, fulfilled, rejected, progress) {
  * some milliseconds time out.
  * @param {Any*} promise
  * @param {Number} milliseconds timeout
+ * @param {String} custom error message (optional)
  * @returns a promise for the resolution of the given promise if it is
  * fulfilled before the timeout, otherwise rejected.
  */
 Q.timeout = timeout;
-function timeout(promise, ms) {
+function timeout(promise, ms, msg) {
     var deferred = defer();
     var timeoutId = setTimeout(function () {
-        deferred.reject(new Error("Timed out after " + ms + " ms"));
+        deferred.reject(new Error(msg || "Timed out after " + ms + " ms"));
     }, ms);
 
     when(promise, function (value) {
