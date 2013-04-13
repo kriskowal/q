@@ -596,7 +596,6 @@ array_reduce(
         "timeout", "delay",
         "catch", "finally", "fail", "fin", "progress", "done",
         "nfcall", "nfapply", "nfbind", "denodeify", "nbind",
-        "ncall", "napply", "nbind",
         "npost", "nsend", "ninvoke",
         "nodeify"
     ],
