@@ -73,19 +73,21 @@ var qFileName;
 // used for fallback in "allResolved"
 var noop = function () {};
 
-// use the fastest possible means to execute a task in a future turn
+// Use the fastest possible means to execute a task in a future turn
 // of the event loop.
 var nextTick;
 if (typeof setImmediate === "function") {
-    // In IE10, or use https://github.com/NobleJS/setImmediate
+    // In IE10, Node.js 0.9+, or https://github.com/NobleJS/setImmediate
     if (typeof window !== "undefined") {
         nextTick = setImmediate.bind(window);
     } else {
         nextTick = setImmediate;
     }
-} else if (typeof process !== "undefined") {
-        // node
-        nextTick = process.nextTick;
+} else if (typeof process !== "undefined" && process.nextTick) {
+    // Node.js before 0.9. Note that some fake-Node environments, like the
+    // Mocha test runner, introduce a `process` global without a `nextTick`.
+
+    nextTick = process.nextTick;
 } else {
     (function () {
         // linked list of tasks (single, with head node)
