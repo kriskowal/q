@@ -1,5 +1,18 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
+## 0.9.3
+
+ - Add the ability to give `Q.timeout`'s errors a custom error message. #270
+   @jgrenon
+ - Fix Q's call-stack busting behavior in Node.js 0.10, by switching from
+   `process.nextTick` to `setImmediate`. #254 #259
+ - Fix Q's behavior when used with the Mocha test runner in the browser, since
+   Mocha introduces a fake `process` global without a `nextTick` property. #267
+ - Fix some, but not all, cases wherein Q would give false positives in its
+   unhandled rejection detection (#252). A fix for other cases (#238) is
+   hopefully coming soon.
+ - Made `Q.promise` throw early if given a non-function.
+
 ## 0.9.2
 
  - Pass through progress notifications when using `timeout`. #229 @omares
