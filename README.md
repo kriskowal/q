@@ -563,6 +563,17 @@ function requestOkText(url) {
 }
 ```
 
+Below is an example of how to call the requestOkText function and view the response in the console.  Notice that to handle a possible error you can chain the rejection handler.  A complete explanation of this behavior is [here][handle-errors].
+
+[handle-errors]: https://github.com/kriskowal/q#handling-errors
+
+```javascript
+requestOkText('http://localhost:3000').then(function(res) {
+  console.log(res); // if page exists the responseText is displayed 
+}).fail(function(err) {  
+  console.log(err); // will print the "Can't XHR" message
+});
+```
 
 ### The Middle
 
