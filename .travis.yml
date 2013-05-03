@@ -1,5 +1,24 @@
+---
 language: node_js
 node_js:
-  - "0.6"
-  - "0.8"
-  - "0.10"
+- '0.6'
+- '0.8'
+- '0.10'
+before_script:
+  - npm install -g grunt-cli
+script:
+  - npm test
+env:
+  global:
+  - secure: |-
+      VPHdKXYe2m3v8CrxQFNFLLFPYM3zQ7f3omPpKia5QOjfbnYzft04i1qMMjKn
+      uls2jW1vHIu6jRn2nZ8VpbrJpUDJqRZn974UUvGT5IyV/rDBri2sr1/rfFFD
+      cYiBSkn+bqwq9sfoV5EN8Ulv5iHWOi4yR3MIbowgmhgtSzexpzs=
+  - secure: |-
+      JXrANkfH5fCdknLcuZh46d1JZi/TKx2YLWjuePqPUKslQFqrrEPLWQ9nux7m
+      3y+iK2a2zHDoKz7yALFBG7LAs+6XB2Qn0xryOnXj0ziaEcmNbRbZu+LA4aKY
+      pQKx+T1aVes4LCBLtXC+YpFVq9zpZQ7eh345r1WhBfqF51O3H3o=
+matrix:
+  include:
+    - node_js: '0.10'
+      script: grunt test
