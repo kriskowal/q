@@ -1,5 +1,9 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
+## 0.9.4
+ - `isPromise` and `isPromiseAlike` now always returns a boolean 
+   (even for falsy values)
+
 ## 0.9.3
 
  - Add the ability to give `Q.timeout`'s errors a custom error message. #270

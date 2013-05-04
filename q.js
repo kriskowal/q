@@ -253,6 +253,11 @@ var object_keys = Object.keys || function (object) {
 
 var object_toString = uncurryThis(Object.prototype.toString);
 
+var is_object = function (object) {
+    //Implementation from https://github.com/documentcloud/underscore/
+    return object === Object(object);
+};
+
 // generator related shims
 
 function isStopIteration(exception) {
@@ -643,12 +648,12 @@ function valueOf(value) {
  */
 Q.isPromise = isPromise;
 function isPromise(object) {
-    return object && typeof object.promiseDispatch === "function";
+    return is_object(object) && typeof object.promiseDispatch === "function";
 }
 
 Q.isPromiseAlike = isPromiseAlike;
 function isPromiseAlike(object) {
-    return object && typeof object.then === "function";
+    return is_object(object) && typeof object.then === "function";
 }
 
 /**

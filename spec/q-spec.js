@@ -2132,6 +2132,48 @@ describe("node support", function () {
 
 });
 
+describe("isPromise", function () {
+    it("returns true if passed a promise", function () {
+        expect(Q.isPromise(Q.resolve(10))).toBe(true);
+    });
+    
+    it("returns false if not passed a promise", function () {
+        expect(Q.isPromise(undefined)).toBe(false);
+        expect(Q.isPromise(null)).toBe(false);
+        expect(Q.isPromise(10)).toBe(false);
+        expect(Q.isPromise("str")).toBe(false);
+        expect(Q.isPromise("")).toBe(false);
+        expect(Q.isPromise(true)).toBe(false);
+        expect(Q.isPromise(false)).toBe(false);
+        expect(Q.isPromise({})).toBe(false);
+        expect(Q.isPromise({
+            then: function () {}
+        })).toBe(false);
+        expect(Q.isPromise(function () {})).toBe(false);
+    });
+});
+
+describe("isPromiseAlike", function () {
+    it("returns true if passed a promise like object", function () {
+        expect(Q.isPromiseAlike(Q.resolve(10))).toBe(true);
+        expect(Q.isPromiseAlike({
+            then: function () {}
+        })).toBe(true);
+    });
+    
+    it("returns false if not passed a promise like object", function () {
+        expect(Q.isPromiseAlike(undefined)).toBe(false);
+        expect(Q.isPromiseAlike(null)).toBe(false);
+        expect(Q.isPromiseAlike(10)).toBe(false);
+        expect(Q.isPromiseAlike("str")).toBe(false);
+        expect(Q.isPromiseAlike("")).toBe(false);
+        expect(Q.isPromiseAlike(true)).toBe(false);
+        expect(Q.isPromiseAlike(false)).toBe(false);
+        expect(Q.isPromiseAlike({})).toBe(false);
+        expect(Q.isPromiseAlike(function () {})).toBe(false);
+    });
+});
+
 if (typeof require === "function") {
     var domain;
     try {
