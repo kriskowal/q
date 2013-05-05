@@ -427,21 +427,21 @@ Q.nextTick = nextTick;
  */
 Q.defer = defer;
 function defer() {
-    // if "pending" is an "Array", that indicates that the promise has not yet
+    // if "messages" is an "Array", that indicates that the promise has not yet
     // been resolved.  If it is "undefined", it has been resolved.  Each
-    // element of the pending array is itself an array of complete arguments to
+    // element of the messages array is itself an array of complete arguments to
     // forward to the resolved promise.  We coerce the resolution value to a
-    // promise using the ref promise because it handles both fully
+    // promise using the `resolve` function because it handles both fully
     // resolved values and other promises gracefully.
-    var pending = [], progressListeners = [], resolvedPromise;
+    var messages = [], progressListeners = [], resolvedPromise;
 
     var deferred = object_create(defer.prototype);
     var promise = object_create(makePromise.prototype);
 
     promise.promiseDispatch = function (resolve, op, operands) {
         var args = array_slice(arguments);
-        if (pending) {
-            pending.push(args);
+        if (messages) {
+            messages.push(args);
             if (op === "when" && operands[1]) { // progress operand
                 progressListeners.push(operands[1]);
             }
@@ -453,7 +453,7 @@ function defer() {
     };
 
     promise.valueOf = function () {
-        if (pending) {
+        if (messages) {
             return promise;
         }
         var nearer = valueOf(resolvedPromise);
@@ -484,13 +484,13 @@ function defer() {
     function become(promise) {
         resolvedPromise = promise;
 
-        array_reduce(pending, function (undefined, pending) {
+        array_reduce(messages, function (undefined, message) {
             nextTick(function () {
-                promise.promiseDispatch.apply(promise, pending);
+                promise.promiseDispatch.apply(promise, message);
             });
         }, void 0);
 
-        pending = void 0;
+        messages = void 0;
         progressListeners = void 0;
     }
 
