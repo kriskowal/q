@@ -123,7 +123,7 @@ describe("defer and when", function () {
     it("resolves multiple observers", function (done) {
         var nextTurn = false;
 
-        var resolution = 'Taram pam param!';
+        var resolution = "Taram pam param!";
         var deferred = Q.defer();
         var count = 10;
         var i = 0;
@@ -544,7 +544,7 @@ describe("promises for objects", function () {
         it("fulfills a promise", function () {
             var object = {};
             return Q.resolve(object)
-            .set('a', 1)
+            .set("a", 1)
             .then(function (result) {
                 expect(result).toBe(undefined);
                 expect(object.a).toBe(1);
@@ -555,7 +555,7 @@ describe("promises for objects", function () {
             var exception = new Error("Gah!");
             return Q.reject(exception)
             .set("a", 1)
-            .then(function (result) {
+            .then(function () {
                 expect("frozen over").toBe("quite warm");
             }, function (_exception) {
                 expect(_exception).toBe(exception);
@@ -571,11 +571,11 @@ describe("promises for objects", function () {
             return Q.fcall(function () {
                 return object;
             })
-            .del('a')
+            .del("a")
             .then(function (result) {
-                expect('a' in object).toBe(false);
+                expect("a" in object).toBe(false);
                 expect(result).toBe(void 0);
-            }, function (exception) {
+            }, function () {
                 expect("up").toBe("down");
             });
         });
@@ -585,7 +585,7 @@ describe("promises for objects", function () {
             return Q.fcall(function () {
                 throw exception;
             })
-            .del('a')
+            .del("a")
             .then(function () {
                 expect(true).toBe(false);
             }, function (_exception) {
@@ -604,7 +604,7 @@ describe("promises for objects", function () {
                     return 1 + value;
                 }
             };
-            return Q.when(Q.post(subject, 'a', [1]), function (two) {
+            return Q.when(Q.post(subject, "a", [1]), function (two) {
                 expect(subject._a).toBe(1);
                 expect(two).toBe(2);
             });
@@ -635,7 +635,7 @@ describe("promises for objects", function () {
                     return this.foo(_bar);
                 }
             };
-            return Q.send(subject, 'bar', 1, 2)
+            return Q.send(subject, "bar", 1, 2)
             .then(function (two) {
                 expect(foo).toEqual(1);
                 expect(two).toEqual(2);
@@ -645,19 +645,19 @@ describe("promises for objects", function () {
         it("is rejected for undefined method", function () {
             var subject = {};
             return Q.resolve(subject)
-            .send('foo')
+            .send("foo")
             .then(function () {
                 expect("here").toEqual("not here");
-            }, function (exception) {
+            }, function () {
             });
         });
 
         it("is rejected for undefined object", function () {
             return Q.resolve()
-            .send('foo')
+            .send("foo")
             .then(function () {
                 expect("here").toEqual("not here");
-            }, function (exception) {
+            }, function () {
             });
         });
 
@@ -674,7 +674,7 @@ describe("promises for objects", function () {
         it("fulfills a promise", function () {
             return Q.keys(new Klass(10, 20))
             .then(function (keys) {
-                expect(keys.sort()).toEqual(['a', 'b']);
+                expect(keys.sort()).toEqual(["a", "b"]);
             });
         });
 
@@ -912,7 +912,7 @@ describe("promise states", function () {
 
         var parentPromise = deferred.promise;
 
-        var childPromise = parentPromise.then(function (value) {
+        var childPromise = parentPromise.then(function () {
             expect(parentPromise.isFulfilled()).toBe(true);
             expect(childPromise.isFulfilled()).toBe(false);
 
@@ -1096,7 +1096,7 @@ describe("all", function () {
         .timeout(1000);
     });
 
-    it("resolves foreign promises", function () {
+    it("resolves foreign thenables", function () {
         var normal = Q.resolve(1);
         var foreign = { then: function (f) { f(2); } };
 
@@ -1179,7 +1179,7 @@ describe("allResolved", function () {
         });
 
         return Q.allResolved(promises)
-        .then(function (promises) {
+        .then(function () {
             expect(resolved).toBe(true);
             expect(rejected).toBe(true);
         });
@@ -1190,7 +1190,7 @@ describe("allResolved", function () {
 describe("spread", function () {
 
     it("spreads values across arguments", function () {
-        return Q.spread([1, 2, 3], function (a, b, c) {
+        return Q.spread([1, 2, 3], function (a, b) {
             expect(b).toBe(2);
         });
     });
@@ -1337,7 +1337,7 @@ describe("fin", function () {
             .fin(function () {
                 return "bar";
             })
-            .then(function (result) {
+            .then(function () {
                 expect(false).toBe(true);
             },
             function (exception) {
@@ -1355,7 +1355,7 @@ describe("fin", function () {
                     .fin(function () {
                         return promise;
                     })
-                    .then(function (result) {
+                    .then(function () {
                         expect(false).toBe(true);
                     },
                     function (exception) {
@@ -1367,13 +1367,11 @@ describe("fin", function () {
 
             describe("that is rejected", function () {
                 it("should reject with the new reason", function () {
-                    var newException = new TypeError("evil!");
-
                     return Q.reject(exception1)
                     .fin(function () {
                         return Q.reject(exception2);
                     })
-                    .then(function (result) {
+                    .then(function () {
                         expect(false).toBe(true);
                     },
                     function (exception) {
@@ -1553,7 +1551,6 @@ describe("timeout", function () {
     });
 
     it("should reject with a timeout error if the promise is too slow", function () {
-        var goodError = new Error("haha!");
         return Q.delay(100)
         .timeout(10)
         .then(
@@ -1570,7 +1567,7 @@ describe("timeout", function () {
         var deferred = Q.defer();
 
         var progressValsSeen = [];
-        var promise = Q.timeout(deferred.promise, 100).then(function () {
+        var promise = Q.timeout(deferred.promise, 300).then(function () {
             expect(progressValsSeen).toEqual([1, 2, 3]);
         }, undefined, function (progressVal) {
             progressValsSeen.push(progressVal);
@@ -1585,7 +1582,6 @@ describe("timeout", function () {
     });
 
     it("should reject with a custom timeout error if the promise is too slow and msg was provided", function () {
-        var goodError = new Error("haha!");
         return Q.delay(100)
         .timeout(10, "custom")
         .then(
@@ -1699,23 +1695,23 @@ describe("thenResolve", function () {
                 .then(function () {
                     waited = true;
                 })
-                .thenResolve('foo')
+                .thenResolve("foo")
                 .then(function (val) {
                     expect(waited).toBe(true);
-                    expect(val).toBe('foo');
+                    expect(val).toBe("foo");
                 });
         });
 
         describe("based off a rejected promise", function () {
             it("does nothing, letting the rejection flow through", function () {
-                return Q.reject('boo')
-                    .thenResolve('foo')
+                return Q.reject("boo")
+                    .thenResolve("foo")
                     .then(
                         function () {
                             expect(true).toBe(false);
                         },
                         function (reason) {
-                            expect(reason).toBe('boo');
+                            expect(reason).toBe("boo");
                         }
                     );
             });
@@ -1729,10 +1725,10 @@ describe("thenResolve", function () {
                 .then(function () {
                     waited = true;
                 })
-                .thenResolve(Q.resolve('foo'))
+                .thenResolve(Q.resolve("foo"))
                 .then(function (val) {
                     expect(waited).toBe(true);
-                    expect(val).toBe('foo');
+                    expect(val).toBe("foo");
                 });
         });
     });
@@ -1746,28 +1742,28 @@ describe("thenReject", function () {
                 .then(function () {
                     waited = true;
                 })
-                .thenReject('foo')
+                .thenReject("foo")
                 .then(
                     function () {
                         expect(true).toBe(false);
                     },
                     function (reason) {
                         expect(waited).toBe(true);
-                        expect(reason).toBe('foo');
+                        expect(reason).toBe("foo");
                     }
                 );
         });
 
         describe("based off a rejected promise", function () {
             it("does nothing, letting the rejection flow through", function () {
-                return Q.reject('boo')
-                    .thenResolve('foo')
+                return Q.reject("boo")
+                    .thenResolve("foo")
                     .then(
                         function () {
                             expect(true).toBe(false);
                         },
                         function (reason) {
-                            expect(reason).toBe('boo');
+                            expect(reason).toBe("boo");
                         }
                     );
             });
@@ -1844,7 +1840,7 @@ describe("thenables", function () {
 
     it("assimilates a thenable in allResolved", function () {
         return Q.allResolved([
-            {then: function (win, fail) {
+            {then: function (win) {
                 win(10);
             }}
         ])
@@ -1857,7 +1853,7 @@ describe("thenables", function () {
 
     it("assimilates a pending thenable in allResolved", function () {
         return Q.allResolved([
-            {then: function (win, fail) {
+            {then: function (win) {
                 setTimeout(function () {
                     win(10);
                 }, 100);
@@ -1886,12 +1882,12 @@ describe("node support", function () {
         errorCallbacker: function (a, b, c, callback) {
             callback(exception);
         },
-        errorThrower: function (a, b, c, callback) {
+        errorThrower: function () {
             throw exception;
         }
     };
 
-    describe("nfapply", function (done) {
+    describe("nfapply", function () {
 
         it("fulfills with callback result", function () {
             return Q.nfapply(function (a, b, c, callback) {
@@ -1907,7 +1903,7 @@ describe("node support", function () {
             return Q.nfapply(function (a, b, c, callback) {
                 callback(exception);
             }, [1, 2, 3])
-            .then(function (sum) {
+            .then(function () {
                 expect(true).toBe(false);
             }, function (_exception) {
                 expect(_exception).toBe(exception);
@@ -1931,7 +1927,7 @@ describe("node support", function () {
             return Q.nfcall(function (a, b, c, callback) {
                 callback(exception);
             }, 1, 2, 3)
-            .then(function (sum) {
+            .then(function () {
                 expect(true).toBe(false);
             }, function (_exception) {
                 expect(_exception).toBe(exception);
@@ -1976,7 +1972,7 @@ describe("node support", function () {
         });
 
     });
-    describe("npost", function (done) {
+    describe("npost", function () {
 
         it("fulfills with callback result", function () {
             return Q.npost(obj, "method", [1, 2, 3])
@@ -1994,7 +1990,7 @@ describe("node support", function () {
 
         it("rejects with callback error", function () {
             return Q.npost(obj, "errorCallbacker", [1, 2, 3])
-            .then(function (sum) {
+            .then(function () {
                 expect("blue").toBe("no, yellow!");
             }, function (_exception) {
                 expect(_exception).toBe(exception);
@@ -2003,7 +1999,7 @@ describe("node support", function () {
 
         it("rejects with thrown error", function () {
             return Q.npost(obj, "errorThrower", [1, 2, 3])
-            .then(function (sum) {
+            .then(function () {
                 expect(true).toBe(false);
             }, function (_exception) {
                 expect(_exception).toBe(exception);
@@ -2020,7 +2016,7 @@ describe("node support", function () {
 
     });
 
-    describe("nsend", function (done) {
+    describe("nsend", function () {
 
         it("fulfills with callback result", function () {
             return Q.nsend(obj, "method", 1, 2, 3)
@@ -2038,7 +2034,7 @@ describe("node support", function () {
 
         it("rejects with callback error", function () {
             return Q.nsend(obj, "errorCallbacker", 1, 2, 3)
-            .then(function (sum) {
+            .then(function () {
                 expect("blue").toBe("no, yellow!");
             }, function (_exception) {
                 expect(_exception).toBe(exception);
@@ -2047,7 +2043,7 @@ describe("node support", function () {
 
         it("rejects with thrown error", function () {
             return Q.nsend(obj, "errorThrower", 1, 2, 3)
-            .then(function (sum) {
+            .then(function () {
                 expect(true).toBe(false);
             }, function (_exception) {
                 expect(_exception).toBe(exception);
@@ -2089,7 +2085,7 @@ describe("node support", function () {
             var callback = deferred.makeNodeResolver();
             var exception = new Error("Holy Exception of Anitoch");
             callback(exception);
-            return deferred.promise.then(function (value) {
+            return deferred.promise.then(function () {
                 expect(5).toBe(3);
             }, function (_exception) {
                 expect(_exception).toBe(exception);
@@ -2136,7 +2132,7 @@ describe("isPromise", function () {
     it("returns true if passed a promise", function () {
         expect(Q.isPromise(Q.resolve(10))).toBe(true);
     });
-    
+
     it("returns false if not passed a promise", function () {
         expect(Q.isPromise(undefined)).toBe(false);
         expect(Q.isPromise(null)).toBe(false);
@@ -2160,7 +2156,7 @@ describe("isPromiseAlike", function () {
             then: function () {}
         })).toBe(true);
     });
-    
+
     it("returns false if not passed a promise like object", function () {
         expect(Q.isPromiseAlike(undefined)).toBe(false);
         expect(Q.isPromiseAlike(null)).toBe(false);
