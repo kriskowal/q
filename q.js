@@ -398,6 +398,17 @@ function captureLine() {
     }
 }
 
+function deprecate(callback, name, alternative) {
+    return function () {
+        if (typeof console !== "undefined" &&
+            typeof console.warn === "function") {
+            console.warn(name + " is deprecated, use " + alternative +
+                         " instead.", new Error("").stack);
+        }
+        return callback.apply(callback, arguments);
+    };
+}
+
 // end of shims
 // beginning of real work
 
@@ -452,15 +463,23 @@ function defer() {
         }
     };
 
-    promise.valueOf = function () {
+    // XXX deprecated
+    promise.valueOf = deprecate(function () {
         if (messages) {
             return promise;
         }
-        var nearer = valueOf(resolvedPromise);
-        if (isPromise(nearer)) {
-            resolvedPromise = nearer; // shorten chain
+        var nearerValue = nearer(resolvedPromise);
+        if (isPromise(nearerValue)) {
+            resolvedPromise = nearerValue; // shorten chain
         }
-        return nearer;
+        return nearerValue;
+    }, "valueOf", "inspect");
+
+    promise.inspect = function () {
+        if (!resolvedPromise) {
+            return { state: "pending" };
+        }
+        return resolvedPromise.inspect();
     };
 
     if (Q.longStackJumpLimit > 0 && hasStacks) {
@@ -584,7 +603,7 @@ function promise(resolver) {
  * bought and sold.
  */
 Q.makePromise = makePromise;
-function makePromise(descriptor, fallback, valueOf, exception, isException) {
+function makePromise(descriptor, fallback, inspect) {
     if (fallback === void 0) {
         fallback = function (op) {
             return reject(new Error(
@@ -611,12 +630,23 @@ function makePromise(descriptor, fallback, valueOf, exception, isException) {
         }
     };
 
-    if (valueOf) {
-        promise.valueOf = valueOf;
-    }
+    promise.inspect = inspect;
 
-    if (isException) {
-        promise.exception = exception;
+    // XXX deprecated `valueOf` and `exception` support
+    if (inspect) {
+        var inspected = inspect();
+        if (inspected.state === "rejected") {
+            promise.exception = inspected.reason;
+        }
+
+        promise.valueOf = deprecate(function () {
+            var inspected = inspect();
+            if (inspected.state === "pending" ||
+                inspected.state === "rejected") {
+                return promise;
+            }
+            return inspected.value;
+        });
     }
 
     return promise;
@@ -680,10 +710,15 @@ makePromise.prototype.toString = function () {
  * @param object
  * @returns most resolved (nearest) form of the object
  */
-Q.nearer = valueOf;
-function valueOf(value) {
+
+// XXX should we re-do this?
+Q.nearer = nearer;
+function nearer(value) {
     if (isPromise(value)) {
-        return value.valueOf();
+        var inspected = value.inspect();
+        if (inspected.state === "fulfilled") {
+            return inspected.value;
+        }
     }
     return value;
 }
@@ -708,7 +743,7 @@ function isPromiseAlike(object) {
  */
 Q.isPending = isPending;
 function isPending(object) {
-    return !isFulfilled(object) && !isRejected(object);
+    return isPromise(object) && object.inspect().state === "pending";
 }
 
 /**
@@ -717,7 +752,7 @@ function isPending(object) {
  */
 Q.isFulfilled = isFulfilled;
 function isFulfilled(object) {
-    return !isPromiseAlike(valueOf(object));
+    return !isPromise(object) || object.inspect().state === "fulfilled";
 }
 
 /**
@@ -725,8 +760,7 @@ function isFulfilled(object) {
  */
 Q.isRejected = isRejected;
 function isRejected(object) {
-    object = valueOf(object);
-    return isPromise(object) && "exception" in object;
+    return isPromise(object) && object.inspect().state === "rejected";
 }
 
 // This promise library consumes exceptions thrown in handlers so they can be
@@ -792,9 +826,9 @@ function reject(reason) {
         }
     }, function fallback() {
         return this;
-    }, function valueOf() {
-        return this;
-    }, reason, true);
+    }, function inspect() {
+        return { state: "rejected", reason: reason };
+    });
 
     // Note that the reason has not been handled.
     displayUnhandledReasons();
@@ -809,37 +843,37 @@ function reject(reason) {
  * @param value immediate reference
  */
 Q.fulfill = fulfill;
-function fulfill(object) {
+function fulfill(value) {
     return makePromise({
         "when": function () {
-            return object;
+            return value;
         },
         "get": function (name) {
-            return object[name];
+            return value[name];
         },
-        "set": function (name, value) {
-            object[name] = value;
+        "set": function (name, rhs) {
+            value[name] = rhs;
         },
         "delete": function (name) {
-            delete object[name];
+            delete value[name];
         },
         "post": function (name, args) {
             // Mark Miller proposes that post with no name should apply a
             // promised function.
             if (name === null || name === void 0) {
-                return object.apply(void 0, args);
+                return value.apply(void 0, args);
             } else {
-                return object[name].apply(object, args);
+                return value[name].apply(value, args);
             }
         },
         "apply": function (thisP, args) {
-            return object.apply(thisP, args);
+            return value.apply(thisP, args);
         },
         "keys": function () {
-            return object_keys(object);
+            return object_keys(value);
         }
-    }, void 0, function valueOf() {
-        return object;
+    }, void 0, function inspect() {
+        return { state: "fulfilled", value: value };
     });
 }
 
@@ -856,16 +890,8 @@ function resolve(value) {
     if (isPromise(value)) {
         return value;
     }
-    // In order to break infinite recursion or loops between `then` and
-    // `resolve`, it is necessary to attempt to extract fulfilled values
-    // out of foreign promise implementations before attempting to wrap
-    // them as unresolved promises.  It is my hope that other
-    // implementations will implement `valueOf` to synchronously extract
-    // the fulfillment value from their fulfilled promises.  If the
-    // other promise library does not implement `valueOf`, the
-    // implementations on primordial prototypes are harmless.
-    value = valueOf(value);
-    // assimilate thenables, CommonJS/Promises/A+
+
+    // assimilate thenables
     if (isPromiseAlike(value)) {
         return coerce(value);
     } else {
@@ -906,7 +932,7 @@ function master(object) {
     }, function fallback(op, args) {
         return dispatch(object, op, args);
     }, function () {
-        return valueOf(object);
+        return resolve(object).inspect();
     });
 }
 
@@ -1281,8 +1307,10 @@ function all(promises) {
         var countDown = 0;
         var deferred = defer();
         array_reduce(promises, function (undefined, promise, index) {
-            if (isFulfilled(promise)) {
-                promises[index] = valueOf(promise);
+            var snapshot;
+            if (isPromise(promise) &&
+                (snapshot = promise.inspect()).state === "fulfilled") {
+                promises[index] = snapshot.value;
             } else {
                 ++countDown;
                 when(promise, function (value) {

@@ -785,49 +785,58 @@ describe("promises for functions", function () {
 
 });
 
-describe("valueOf", function () {
+describe("inspect", function () {
 
-    it("of fulfillment", function () {
-        expect(Q.resolve(10).valueOf()).toEqual(10);
+    it("for a fulfilled promise", function () {
+        expect(Q.resolve(10).inspect()).toEqual({
+            state: "fulfilled",
+            value: 10
+        });
     });
 
-    it("of rejection", function () {
+    it("for a rejected promise", function () {
         var error = new Error("In your face.");
-        var rejection = Q.reject(error);
-        expect(rejection.valueOf()).toBe(rejection);
-        expect(rejection.valueOf().exception).toBe(error);
+        var rejected = Q.reject(error);
+        expect(rejected.inspect()).toEqual({
+            state: "rejected",
+            reason: error
+        });
     });
 
-    it("of deferred", function () {
-        var deferred = Q.defer();
-        expect(deferred.promise.valueOf()).toBe(deferred.promise);
+    it("for a pending, unresolved promise", function () {
+        var pending = Q.defer().promise;
+        expect(pending.inspect()).toEqual({ state: "pending" });
     });
 
-    it("of deferred rejection", function () {
+    it("for a promise resolved to a rejected promise", function () {
         var deferred = Q.defer();
         var error = new Error("Rejected!");
-        var rejection = Q.reject(error);
-        deferred.resolve(rejection);
-        expect(deferred.promise.valueOf()).toBe(rejection);
-        expect(deferred.promise.valueOf().exception).toBe(error);
+        var rejected = Q.reject(error);
+        deferred.resolve(rejected);
+
+        expect(deferred.promise.inspect()).toEqual({
+            state: "rejected",
+            reason: error
+        });
     });
 
-    it("of deferred fulfillment", function () {
+    it("for a promise resolved to a fulfilled promise", function () {
         var deferred = Q.defer();
-        deferred.fulfill(10);
-        expect(deferred.promise.valueOf()).toBe(10);
+        var fulfilled = Q.resolve(10);
+        deferred.resolve(fulfilled);
+
+        expect(deferred.promise.inspect()).toEqual({
+            state: "fulfilled",
+            value: 10
+        });
     });
 
-    it("of deferred deferred", function () {
+    it("for a promise resolved to a pending promise", function () {
         var a = Q.defer();
         var b = Q.defer();
         a.resolve(b.promise);
-        expect(a.promise.valueOf()).toBe(b.promise);
-    });
 
-    it("should not convert `Date` instances to milliseconds", function () {
-        var promise = Q.resolve(new Date(2012, 10, 4));
-        expect(promise.valueOf()).toEqual(new Date(2012, 10, 4));
+        expect(a.promise.inspect()).toEqual({ state: "pending" });
     });
 
 });
@@ -928,7 +937,7 @@ describe("promise states", function () {
             expect(childPromise.isPending()).toBe(false);
             expect(childPromise.isRejected()).toBe(false);
             expect(childPromise.isFulfilled()).toBe(true);
-            expect(childPromise.valueOf()).toBe(2);
+            expect(childPromise.inspect().value).toBe(2);
         });
     });
 
@@ -1166,8 +1175,8 @@ describe("allResolved", function () {
             expect(Q.isFulfilled(promises[1])).toBe(true);
             expect(Q.isRejected(promises[2])).toBe(true);
 
-            expect(promises[0].valueOf()).toEqual(1);
-            expect(promises[1].valueOf()).toEqual(2);
+            expect(promises[0].inspect().value).toEqual(1);
+            expect(promises[1].inspect().value).toEqual(2);
         });
     });
 
