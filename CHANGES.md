@@ -1,8 +1,10 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
 ## 0.9.4 (unreleased)
+
  - `isPromise` and `isPromiseAlike` now always returns a boolean 
    (even for falsy values). #284 @lfac-pt
+ - Support for ES6 Generators in `async` #288 @andywingo
 
 ## 0.9.3
 
