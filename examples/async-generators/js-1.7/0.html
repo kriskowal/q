@@ -2,15 +2,14 @@
 <html>
     <head>
     <!--
-        Works in browsers that support ES6 geneartors, like Chromium 29 with
-        the --harmony flag.
+        Works in Firefox, or where generators are implemented.
 
-        Peter Hallam, Tom van Cutsem, Mark S. Miller, Dave Herman, Andy Wingo.
+        Peter Hallam, Tom van Cutsem, Mark S. Miller, Dave Herman.
         The animation example was taken from
         <http://wiki.ecmascript.org/doku.php?id=strawman:deferred_functions>
     -->
-    <script src="../../q.js"></script>
-    <script>
+    <script src="../../../q.js"></script>
+    <script type="application/javascript;version=1.7">
 
         function delay(millis, answer) {
             const deferredResult = Q.defer();
@@ -20,7 +19,7 @@
             return deferredResult.promise;
         }
 
-        var deferredAnimate = Q.async(function*(element) {
+        var deferredAnimate = Q.async(function(element) {
             for (var i = 0; i < 100; ++i) {
                 element.style.marginLeft = ''+i+'px';
                 yield delay(20);
