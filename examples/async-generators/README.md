@@ -8,11 +8,19 @@ decorate a generator function such that ``yield`` is
 effectively equivalent to ``await`` or ``defer`` syntax as
 supported by languages like Go and, reportedly, C#3.
 
-Generator functions are presently only supported by SpiderMonkey, but
-they are (with some changes) on standards track, and very similar down
-to details to generators in Python.
+Generator functions are presently on the standards track for ES6.  As of
+May 2013, they are only fully supported by bleeding edge V8, which
+hasn't made it out to a released Chromium yet but will probably be in
+Chromium 29.  Generators have been in SpiderMonkey for years, but in an
+older pre-standard form based on Python's design.  The Traceur
+transpiler also still uses Python-style generators, which were part of
+an older ES6 draft.
 
-    function count() {
+Q's ``async`` function supports both kinds of generators.  These
+examples will use the ES6 style.  See the examples and notes in
+[js-1.7](js-1.7/) for more on getting these to work with SpiderMonkey.
+
+    function* count() {
         var i = 0;
         while (true) {
             yield i++;
@@ -27,7 +35,7 @@ to details to generators in Python.
 ``yield`` can also return a value, if the ``send`` method of
 a generator is used instead of ``next``.
 
-    var buffer = (function () {
+    var buffer = (function* () {
         var x;
         while (true) {
             x = yield x;
@@ -43,7 +51,7 @@ a generator is used instead of ``next``.
 
 We can use ``yield`` to wait for a promise to resolve.
 
-    var eventualAdd = Q.async(function (oneP, twoP) {
+    var eventualAdd = Q.async(function* (oneP, twoP) {
         var one = yield oneP;
         var two = yield twoP;
         return one + two;
@@ -54,13 +62,8 @@ We can use ``yield`` to wait for a promise to resolve.
         three === 3;
     });
 
-Or, at least we could.  For now, SpiderMonkey does not allow
-return values in generators.  When they do, ``Q.async`` will
-properly fulfill the result of eventualAdd.  Until then,
-``eventualAdd`` will resolve to ``undefined`` when the job
-is done, when the generator throws ``StopIteration``.
-
-As a stop-gap, you can fake the return value by tacking a
-``value`` property on an explicitly thrown
-``StopIteration``, as in Example 1, in this directory.
-
+To use these in SpiderMonkey, change ``function`` to ``function*``.
+Also, in this last example, SpiderMonkey does not allow return values in
+generators.  To work around that, call the ``Q.return`` function instead
+of using a ``return`` statement.  ``Q.return`` will go away at some
+point when SpiderMonkey switches to ES6 style.

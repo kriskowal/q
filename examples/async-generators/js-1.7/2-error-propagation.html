@@ -2,15 +2,14 @@
 <html>
     <head>
     <!--
-        Works in browsers that support ES6 geneartors, like Chromium 29 with
-        the --harmony flag.
+        Works in Firefox, or where generators are implemented.
     -->
-    <script src="../../q.js"></script>
-    <script>
+    <script src="../../../q.js"></script>
+    <script type="application/javascript;version=1.7">
 
         function test() {
 
-            var generator = Q.async(function* () {
+            var generator = Q.async(function () {
                 try {
                     var ten = yield Q.reject('Rejected!');
                     console.log("Should not get here 1");

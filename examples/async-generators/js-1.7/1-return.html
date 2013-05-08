@@ -4,7 +4,7 @@
     <!--
         Works in Firefox, or where generators are implemented.
     -->
-    <script src="../../q.js"></script>
+    <script src="../../../q.js"></script>
     <script type="application/javascript;version=1.7">
 
         function test() {
@@ -16,11 +16,11 @@
                 console.log(twenty, 20);
                 var thirty = yield twenty + 10;
                 console.log(thirty, 30);
-                Q.return(thirty + 10);
+                StopIteration.value = thirty + 10;
+                throw StopIteration;
             });
 
-            generator()
-            .then(function (forty) {
+            Q.when(generator(), function (forty) {
                 console.log(forty, 40);
             }, function (reason) {
                 console.log("error", reason);
@@ -28,7 +28,7 @@
 
         }
 
-    </script>
+    </script> 
     </head>
     <body onload="test()">
         <div id="box" style="width: 20px; height: 20px; background-color: red;"></div>

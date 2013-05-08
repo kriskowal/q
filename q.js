@@ -266,6 +266,7 @@ function isObject(value) {
 
 // generator related shims
 
+// FIXME: Remove this function once ES6 generators are in SpiderMonkey.
 function isStopIteration(exception) {
     return (
         object_toString(exception) === "[object StopIteration]" ||
@@ -273,6 +274,8 @@ function isStopIteration(exception) {
     );
 }
 
+// FIXME: Remove this helper and Q.return once ES6 generators are in
+// SpiderMonkey.
 var QReturnValue;
 if (typeof ReturnValue !== "undefined") {
     QReturnValue = ReturnValue;
@@ -280,6 +283,21 @@ if (typeof ReturnValue !== "undefined") {
     QReturnValue = function (value) {
         this.value = value;
     };
+}
+
+// Until V8 3.19 / Chromium 29 is released, SpiderMonkey is the only
+// engine that has a deployed base of browsers that support generators.
+// However, SM's generators use the Python-inspired semantics of
+// outdated ES6 drafts.  We would like to support ES6, but we'd also
+// like to make it possible to use generators in deployed browsers, so
+// we also support Python-style generators.  At some point we can remove
+// this block.
+var hasES6Generators;
+try {
+    eval("(function* (){ yield 1; })");
+    hasES6Generators = true;
+} catch (e) {
+    hasES6Generators = false;
 }
 
 // long stack traces
@@ -995,10 +1013,15 @@ function spread(promise, fulfilled, rejected) {
 
 /**
  * The async function is a decorator for generator functions, turning
- * them into asynchronous generators.  This presently only works in
- * Firefox/Spidermonkey, however, this code does not cause syntax
- * errors in older engines.  This code should continue to work and
- * will in fact improve over time as the language improves.
+ * them into asynchronous generators.  Although generators are only part
+ * of the newest ECMAScript 6 drafts, this code does not cause syntax
+ * errors in older engines.  This code should continue to work and will
+ * in fact improve over time as the language improves.
+ *
+ * ES6 generators are currently part of V8 version 3.19 with the
+ * --harmony-generators runtime flag enabled.  SpiderMonkey has had them
+ * for longer, but under an older Python-inspired form.  This function
+ * works on both kinds of generators.
  *
  * Decorates a generator function such that:
  *  - it may yield promises
@@ -1013,18 +1036,6 @@ function spread(promise, fulfilled, rejected) {
  *    every following yield until it is caught, or until it escapes
  *    the generator function altogether, and is translated into a
  *    rejection for the promise returned by the decorated generator.
- *  - in present implementations of generators, when a generator
- *    function is complete, it throws ``StopIteration``, ``return`` is
- *    a syntax error in the presence of ``yield``, so there is no
- *    observable return value. There is a proposal[1] to add support
- *    for ``return``, which would permit the value to be carried by a
- *    ``StopIteration`` instance, in which case it would fulfill the
- *    promise returned by the asynchronous generator.  This can be
- *    emulated today by throwing StopIteration explicitly with a value
- *    property.
- *
- *  [1]: http://wiki.ecmascript.org/doku.php?id=strawman:async_functions#reference_implementation
- *
  */
 Q.async = async;
 function async(makeGenerator) {
@@ -1033,16 +1044,30 @@ function async(makeGenerator) {
         // when verb is "throw", arg is an exception
         function continuer(verb, arg) {
             var result;
-            try {
-                result = generator[verb](arg);
-            } catch (exception) {
-                if (isStopIteration(exception)) {
-                    return exception.value;
-                } else {
+            if (hasES6Generators) {
+                try {
+                    result = generator[verb](arg);
+                } catch (exception) {
                     return reject(exception);
                 }
+                if (result.done) {
+                    return result.value;
+                } else {
+                    return when(result.value, callback, errback);
+                }
+            } else {
+                // FIXME: Remove this case when SM does ES6 generators.
+                try {
+                    result = generator[verb](arg);
+                } catch (exception) {
+                    if (isStopIteration(exception)) {
+                        return exception.value;
+                    } else {
+                        return reject(exception);
+                    }
+                }
+                return when(result, callback, errback);
             }
-            return when(result, callback, errback);
         }
         var generator = makeGenerator.apply(this, arguments);
         var callback = continuer.bind(continuer, "send");
@@ -1051,13 +1076,25 @@ function async(makeGenerator) {
     };
 }
 
+// FIXME: Remove this interface once ES6 generators are in SpiderMonkey.
 /**
  * Throws a ReturnValue exception to stop an asynchronous generator.
- * Only useful presently in Firefox/SpiderMonkey since generators are
- * implemented.
+ *
+ * This interface is a stop-gap measure to support generator return
+ * values in older Firefox/SpiderMonkey.  In browsers that support ES6
+ * generators like Chromium 29, just use "return" in your generator
+ * functions.
+ *
  * @param value the return value for the surrounding generator
  * @throws ReturnValue exception with the value.
  * @example
+ * // ES6 style
+ * Q.async(function* () {
+ *      var foo = yield getFooPromise();
+ *      var bar = yield getBarPromise();
+ *      return foo + bar;
+ * })
+ * // Older SpiderMonkey style
  * Q.async(function () {
  *      var foo = yield getFooPromise();
  *      var bar = yield getBarPromise();

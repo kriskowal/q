@@ -2,25 +2,25 @@
 <html>
     <head>
     <!--
-        Ought to work in ES.next, if return sugar for
-        generators gets added.
+        Works in Firefox, or where generators are implemented.
     -->
-    <script src="../../q.js"></script>
+    <script src="../../../q.js"></script>
     <script type="application/javascript;version=1.7">
 
         function test() {
 
-            var eventuallyFourty = Q.async(function () {
+            var generator = Q.async(function () {
                 var ten = yield 10;
                 console.log(ten, 10);
                 var twenty = yield ten + 10;
                 console.log(twenty, 20);
                 var thirty = yield twenty + 10;
                 console.log(thirty, 30);
-                return thrity + 10;
+                Q.return(thirty + 10);
             });
 
-            Q.when(eventuallyFourty(), function (forty) {
+            generator()
+            .then(function (forty) {
                 console.log(forty, 40);
             }, function (reason) {
                 console.log("error", reason);
@@ -28,7 +28,7 @@
 
         }
 
-    </script> 
+    </script>
     </head>
     <body onload="test()">
         <div id="box" style="width: 20px; height: 20px; background-color: red;"></div>
