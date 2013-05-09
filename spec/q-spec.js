@@ -2423,10 +2423,10 @@ describe("unhandled rejection reporting", function () {
     });
 
     it("doesn't report when you chain off a rejection", function () {
-        Q.reject("this will be handled").get("property").fail(function () {
+        return Q.reject("this will be handled").get("property").fail(function () {
             // now it should be handled.
+        }).fin(function() {
+            expect(Q.unhandledReasons.length).toEqual(0);
         });
-
-        expect(Q.unhandledReasons.length).toEqual(0);
     });
 });
