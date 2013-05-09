@@ -791,7 +791,7 @@ function reject(reason) {
             return rejected ? rejected(reason) : this;
         }
     }, function fallback() {
-        return reject(reason);
+        return this;
     }, function valueOf() {
         return this;
     }, reason, true);
