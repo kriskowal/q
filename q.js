@@ -294,7 +294,7 @@ if (typeof ReturnValue !== "undefined") {
 // this block.
 var hasES6Generators;
 try {
-    eval("(function* (){ yield 1; })");
+    new Function("(function* (){ yield 1; })");
     hasES6Generators = true;
 } catch (e) {
     hasES6Generators = false;
