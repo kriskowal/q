@@ -729,13 +729,16 @@ function isRejected(object) {
     return isPromise(object) && "exception" in object;
 }
 
+//// BEGIN UNHANDLED REJECTION TRACKING
+
 // This promise library consumes exceptions thrown in handlers so they can be
 // handled by a subsequent promise.  The exceptions get added to this array when
 // they are created, and removed when they are handled.  Note that in ES6 or
 // shimmed environments, this would naturally be a `Set`.
-var unhandledReasons = Q.unhandledReasons = [];
+var unhandledReasons = [];
 var unhandledRejections = [];
 var unhandledReasonsDisplayed = false;
+var trackUnhandledRejections = true;
 function displayUnhandledReasons() {
     if (
         !unhandledReasonsDisplayed &&
@@ -750,27 +753,74 @@ function displayUnhandledReasons() {
     unhandledReasonsDisplayed = true;
 }
 
-Q.resetUnhandledRejections = function () {
+function logUnhandledReasons() {
+    for (var i = 0; i < unhandledReasons.length; i++) {
+        var reason = unhandledReasons[i];
+        if (reason && typeof reason.stack !== "undefined") {
+            console.warn("Unhandled rejection reason:", reason.stack);
+        } else {
+            console.warn("Unhandled rejection reason (no stack):", reason);
+        }
+    }
+}
+
+function resetUnhandledRejections() {
     unhandledReasons.length = 0;
     unhandledRejections.length = 0;
     unhandledReasonsDisplayed = false;
+
+    if (!trackUnhandledRejections) {
+        trackUnhandledRejections = true;
+
+        // Show unhandled rejection reasons if Node exits without handling an
+        // outstanding rejection.  (Note that Browserify presently produces a
+        // `process` global without the `EventEmitter` `on` method.)
+        if (typeof process !== "undefined" && process.on) {
+            process.on("exit", logUnhandledReasons);
+        }
+    }
+}
+
+function trackRejection(promise, reason) {
+    if (!trackUnhandledRejections) {
+        return;
+    }
+
+    unhandledRejections.push(promise);
+    unhandledReasons.push(reason);
+    displayUnhandledReasons();
+}
+
+function untrackRejection(promise, reason) {
+    if (!trackUnhandledRejections) {
+        return;
+    }
+
+    var at = array_indexOf(unhandledRejections, promise);
+    if (at !== -1) {
+        unhandledRejections.splice(at, 1);
+        unhandledReasons.splice(at, 1);
+    }
+}
+
+Q.resetUnhandledRejections = resetUnhandledRejections;
+
+Q.getUnhandledReasons = function () {
+    // Make a copy so that consumers can't interfere with our internal state.
+    return unhandledReasons.slice();
 };
 
-// Show unhandled rejection reasons if Node exits without handling an
-// outstanding rejection.  (Note that Browserify presently produces a process
-// global without the `EventEmitter` `on` method.)
-if (typeof process !== "undefined" && process.on) {
-    process.on("exit", function () {
-        for (var i = 0; i < unhandledReasons.length; i++) {
-            var reason = unhandledReasons[i];
-            if (reason && typeof reason.stack !== "undefined") {
-                console.warn("Unhandled rejection reason:", reason.stack);
-            } else {
-                console.warn("Unhandled rejection reason (no stack):", reason);
-            }
-        }
-    });
-}
+Q.stopUnhandledRejectionTracking = function () {
+    resetUnhandledRejections();
+    if (typeof process !== "undefined" && process.on) {
+        process.removeListener("exit", logUnhandledReasons);
+    }
+    trackUnhandledRejections = false;
+};
+
+resetUnhandledRejections();
+
+//// END UNHANDLED REJECTION TRACKING
 
 /**
  * Constructs a rejected promise.
@@ -782,11 +832,7 @@ function reject(reason) {
         "when": function (rejected) {
             // note that the error has been handled
             if (rejected) {
-                var at = array_indexOf(unhandledRejections, this);
-                if (at !== -1) {
-                    unhandledRejections.splice(at, 1);
-                    unhandledReasons.splice(at, 1);
-                }
+                untrackRejection(this);
             }
             return rejected ? rejected(reason) : this;
         }
@@ -797,9 +843,7 @@ function reject(reason) {
     }, reason, true);
 
     // Note that the reason has not been handled.
-    displayUnhandledReasons();
-    unhandledRejections.push(rejection);
-    unhandledReasons.push(reason);
+    trackRejection(rejection, reason);
 
     return rejection;
 }

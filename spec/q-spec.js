@@ -2415,14 +2415,44 @@ describe("unhandled rejection reporting", function () {
         deferred.resolve();
         deferred.reject();
 
-        expect(Q.unhandledReasons.length).toEqual(0);
+        expect(Q.getUnhandledReasons().length).toEqual(0);
     });
 
     it("doesn't report when you chain off a rejection", function () {
         return Q.reject("this will be handled").get("property").fail(function () {
             // now it should be handled.
         }).fin(function() {
-            expect(Q.unhandledReasons.length).toEqual(0);
+            expect(Q.getUnhandledReasons().length).toEqual(0);
         });
+    });
+
+    it("reports the most basic case", function () {
+        Q.reject("a reason");
+
+        expect(Q.getUnhandledReasons()).toEqual(["a reason"]);
+    });
+
+    it("doesn't let you mutate the internal array", function () {
+        Q.reject("a reason");
+
+        Q.getUnhandledReasons().length = 0;
+        expect(Q.getUnhandledReasons()).toEqual(["a reason"]);
+    });
+
+    it("resets after calling `Q.resetUnhandledRejections`", function () {
+        Q.reject("a reason");
+
+        Q.resetUnhandledRejections();
+        expect(Q.getUnhandledReasons()).toEqual([]);
+    });
+
+    it("stops tracking after calling `Q.stopUnhandledRejectionTracking`", function () {
+        Q.reject("a reason");
+
+        Q.stopUnhandledRejectionTracking();
+
+        Q.reject("another reason");
+
+        expect(Q.getUnhandledReasons()).toEqual([]);
     });
 });
