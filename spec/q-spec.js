@@ -1120,6 +1120,15 @@ describe("all", function () {
         });
     });
 
+    it("modifies the input array", function () {
+        var input = [Q.resolve(0), Q.resolve(1)];
+
+        return Q.all(input).then(function (result) {
+            expect(result).toBe(input);
+            expect(input).toEqual([0, 1]);
+        });
+    });
+
 });
 
 describe("allResolved", function () {
