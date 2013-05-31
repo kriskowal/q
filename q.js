@@ -640,7 +640,7 @@ array_reduce(
     [
         "isFulfilled", "isRejected", "isPending",
         "dispatch",
-        "when", "spread",
+        "when", "spread", "spreadResolved",
         "get", "set", "del", "delete",
         "post", "send", "invoke",
         "keys",
@@ -1059,6 +1059,29 @@ function spread(promise, fulfilled, rejected) {
             return fulfilled.apply(void 0, values);
         }, rejected);
     }, rejected);
+}
+
+/**
+ * Spreads the values or rejection reasons of a promised array of arguments
+ * into the single resolved callback.
+ * @param resolved callback that receives variadic arguments from the
+ * promised array, either fulfilled values or rejection reasons
+ * @returns a promise for the return value.
+ */
+Q.spreadResolved = spreadResolved;
+function spreadResolved (promise, resolved) {
+    return when(promise, function (valuesOrPromises) {
+        return allResolved(valuesOrPromises).then(function (promises) {
+            return resolved.apply(void 0, array_map(promises, function (promise) {
+                if (promise.isFulfilled()) {
+                    return promise.valueOf();
+                }
+                else {
+                    return promise.valueOf().exception;
+                }
+            }));
+        });
+    });
 }
 
 /**

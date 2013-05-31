@@ -1236,6 +1236,60 @@ describe("spread", function () {
 
 });
 
+describe("spreadResolved", function () {
+
+    it("spreads values across arguments", function () {
+        return Q.spreadResolved([1, 2, 3], function (a, b) {
+            expect(b).toBe(2);
+        });
+    });
+
+    it("spreads promises for arrays across arguments", function () {
+        return Q.resolve([Q.resolve(10)])
+        .spreadResolved(function (value) {
+            expect(value).toEqual(10);
+        });
+    });
+
+    it("spreads arrays of fulfilled promises across arguments", function () {
+        var deferredA = Q.defer();
+        var deferredB = Q.defer();
+
+        var promise = Q.spreadResolved([deferredA.promise, deferredB.promise],
+                               function (a, b) {
+            expect(a).toEqual(10);
+            expect(b).toEqual(20);
+        });
+
+        Q.delay(5).then(function () {
+            deferredA.resolve(10);
+        });
+        Q.delay(10).then(function () {
+            deferredB.resolve(20);
+        });
+
+        return promise;
+    });
+
+    it("spreads arrays of fulfilled and rejected promises across arguments", function () {
+        var err1 = new Error('err1');
+        var err2 = new Error('err2');
+        return Q.spreadResolved([3, Q.resolve(10), Q.reject(err1), Q.resolve(20), Q.reject(err2), 30],
+            function (a, b, c, d, e, f) {
+                expect(a).toBe(3);
+                expect(b).toBe(10);
+                expect(c).toBe(err1)
+                expect(c.message).toBe('err1');
+                expect(d).toBe(20);
+                expect(e).toBe(err2);
+                expect(e.message).toBe('err2');
+                expect(f).toBe(30);
+            }
+        );
+    });
+
+});
+
 describe("fin", function () {
 
     var exception1 = new Error("boo!");
