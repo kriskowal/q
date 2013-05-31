@@ -1126,6 +1126,18 @@ function async(makeGenerator) {
     };
 }
 
+/**
+ * The spawn function is a small wrapper around async that immediately
+ * calls the generator and also ends the promise chain, so that any
+ * unhandled errors are thrown instead of forwarded to the error
+ * handler. This is useful because it's extremely common to run
+ * generators at the top-level to work with libraries.
+ */
+Q.spawn = spawn;
+function spawn(makeGenerator) {
+    Q.done(Q.async(makeGenerator)());
+}
+
 // FIXME: Remove this interface once ES6 generators are in SpiderMonkey.
 /**
  * Throws a ReturnValue exception to stop an asynchronous generator.
