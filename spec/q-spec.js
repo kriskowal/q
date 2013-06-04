@@ -785,49 +785,58 @@ describe("promises for functions", function () {
 
 });
 
-describe("valueOf", function () {
+describe("inspect", function () {
 
-    it("of fulfillment", function () {
-        expect(Q.resolve(10).valueOf()).toEqual(10);
+    it("for a fulfilled promise", function () {
+        expect(Q.resolve(10).inspect()).toEqual({
+            state: "fulfilled",
+            value: 10
+        });
     });
 
-    it("of rejection", function () {
+    it("for a rejected promise", function () {
         var error = new Error("In your face.");
-        var rejection = Q.reject(error);
-        expect(rejection.valueOf()).toBe(rejection);
-        expect(rejection.valueOf().exception).toBe(error);
+        var rejected = Q.reject(error);
+        expect(rejected.inspect()).toEqual({
+            state: "rejected",
+            reason: error
+        });
     });
 
-    it("of deferred", function () {
-        var deferred = Q.defer();
-        expect(deferred.promise.valueOf()).toBe(deferred.promise);
+    it("for a pending, unresolved promise", function () {
+        var pending = Q.defer().promise;
+        expect(pending.inspect()).toEqual({ state: "pending" });
     });
 
-    it("of deferred rejection", function () {
+    it("for a promise resolved to a rejected promise", function () {
         var deferred = Q.defer();
         var error = new Error("Rejected!");
-        var rejection = Q.reject(error);
-        deferred.resolve(rejection);
-        expect(deferred.promise.valueOf()).toBe(rejection);
-        expect(deferred.promise.valueOf().exception).toBe(error);
+        var rejected = Q.reject(error);
+        deferred.resolve(rejected);
+
+        expect(deferred.promise.inspect()).toEqual({
+            state: "rejected",
+            reason: error
+        });
     });
 
-    it("of deferred fulfillment", function () {
+    it("for a promise resolved to a fulfilled promise", function () {
         var deferred = Q.defer();
-        deferred.fulfill(10);
-        expect(deferred.promise.valueOf()).toBe(10);
+        var fulfilled = Q.resolve(10);
+        deferred.resolve(fulfilled);
+
+        expect(deferred.promise.inspect()).toEqual({
+            state: "fulfilled",
+            value: 10
+        });
     });
 
-    it("of deferred deferred", function () {
+    it("for a promise resolved to a pending promise", function () {
         var a = Q.defer();
         var b = Q.defer();
         a.resolve(b.promise);
-        expect(a.promise.valueOf()).toBe(b.promise);
-    });
 
-    it("should not convert `Date` instances to milliseconds", function () {
-        var promise = Q.resolve(new Date(2012, 10, 4));
-        expect(promise.valueOf()).toEqual(new Date(2012, 10, 4));
+        expect(a.promise.inspect()).toEqual({ state: "pending" });
     });
 
 });
@@ -928,7 +937,7 @@ describe("promise states", function () {
             expect(childPromise.isPending()).toBe(false);
             expect(childPromise.isRejected()).toBe(false);
             expect(childPromise.isFulfilled()).toBe(true);
-            expect(childPromise.valueOf()).toBe(2);
+            expect(childPromise.inspect().value).toBe(2);
         });
     });
 
@@ -1120,68 +1129,67 @@ describe("all", function () {
         });
     });
 
+    it("modifies the input array", function () {
+        var input = [Q.resolve(0), Q.resolve(1)];
+
+        return Q.all(input).then(function (result) {
+            expect(result).toBe(input);
+            expect(input).toEqual([0, 1]);
+        });
+    });
+
 });
 
-describe("allResolved", function () {
+describe("allSettled", function () {
 
-    it("normalizes all given values to promises", function () {
-        return Q.allResolved([1, Q.resolve(2), Q.reject(3)])
-        .then(function (promises) {
-            expect(Q.isPromise(promises[0])).toBe(true);
-            expect(Q.isPromise(promises[1])).toBe(true);
-            expect(Q.isPromise(promises[2])).toBe(true);
+    it("deals with a mix of non-promises and promises", function () {
+        return Q.allSettled([1, Q.resolve(2), Q.reject(3)])
+        .then(function (snapshots) {
+            expect(snapshots).toEqual([
+                { state: "fulfilled", value: 1 },
+                { state: "fulfilled", value: 2 },
+                { state: "rejected", reason: 3 }
+            ]);
+        }, function () {
+            expect(true).toBe(false);
         });
     });
 
-    it("fulfillment even when one given promise is rejected", function () {
-        return Q.allResolved([1, Q.resolve(2), Q.reject(3)])
-        .then(null, function () {
-            expect("flying pigs").toBe("flightless pigs");
-        });
-    });
-
-    it("the state and quantity of promises to be correct", function () {
-        return Q.allResolved([1, Q.resolve(2), Q.reject(3)])
-        .then(function (promises) {
-            expect(promises.length).toEqual(3);
-
-            expect(Q.isPromise(promises[0])).toBe(true);
-            expect(Q.isPromise(promises[1])).toBe(true);
-            expect(Q.isPromise(promises[2])).toBe(true);
-
-            expect(Q.isPending(promises[0])).toBe(false);
-            expect(Q.isPending(promises[1])).toBe(false);
-            expect(Q.isPending(promises[2])).toBe(false);
-
-            expect(Q.isFulfilled(promises[0])).toBe(true);
-            expect(Q.isFulfilled(promises[1])).toBe(true);
-            expect(Q.isRejected(promises[2])).toBe(true);
-
-            expect(promises[0].valueOf()).toEqual(1);
-            expect(promises[1].valueOf()).toEqual(2);
-        });
-    });
-
-    it("is resolved after every constituent promise is resolved", function () {
-        var toResolve = Q.defer();
+    it("is settled after every constituent promise is settled", function () {
+        var toFulfill = Q.defer();
         var toReject = Q.defer();
-        var promises = [toResolve.promise, toReject.promise];
-        var resolved;
+        var promises = [toFulfill.promise, toReject.promise];
+        var fulfilled;
         var rejected;
 
         Q.fcall(function () {
             toReject.reject();
             rejected = true;
         })
+        .delay(15)
         .then(function () {
-            toResolve.resolve();
-            resolved = true;
+            toFulfill.resolve();
+            fulfilled = true;
         });
 
-        return Q.allResolved(promises)
+        return Q.allSettled(promises)
         .then(function () {
-            expect(resolved).toBe(true);
+            expect(fulfilled).toBe(true);
             expect(rejected).toBe(true);
+        });
+    });
+
+    it("modifies the input array", function () {
+        var input = [1, Q.resolve(2), Q.reject(3)];
+
+        return Q.allSettled(input)
+        .then(function (snapshots) {
+            expect(snapshots).toBe(input);
+            expect(input).toEqual([
+                { state: "fulfilled", value: 1 },
+                { state: "fulfilled", value: 2 },
+                { state: "rejected", reason: 3 }
+            ]);
         });
     });
 
@@ -1838,31 +1846,27 @@ describe("thenables", function () {
         });
     });
 
-    it("assimilates a thenable in allResolved", function () {
-        return Q.allResolved([
+    it("assimilates an immediately-fulfilled thenable in allSettled", function () {
+        return Q.allSettled([
             {then: function (win) {
                 win(10);
             }}
         ])
-        .then(function (promises) {
-            expect(promises[0].isPending()).toBe(false);
-            expect(promises[0].isFulfilled()).toBe(true);
-            expect(promises[0].isRejected()).toBe(false);
+        .then(function (snapshots) {
+            expect(snapshots).toEqual([{ state: "fulfilled", value: 10 }]);
         });
     });
 
-    it("assimilates a pending thenable in allResolved", function () {
-        return Q.allResolved([
+    it("assimilates an eventually-fulfilled thenable in allSettled", function () {
+        return Q.allSettled([
             {then: function (win) {
                 setTimeout(function () {
                     win(10);
                 }, 100);
             }}
         ])
-        .then(function (promises) {
-            expect(promises[0].isPending()).toBe(false);
-            expect(promises[0].isFulfilled()).toBe(true);
-            expect(promises[0].isRejected()).toBe(false);
+        .then(function (snapshots) {
+            expect(snapshots).toEqual([{ state: "fulfilled", value: 10 }]);
         });
     });
 
