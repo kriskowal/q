@@ -44,7 +44,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "jshint": ">=1.1.0",
+    "jshint": "~2.1.3",
     "cover": "*",
     "jasmine-node": "1.2.2",
     "opener": "*",

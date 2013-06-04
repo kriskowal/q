@@ -28,7 +28,7 @@
 
 (function (definition) {
     // Turn off strict mode for this function so we can assign to global.Q
-    /*jshint strict: false, -W117*/
+    /* jshint strict: false */
 
     // This file will function properly as a <script> tag, or a module
     // using CommonJS and NodeJS or RequireJS module formats.  In
@@ -294,6 +294,7 @@ if (typeof ReturnValue !== "undefined") {
 // this block.
 var hasES6Generators;
 try {
+    /* jshint evil: true, nonew: false */
     new Function("(function* (){ yield 1; })");
     hasES6Generators = true;
 } catch (e) {
@@ -301,8 +302,6 @@ try {
 }
 
 // long stack traces
-
-Q.longStackJumpLimit = 1;
 
 var STACK_JUMP_SEPARATOR = "From previous event:";
 
@@ -426,6 +425,11 @@ function Q(value) {
  * @param {Function} task
  */
 Q.nextTick = nextTick;
+
+/**
+ * Controls whether or not long stack traces will be on
+ */
+Q.longStackJumpLimit = 1;
 
 /**
  * Constructs a {promise, resolve} object.
@@ -825,7 +829,7 @@ function trackRejection(promise, reason) {
     displayUnhandledReasons();
 }
 
-function untrackRejection(promise, reason) {
+function untrackRejection(promise) {
     if (!trackUnhandledRejections) {
         return;
     }
