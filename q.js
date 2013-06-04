@@ -1288,6 +1288,7 @@ Q.del = dispatcher("delete");
  */
 // bound locally because it is used by other methods
 var post = Q.post = dispatcher("post");
+Q.mapply = post; // synonyms
 
 /**
  * Invokes a method in a future turn.
@@ -1323,6 +1324,17 @@ Q.fcall = fcall;
 function fcall(value) {
     var args = array_slice(arguments, 1);
     return fapply(value, args);
+}
+
+/**
+ * Calls the promised method in a future turn.
+ * @param object    promise or immediate reference for target method
+ * @param ...args   array of application arguments
+ */
+Q.mcall = mcall;
+function mcall(value) {
+    var args = array_slice(arguments, 1);
+    return post(value, args); // Just a guess, do not use this without someone who nows Q (TNGlol) look at this.
 }
 
 /**
@@ -1650,6 +1662,7 @@ function nbind(callback, thisArg /*, ... args*/) {
  * @returns a promise for the value or error
  */
 Q.npost = npost;
+Q.nmapply = npost; // synonyms
 function npost(object, name, args) {
     var nodeArgs = array_slice(args || []);
     var deferred = defer();
@@ -1671,6 +1684,7 @@ function npost(object, name, args) {
  */
 Q.nsend = nsend;
 Q.ninvoke = Q.nsend; // synonyms
+Q.nmcall = Q.nsend; // synonyms
 function nsend(object, name /*, ...args*/) {
     var nodeArgs = array_slice(arguments, 2);
     var deferred = defer();
