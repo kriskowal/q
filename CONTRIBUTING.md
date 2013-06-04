@@ -5,7 +5,7 @@ For pull requests:
 -   Add a Jasmine spec to `specs/q-spec.js`.
 -   Use `npm test` to avoid regressions.
 -   Run tests in `q-spec/run.html` in as many supported browsers as you
-    can find the will to deal with.
+    can find the will to deal with or use `grunt test` if you're using SauceLabs.
 -   You do not need to build minified versions.
 -   If you would be so kind, add a note to `CHANGES.md` in an
     appropriate section:
