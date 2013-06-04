@@ -284,7 +284,7 @@ return getUsername()
 });
 ```
 
-The ``all`` function returns a promise for an array of values.  When this 
+The ``all`` function returns a promise for an array of values.  When this
 promise is fulfilled, the array contains the fulfillment values of the original
 promises, in the same order as those promises.  If one of the given promises
 is rejected, the returned promise is immediately rejected, not waiting for the
@@ -683,44 +683,44 @@ return Q.fcall(function () {
 
 ### Adapting Node
 
-There is a ``makeNodeResolver`` method on deferreds that is handy for
-the NodeJS callback pattern.
+If you're working with functions that make use of the Node.js callback pattern,
+Q provides a few useful utility functions for converting between them. The
+most straightforward are probably `Q.nfcall` and `Q.nfapply` ("Node function
+call/apply") for calling Node.js-style functions and getting back a promise:
+
+```javascript
+return Q.nfcall(FS.readFile, "foo.txt", "utf-8");
+return Q.nfapply(FS.readFile, ["foo.txt", "utf-8"]);
+```
+
+If you are working with methods, instead of simple functions, you can easily
+run in to the usual problems where passing a method to another function—like
+`Q.nfcall`—"un-binds" the method from its owner. To avoid this, you can either
+use `Function.prototype.bind` or some nice shortcut methods we provide:
+
+```javascript
+return Q.ninvoke(redisClient, "get", "user:1:id");
+return Q.npost(redisClient, "get", ["user:1:id"]);
+```
+
+You can also create reusable wrappers with `Q.denodeify` or `Q.nbind`:
+
+```javascript
+var readFile = Q.denodeify(FS.readFile);
+return readFile("foo.txt", "utf-8");
+
+var redisClientGet = Q.nbind(redisClient.get, redisClient);
+return redisClientGet("user:1:id");
+```
+
+Finally, if you're working with raw deferred objects, there is a
+`makeNodeResolver` method on deferreds that can be handy:
 
 ```javascript
 var deferred = Q.defer();
 FS.readFile("foo.txt", "utf-8", deferred.makeNodeResolver());
 return deferred.promise;
 ```
-
-And there are ``Q.nfcall`` and ``Q.ninvoke`` for even shorter
-expression.
-
-```javascript
-return Q.nfcall(FS.readFile, "foo.txt", "utf-8");
-```
-
-```javascript
-return Q.ninvoke(FS, "readFile", "foo.txt", "utf-8");
-```
-
-There is also a ``Q.nfbind`` function that that creates a reusable
-wrapper.
-
-```javascript
-var readFile = Q.nfbind(FS.readFile);
-return readFile("foo.txt", "utf-8");
-```
-
-Note that, since promises are always resolved in the next turn of the
-event loop, working with streams [can be tricky][streams]. The
-essential problem is that, since Node does not buffer input, it is
-necessary to attach your ``"data"`` event listeners immediately,
-before this next turn comes around. There are a variety of solutions
-to this problem, and even some hope that in future versions of Node it
-will [be ameliorated][streamsnext].
-
-[streams]: https://groups.google.com/d/topic/q-continuum/xr8znxc_K5E/discussion
-[streamsnext]: http://maxogden.com/node-streams#streams.next
 
 ### Long Stack Traces
 
