@@ -436,7 +436,7 @@ Q.nextTick = nextTick;
 /**
  * Controls whether or not long stack traces will be on
  */
-Q.longStackJumpLimit = 1;
+Q.longStackSupport = false;
 
 /**
  * Constructs a {promise, resolve} object.
@@ -493,7 +493,7 @@ function defer() {
         return resolvedPromise.inspect();
     };
 
-    if (Q.longStackJumpLimit > 0 && hasStacks) {
+    if (Q.longStackSupport && hasStacks) {
         try {
             throw new Error();
         } catch (e) {
