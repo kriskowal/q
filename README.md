@@ -724,7 +724,7 @@ return deferred.promise;
 
 ### Long Stack Traces
 
-Q comes with *experimental* support for “long stack traces,” wherein the `stack`
+Q comes with optional support for “long stack traces,” wherein the `stack`
 property of `Error` rejection reasons is rewritten to be traced along
 asynchronous jumps instead of stopping at the most recent one. As an example:
 
@@ -738,7 +738,25 @@ function theDepthsOfMyProgram() {
 theDepthsOfMyProgram();
 ```
 
-gives a strack trace of:
+usually would give a rather unhelpful stack trace looking something like
+
+```
+Error: boo!
+    at explode (/path/to/test.js:3:11)
+    at _fulfilled (/path/to/test.js:q:54)
+    at resolvedValue.promiseDispatch.done (/path/to/q.js:823:30)
+    at makePromise.promise.promiseDispatch (/path/to/q.js:496:13)
+    at pending (/path/to/q.js:397:39)
+    at process.startup.processNextTick.process._tickCallback (node.js:244:9)
+```
+
+But, if you turn this feature on by setting
+
+```js
+Q.longStackSupport = true;
+```
+
+then the above code gives a nice stack trace to the tune of
 
 ```
 Error: boo!
@@ -753,29 +771,9 @@ stack trace! This is very helpful for debugging, as otherwise you end up getting
 only the first line, plus a bunch of Q internals, with no sign of where the
 operation started.
 
-This feature comes with some caveats, however. First, it does not (<em>yet!</em>)
-stitch together multiple asynchronous steps. You only get the one immediately
-prior to the operation that throws. Secondly, it comes with a performance
-penalty, and so if you are using Q to create many promises in a
-performance-critical situation, you will probably want to turn it off.
-
-To turn it off, set
-
-```js
-Q.longStackJumpLimit = 0;
-```
-
-Then you stack traces will revert to their usual unhelpful selves:
-
-```
-Error: boo!
-    at explode (/path/to/test.js:3:11)
-    at _fulfilled (/path/to/test.js:q:54)
-    at resolvedValue.promiseDispatch.done (/path/to/q.js:823:30)
-    at makePromise.promise.promiseDispatch (/path/to/q.js:496:13)
-    at pending (/path/to/q.js:397:39)
-    at process.startup.processNextTick.process._tickCallback (node.js:244:9)
-```
+This feature does come with somewhat-serious performance and memory overhead,
+however. If you're working with lots of promises, or trying to scale a server
+to many users, you should probably keep it off. But in development, go for it!
 
 ## Reference
 
