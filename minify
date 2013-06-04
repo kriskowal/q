@@ -1,2 +1,0 @@
-closure < q.js > q.min.js
-gzip < q.min.js > q.min.js.gz

@@ -66,7 +66,7 @@ rest and spread arguments.
 
 The Q module can be loaded as:
 
--   A ``<script>`` tag (creating a ``Q`` global variable): ~3 KB minified and
+-   A ``<script>`` tag (creating a ``Q`` global variable): ~2.5 KB minified and
     gzipped.
 -   A Node.js and CommonJS module, available in [npm](https://npmjs.org/) as
     the [q](https://npmjs.org/package/q) package
