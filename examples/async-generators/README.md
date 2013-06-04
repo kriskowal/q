@@ -1,4 +1,3 @@
-
 /!\ Warning: The behavior described here is likely to be quickly
 obseleted by developments in standardization and implementation.  Tread
 with care.
@@ -20,49 +19,55 @@ Q's ``async`` function supports both kinds of generators.  These
 examples will use the ES6 style.  See the examples and notes in
 [js-1.7](js-1.7/) for more on getting these to work with SpiderMonkey.
 
-    function* count() {
-        var i = 0;
-        while (true) {
-            yield i++;
-        }
+```js
+function* count() {
+    var i = 0;
+    while (true) {
+        yield i++;
     }
+}
 
-    var counter = count();
-    count.next() === 0;
-    count.next() === 1;
-    count.next() === 2;
+var counter = count();
+count.next() === 0;
+count.next() === 1;
+count.next() === 2;
+```
 
 ``yield`` can also return a value, if the ``send`` method of
 a generator is used instead of ``next``.
 
-    var buffer = (function* () {
-        var x;
-        while (true) {
-            x = yield x;
-        }
-    }());
+```js
+var buffer = (function* () {
+    var x;
+    while (true) {
+        x = yield x;
+    }
+}());
 
-    buffer.send(1) === undefined
-    buffer.send("a") === 1
-    buffer.send(2) === "a"
-    buffer.next() === 2
-    buffer.next() === undefined
-    buffer.next() === undefined
+buffer.send(1) === undefined;
+buffer.send("a") === 1;
+buffer.send(2) === "a";
+buffer.next() === 2;
+buffer.next() === undefined;
+buffer.next() === undefined;
+```
 
 We can use ``yield`` to wait for a promise to resolve.
 
-    var eventualAdd = Q.async(function* (oneP, twoP) {
-        var one = yield oneP;
-        var two = yield twoP;
-        return one + two;
-    });
+```js
+var eventualAdd = Q.async(function* (oneP, twoP) {
+    var one = yield oneP;
+    var two = yield twoP;
+    return one + two;
+});
 
-    eventualAdd(eventualOne, eventualTwo)
-    .then(function (three) {
-        three === 3;
-    });
+eventualAdd(eventualOne, eventualTwo)
+.then(function (three) {
+    three === 3;
+});
+```
 
-To use these in SpiderMonkey, change ``function`` to ``function*``.
+To use these in SpiderMonkey, change ``function*`` to ``function``.
 Also, in this last example, SpiderMonkey does not allow return values in
 generators.  To work around that, call the ``Q.return`` function instead
 of using a ``return`` statement.  ``Q.return`` will go away at some
