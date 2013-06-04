@@ -289,18 +289,18 @@ promise is fulfilled, the array contains the fulfillment values of the original
 promises, in the same order as those promises.  If one of the given promises
 is rejected, the returned promise is immediately rejected, not waiting for the
 rest of the batch.  If you want to wait for all of the promises to either be
-fulfilled or rejected, you can use ``allResolved``.
+fulfilled or rejected, you can use ``allSettled``.
 
 ```javascript
-Q.allResolved(promises)
-.then(function (promises) {
-    promises.forEach(function (promise) {
-        if (promise.isFulfilled()) {
-            var value = promise.valueOf();
+Q.allSettled(promises)
+.then(function (results) {
+    results.forEach(function (result) {
+        if (result.state === "fulfilled") {
+            var value = result.value;
         } else {
-            var exception = promise.valueOf().exception;
+            var reason = result.reason;
         }
-    })
+    });
 });
 ```
 
