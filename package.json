@@ -51,11 +51,13 @@
     "promises-aplus-tests": "1.x",
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.9",
-    "grunt-contrib-uglify": "~0.2.2"
+    "grunt-contrib-uglify": "~0.2.2",
+    "matcha": "~0.2.0"
   },
   "scripts": {
     "test": "jasmine-node spec && promises-aplus-tests spec/aplus-adapter",
     "test-browser": "opener spec/q-spec.html",
+    "benchmark": "matcha",
     "lint": "jshint q.js",
     "cover": "cover run node_modules/jasmine-node/bin/jasmine-node spec && cover report html && opener cover_html/index.html",
     "minify": "grunt",
