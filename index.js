@@ -1,4 +1,3 @@
-(function(e){if("function"==typeof bootstrap)bootstrap("q",e);else if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else if("undefined"!=typeof ses){if(!ses.ok())return;ses.makeQ=e}else"undefined"!=typeof window?window.Q=e():global.Q=e()})(function(){var define,ses,bootstrap,module,exports;module={exports:(exports={})};
 // vim:ts=4:sts=4:sw=4:
 /*!
  *
@@ -1673,4 +1672,3 @@ function nodeify(promise, nodeback) {
 var qEndingLine = captureLine();
 
 module.exports = Q
-return module.exports;});
