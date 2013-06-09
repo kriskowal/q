@@ -1459,7 +1459,7 @@ function progress(promise, progressed) {
 }
 
 /**
- * Provides an opportunity to observe the rejection of a promise,
+ * Provides an opportunity to observe the resolution of a promise,
  * regardless of whether the promise is fulfilled or rejected.  Forwards
  * the resolution to the returned promise when the callback is done.
  * The callback can return a promise to defer completion.
