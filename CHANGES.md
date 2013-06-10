@@ -14,7 +14,6 @@
    to true to enable long stack traces.
  - Long stack traces can now follow the entire asynchronous history of a
    promise, not just a single jump.
- - Support for ES6 generators. @awingo
  - Introduces `spawn` for an immediately invoked asychronous generator.
    @jlongster
  - Support for *experimental* synonyms `mapply`, `mcall`, `nmapply`,
