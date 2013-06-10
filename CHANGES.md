@@ -1,5 +1,25 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
+## 0.9.5 (unreleased)
+
+ - Introduces `inspect` for getting the state of a promise as
+   `{state: "fulfilled" | "rejected" | "pending", value | reason}`.
+ - Introduces `allSettled` which produces an array of promises states
+   for the input promises once they have all "settled".  This is in
+   accordance with a discussion on Promises/A+ that "settled" refers to
+   a promise that is "fulfilled" or "rejected".  "resolved" refers to a
+   deferred promise that has been "resolved" to another promise,
+   "sealing its fate" to the fate of the successor promise.
+ - Long stack traces are now off by default.  Set `Q.longStackSupport`
+   to true to enable long stack traces.
+ - Long stack traces can now follow the entire asynchronous history of a
+   promise, not just a single jump.
+ - Support for ES6 generators. @awingo
+ - Introduces `spawn` for an immediately invoked asychronous generator.
+   @jlongster
+ - Support for *experimental* synonyms `mapply`, `mcall`, `nmapply`,
+   `nmcall` for method invocation.
+
 ## 0.9.4
 
  - `isPromise` and `isPromiseAlike` now always returns a boolean 
