@@ -1,6 +1,6 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
-## 0.9.5 (unreleased)
+## 0.9.5
 
  - Introduces `inspect` for getting the state of a promise as
    `{state: "fulfilled" | "rejected" | "pending", value | reason}`.
