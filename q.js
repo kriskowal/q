@@ -412,9 +412,9 @@ function deprecate(callback, name, alternative) {
 // beginning of real work
 
 /**
- * Creates fulfilled promises from non-promises,
+ * Creates fulfilled promises from non-thenables,
  * Passes Q promises through,
- * Coerces thenables to Q promises.
+ * Coerces other thenables to Q promises.
  */
 function Q(value) {
     return resolve(value);
@@ -432,13 +432,14 @@ Q.nextTick = nextTick;
 Q.longStackJumpLimit = 1;
 
 /**
- * Constructs a {promise, resolve} object.
+ * Constructs a {promise, resolve, reject} object.
  *
- * The resolver is a callback to invoke with a more resolved value for the
- * promise. To fulfill the promise, invoke the resolver with any value that is
- * not a function. To reject the promise, invoke the resolver with a rejection
- * object. To put the promise in the same state as another promise, invoke the
- * resolver with that other promise.
+ * `resolve` is a callback to invoke with a more resolved value for the
+ * promise. To fulfill the promise, invoke `resolve` with any value that is
+ * not a thenable. To reject the promise, invoke `resolve` with a rejected
+ * thenable, or invoke `reject` with the reason directly. To resolve the
+ * promise to another thenable, thus putting it in the same state, invoke
+ * `resolve` with that other thenable.
  */
 Q.defer = defer;
 function defer() {
@@ -447,7 +448,7 @@ function defer() {
     // element of the messages array is itself an array of complete arguments to
     // forward to the resolved promise.  We coerce the resolution value to a
     // promise using the `resolve` function because it handles both fully
-    // resolved values and other promises gracefully.
+    // non-thenable values and other thenables gracefully.
     var messages = [], progressListeners = [], resolvedPromise;
 
     var deferred = object_create(defer.prototype);
@@ -1200,7 +1201,7 @@ function _return(value) {
 
 /**
  * The promised function decorator ensures that any promise arguments
- * are resolved and passed as values (`this` is also resolved and passed
+ * are settled and passed as values (`this` is also settled and passed
  * as a value).  It will also ensure that the result of a function is
  * always a promise.
  *
@@ -1350,7 +1351,7 @@ function fbind(value) {
  * Requests the names of the owned properties of a promised
  * object in a future turn.
  * @param object    promise or immediate reference for target object
- * @return promise for the keys of the eventually resolved object
+ * @return promise for the keys of the eventually settled object
  */
 Q.keys = dispatcher("keys");
 
@@ -1391,7 +1392,7 @@ function all(promises) {
 }
 
 /**
- * Waits for all promises to be resolved, either fulfilled or
+ * Waits for all promises to be settled, either fulfilled or
  * rejected.  This is distinct from `all` since that would stop
  * waiting at the first rejection.  The promise returned by
  * `allResolved` will never be rejected.
@@ -1459,7 +1460,7 @@ function progress(promise, progressed) {
 }
 
 /**
- * Provides an opportunity to observe the rejection of a promise,
+ * Provides an opportunity to observe the settling of a promise,
  * regardless of whether the promise is fulfilled or rejected.  Forwards
  * the resolution to the returned promise when the callback is done.
  * The callback can return a promise to defer completion.
