@@ -742,7 +742,9 @@ function nearer(value) {
  */
 Q.isPromise = isPromise;
 function isPromise(object) {
-    return isObject(object) && typeof object.promiseDispatch === "function";
+    return isObject(object) &&
+        typeof object.promiseDispatch === "function" &&
+        typeof object.inspect === "function";
 }
 
 Q.isPromiseAlike = isPromiseAlike;
@@ -1379,8 +1381,10 @@ function all(promises) {
         var deferred = defer();
         array_reduce(promises, function (undefined, promise, index) {
             var snapshot;
-            if (isPromise(promise) &&
-                (snapshot = promise.inspect()).state === "fulfilled") {
+            if (
+                isPromise(promise) &&
+                (snapshot = promise.inspect()).state === "fulfilled"
+            ) {
                 promises[index] = snapshot.value;
             } else {
                 ++countDown;
