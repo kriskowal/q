@@ -624,6 +624,11 @@ function makePromise(descriptor, fallback, inspect) {
             ));
         };
     }
+    if (inspect === void 0) {
+        inspect = function () {
+            return {state: "unknown"};
+        };
+    }
 
     var promise = object_create(makePromise.prototype);
 
