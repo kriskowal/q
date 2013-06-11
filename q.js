@@ -1713,6 +1713,27 @@ function nodeify(promise, nodeback) {
     }
 }
 
+/**
+ * Wraps a DOMRequest-producing function and returns an equivalent version that
+ * returns a promise.
+ */
+Q.dedomrequest = dedomrequest;
+function dedomrequest(fn) {
+    var baseArgs = array_slice(arguments, 1);
+    return function() {
+        var requestArgs = baseArgs.concat(array_slice(arguments));
+        var deferred = defer();
+        var request = fn.apply(null, requestArgs);
+        request.onsuccess = function() {
+            deferred.resolve(request.result);
+        };
+        request.onerror = function() {
+            deferred.reject(request.error);
+        };
+        return deferred.promise;
+    };
+}
+
 // All code before this point will be filtered from stack traces.
 var qEndingLine = captureLine();
 
