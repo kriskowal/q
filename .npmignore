@@ -10,6 +10,7 @@ cover_html/
 
 design
 examples
+release
 spec
 .coverignore
 .jshintrc
