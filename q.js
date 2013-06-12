@@ -459,7 +459,7 @@ function defer() {
     var messages = [], progressListeners = [], resolvedPromise;
 
     var deferred = object_create(defer.prototype);
-    var promise = object_create(makePromise.prototype);
+    var promise = object_create(Promise.prototype);
 
     promise.promiseDispatch = function (resolve, op, operands) {
         var args = array_slice(arguments);
@@ -615,8 +615,8 @@ function promise(resolver) {
  * of the returned object, apart from that it is usable whereever promises are
  * bought and sold.
  */
-Q.makePromise = makePromise;
-function makePromise(descriptor, fallback, inspect) {
+Q.makePromise = Promise;
+function Promise(descriptor, fallback, inspect) {
     if (fallback === void 0) {
         fallback = function (op) {
             return reject(new Error(
@@ -630,7 +630,7 @@ function makePromise(descriptor, fallback, inspect) {
         };
     }
 
-    var promise = object_create(makePromise.prototype);
+    var promise = object_create(Promise.prototype);
 
     promise.promiseDispatch = function (resolve, op, args) {
         var result;
@@ -670,7 +670,7 @@ function makePromise(descriptor, fallback, inspect) {
     return promise;
 }
 
-makePromise.prototype.then = function (fulfilled, rejected, progressed) {
+Promise.prototype.then = function (fulfilled, rejected, progressed) {
     var self = this;
     var deferred = defer();
     var done = false;   // ensure the untrusted promise makes at most a
@@ -741,11 +741,11 @@ makePromise.prototype.then = function (fulfilled, rejected, progressed) {
     return deferred.promise;
 };
 
-makePromise.prototype.thenResolve = function (value) {
+Promise.prototype.thenResolve = function (value) {
     return when(this, function () { return value; });
 };
 
-makePromise.prototype.thenReject = function (reason) {
+Promise.prototype.thenReject = function (reason) {
     return when(this, function () { throw reason; });
 };
 
@@ -767,7 +767,7 @@ array_reduce(
         "nodeify"
     ],
     function (undefined, name) {
-        makePromise.prototype[name] = function () {
+        Promise.prototype[name] = function () {
             return Q[name].apply(
                 Q,
                 [this].concat(array_slice(arguments))
@@ -777,11 +777,11 @@ array_reduce(
     void 0
 );
 
-makePromise.prototype.toSource = function () {
+Promise.prototype.toSource = function () {
     return this.toString();
 };
 
-makePromise.prototype.toString = function () {
+Promise.prototype.toString = function () {
     return "[object Promise]";
 };
 
@@ -948,7 +948,7 @@ resetUnhandledRejections();
  */
 Q.reject = reject;
 function reject(reason) {
-    var rejection = makePromise({
+    var rejection = Promise({
         "when": function (rejected) {
             // note that the error has been handled
             if (rejected) {
@@ -974,7 +974,7 @@ function reject(reason) {
  */
 Q.fulfill = fulfill;
 function fulfill(value) {
-    return makePromise({
+    return Promise({
         "when": function () {
             return value;
         },
@@ -1057,7 +1057,7 @@ function coerce(promise) {
  */
 Q.master = master;
 function master(object) {
-    return makePromise({
+    return Promise({
         "isDef": function () {}
     }, function fallback(op, args) {
         return dispatch(object, op, args);
