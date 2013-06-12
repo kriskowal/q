@@ -82,88 +82,110 @@ var noop = function () {};
 
 // Use the fastest possible means to execute a task in a future turn
 // of the event loop.
-var nextTick;
-if (typeof setImmediate === "function") {
-    // In IE10, Node.js 0.9+, or https://github.com/NobleJS/setImmediate
-    if (typeof window !== "undefined") {
-        nextTick = setImmediate.bind(window);
-    } else {
-        nextTick = setImmediate;
-    }
-} else if (typeof process !== "undefined" && process.nextTick) {
-    // Node.js before 0.9. Note that some fake-Node environments, like the
-    // Mocha test runner, introduce a `process` global without a `nextTick`.
+var nextTick =(function () {
+    // linked list of tasks (single, with head node)
+    var head = {task: void 0, next: null};
+    var tail = head;
+    var flushing = false;
+    var requestTick = void 0;
+    var isNodeJS = false;
 
-    nextTick = process.nextTick;
-} else {
-    (function () {
-        // linked list of tasks (single, with head node)
-        var head = {task: void 0, next: null};
-        var tail = head;
-        var maxPendingTicks = 2;
-        var pendingTicks = 0;
-        var queuedTasks = 0;
-        var usedTicks = 0;
-        var requestTick = void 0;
+    function flush() {
+        while (head.next) {
+            head = head.next;
+            var task = head.task;
+            head.task = void 0;
+            var domain = head.domain;
 
-        function onTick() {
-            // In case of multiple tasks ensure at least one subsequent tick
-            // to handle remaining tasks in case one throws.
-            --pendingTicks;
+            if (domain) {
+                head.domain = void 0;
+                domain.enter();
+            }
 
-            if (++usedTicks >= maxPendingTicks) {
-                // Amortize latency after thrown exceptions.
-                usedTicks = 0;
-                maxPendingTicks *= 4; // fast grow!
-                var expectedTicks = queuedTasks && Math.min(
-                    queuedTasks - 1,
-                    maxPendingTicks
-                );
-                while (pendingTicks < expectedTicks) {
-                    ++pendingTicks;
-                    requestTick();
+            try {
+                task();
+
+            } catch (e) {
+                if (isNodeJS) {
+                    // In node, uncaught exceptions are considered fatal errors.
+                    // Re-throw them synchronously to interrupt flushing!
+
+                    // Ensure continuation if the uncaught exception is suppressed
+                    // listening "uncaughtException" events (as domains does).
+                    // Continue in next event to avoid tick recursion.
+                    domain && domain.exit();
+                    setTimeout(flush, 0);
+                    domain && domain.enter();
+
+                    throw e;
+
+                } else {
+                    // In browsers, uncaught exceptions are not fatal.
+                    // Re-throw them asynchronously to avoid slow-downs.
+                    setTimeout(function() {
+                       throw e;
+                    }, 0);
                 }
             }
 
-            while (queuedTasks) {
-                --queuedTasks; // decrement here to ensure it's never negative
-                head = head.next;
-                var task = head.task;
-                head.task = void 0;
-                task();
+            if (domain) {
+                domain.exit();
             }
-
-            usedTicks = 0;
         }
 
-        nextTick = function (task) {
-            tail = tail.next = {task: task, next: null};
-            if (
-                pendingTicks < ++queuedTasks &&
-                pendingTicks < maxPendingTicks
-            ) {
-                ++pendingTicks;
-                requestTick();
-            }
+        flushing = false;
+    }
+
+    nextTick = function (task) {
+        tail = tail.next = {
+            task: task,
+            domain: isNodeJS && process.domain,
+            next: null
         };
 
-        if (typeof MessageChannel !== "undefined") {
-            // modern browsers
-            // http://www.nonblocking.io/2011/06/windownexttick.html
-            var channel = new MessageChannel();
-            channel.port1.onmessage = onTick;
-            requestTick = function () {
-                channel.port2.postMessage(0);
-            };
+        if (!flushing) {
+            flushing = true;
+            requestTick();
+        }
+    };
 
+    if (typeof process !== "undefined" && process.nextTick) {
+        // Node.js before 0.9. Note that some fake-Node environments, like the
+        // Mocha test runner, introduce a `process` global without a `nextTick`.
+        isNodeJS = true;
+
+        requestTick = function () {
+            process.nextTick(flush);
+        };
+
+    } else if (typeof setImmediate === "function") {
+        // In IE10, Node.js 0.9+, or https://github.com/NobleJS/setImmediate
+        if (typeof window !== "undefined") {
+            requestTick = setImmediate.bind(window, flush);
         } else {
-            // old browsers
             requestTick = function () {
-                setTimeout(onTick, 0);
+                setImmediate(flush);
             };
         }
-    })();
-}
+
+    } else if (typeof MessageChannel !== "undefined") {
+        // modern browsers
+        // http://www.nonblocking.io/2011/06/windownexttick.html
+        var channel = new MessageChannel();
+        channel.port1.onmessage = flush;
+        requestTick = function () {
+            channel.port2.postMessage(0);
+        };
+
+    } else {
+        // old browsers
+        requestTick = function () {
+            setTimeout(flush, 0);
+        };
+    }
+
+    return nextTick;
+})();
 
 // Attempt to make generics safe in the face of downstream
 // modifications.
