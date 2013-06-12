@@ -91,6 +91,8 @@ var nextTick =(function () {
     var isNodeJS = false;
 
     function flush() {
+        /* jshint loopfunc: true */
+
         while (head.next) {
             head = head.next;
             var task = head.task;
@@ -113,9 +115,13 @@ var nextTick =(function () {
                     // Ensure continuation if the uncaught exception is suppressed
                     // listening "uncaughtException" events (as domains does).
                     // Continue in next event to avoid tick recursion.
-                    domain && domain.exit();
+                    if (domain) {
+                        domain.exit();
+                    }
                     setTimeout(flush, 0);
-                    domain && domain.enter();
+                    if (domain) {
+                        domain.enter();
+                    }
 
                     throw e;
 
