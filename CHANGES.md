@@ -1,5 +1,21 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
+## 0.9.6
+
+ - Fixes a bug in recognizing the difference between compatible Q
+   promises, and Q promises from before the implementation of "inspect".
+   The latter are now coerced.
+ - Fixes an infinite asynchronous coercion cycle introduced by former
+   solution, in two independently sufficient ways.  1.) All promises
+   returned by makePromise now implement "inspect", albeit a default
+   that reports that the promise has an "unknown" state.  2.) The
+   implementation of "then/when" is now in "then" instead of "when", so
+   that the responsibility to "coerce" the given promise rests solely in
+   the "when" method and the "then" method may assume that "this" is a
+   promise of the right type.
+ - Refactors `nextTick` to use an unrolled microtask within Q regardless
+   of how new ticks a requested. #316 @rkatic
+
 ## 0.9.5
 
  - Introduces `inspect` for getting the state of a promise as
