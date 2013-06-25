@@ -788,7 +788,7 @@ array_reduce(
         "keys",
         "fapply", "fcall", "fbind",
         "all", "allResolved",
-        "timeout", "delay",
+        "timeout", "throttle", "delay",
         "catch", "finally", "fail", "fin", "progress", "done",
         "nfcall", "nfapply", "nfbind", "denodeify", "nbind",
         "npost", "nsend", "nmapply", "ninvoke", "nmcall",
@@ -1593,11 +1593,11 @@ function timeout(promise, ms, msg) {
  * milliseconds.
  * @param {Any*} promise
  * @param {Number} milliseconds
- * @returns a promise for the resolution of the given promise after some
- * time has elapsed.
+ * @returns a promise for the resolution of the given promise after at
+ * least the timeout has elapsed since creating the promise.
  */
-Q.delay = delay;
-function delay(promise, timeout) {
+Q.throttle = throttle;
+function throttle(promise, timeout) {
     if (timeout === void 0) {
         timeout = promise;
         promise = void 0;
@@ -1609,6 +1609,33 @@ function delay(promise, timeout) {
     setTimeout(function () {
         deferred.resolve(promise);
     }, timeout);
+
+    return deferred.promise;
+}
+
+/**
+ * Returns a promise for the given value (or promised value), some
+ * milliseconds after it resolved.
+ * @param {Any*} promise
+ * @param {Number} milliseconds
+ * @returns a promise for the resolution of the given promise after some
+ * time has elapsed since the resolution of the given promise.
+ */
+Q.delay = delay;
+function delay(promise, timeout) {
+    if (timeout === void 0) {
+        timeout = promise;
+        promise = void 0;
+    }
+
+    var deferred = defer();
+
+    function doDelay() {
+        setTimeout(function () {
+            deferred.resolve(promise);
+        }, timeout);
+    }
+    when(promise, doDelay, doDelay, deferred.notify);
 
     return deferred.promise;
 }
