@@ -1589,12 +1589,12 @@ function timeout(promise, ms, msg) {
 }
 
 /**
- * Returns a promise for the given value (or promised value) after some
- * milliseconds.
+ * Returns a promise for the given value (or promised value), some
+ * milliseconds after it resolved.
  * @param {Any*} promise
  * @param {Number} milliseconds
  * @returns a promise for the resolution of the given promise after some
- * time has elapsed.
+ * time has elapsed since the resolution of the given promise.
  */
 Q.delay = delay;
 function delay(promise, timeout) {
@@ -1604,12 +1604,11 @@ function delay(promise, timeout) {
     }
 
     var deferred = defer();
-
-    when(promise, undefined, undefined, deferred.notify);
-    setTimeout(function () {
-        deferred.resolve(promise);
-    }, timeout);
-
+    when(promise, function () {
+        setTimeout(function () {
+            deferred.resolve(promise);
+        }, timeout);
+    }, deferred.reject, deferred.notify);
     return deferred.promise;
 }
 
