@@ -1166,7 +1166,7 @@ describe("allSettled", function () {
             toReject.reject();
             rejected = true;
         })
-        .throttle(15)
+        .delay(15)
         .then(function () {
             toFulfill.resolve();
             fulfilled = true;
@@ -1616,14 +1616,12 @@ describe("delay", function () {
         return promise;
     });
 
-    it("should delay rejection", function () {
+    it("should not delay rejection", function () {
         var promise = Q.reject(5).delay(50);
 
-        setTimeout(function () {
-            expect(promise.isPending()).toBe(true);
-        }, 40);
-
-        return promise.then(undefined, function () { });
+        return Q.delay(20).then(function () {
+            expect(promise.isPending()).toBe(false);
+        });
     });
 
     it("should treat a single argument as a time", function () {
@@ -1677,96 +1675,6 @@ describe("delay", function () {
         Q.delay(15).then(function () { deferred.notify(2); });
         Q.delay(25).then(function () { deferred.notify(3); });
         Q.delay(35).then(function () { deferred.resolve(); });
-
-        return promise;
-    });
-});
-
-describe("throttle", function () {
-    it("should throttle fulfillment", function () {
-        var promise = Q.resolve(5).throttle(50);
-
-        setTimeout(function () {
-            expect(promise.isPending()).toBe(true);
-        }, 40);
-
-        return promise;
-    });
-
-    it("should throttle rejection", function () {
-        var promise = Q.reject(5).throttle(50);
-
-        setTimeout(function () {
-            expect(promise.isPending()).toBe(true);
-        }, 40);
-
-        return promise.then(undefined, function () { });
-    });
-
-    it("should treat a single argument as a time", function () {
-        var promise = Q.throttle(50);
-
-        setTimeout(function () {
-            expect(promise.isPending()).toBe(true);
-        }, 40);
-
-        return promise;
-    });
-
-    it("should treat two arguments as a value + a time", function () {
-        var promise = Q.throttle("what", 50);
-
-        setTimeout(function () {
-            expect(promise.isPending()).toBe(true);
-        }, 40);
-
-        return promise.then(function (value) {
-            expect(value).toBe("what");
-        });
-    });
-
-    it("should delegate to faster passed promises, slowing them down", function () {
-        var promise1 = Q.throttle("what", 30);
-        var promise2 = Q.throttle(promise1, 50);
-
-        setTimeout(function () {
-            expect(promise1.isPending()).toBe(false);
-            expect(promise2.isPending()).toBe(true);
-        }, 40);
-
-        return promise2.then(function (value) {
-            expect(value).toBe("what");
-        });
-    });
-
-    it("should delegate to slower passed promises, staying at their speed", function () {
-        var promise1 = Q.throttle("what", 70);
-        var promise2 = Q.throttle(promise1, 50);
-
-        setTimeout(function () {
-            expect(promise1.isPending()).toBe(true);
-            expect(promise2.isPending()).toBe(true);
-        }, 60);
-
-        return promise2.then(function (value) {
-            expect(value).toBe("what");
-        });
-    });
-
-    it("should pass through progress notifications from passed promises", function () {
-        var deferred = Q.defer();
-
-        var progressValsSeen = [];
-        var promise = Q.throttle(deferred.promise, 100).then(function () {
-            expect(progressValsSeen).toEqual([1, 2, 3]);
-        }, undefined, function (progressVal) {
-            progressValsSeen.push(progressVal);
-        });
-
-        Q.throttle(5).then(function () { deferred.notify(1); });
-        Q.throttle(15).then(function () { deferred.notify(2); });
-        Q.throttle(25).then(function () { deferred.notify(3); });
-        Q.throttle(35).then(function () { deferred.resolve(); });
 
         return promise;
     });
