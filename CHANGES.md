@@ -1,6 +1,6 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
-## 0.9.6
+## 0.9.7
   - Introdues `series` for composing a linear workflow (chaining functions on a promise)
 
 ## 0.9.6
