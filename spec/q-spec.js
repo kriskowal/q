@@ -2460,3 +2460,46 @@ describe("unhandled rejection reporting", function () {
         expect(Q.getUnhandledReasons()).toEqual([]);
     });
 });
+
+describe("series", function() {
+    var inc = function (x) {
+        return x + 1;
+    };
+    var _double = function (x) {
+        return x * 2;
+    };
+
+    var _expector = function(y) {
+        return function(x) {
+            return expect(x).toBe(y);
+        };
+    };
+
+    it("resolves when passed no arguments", function() {
+        return Q.series().then(_expector(null));
+    });
+
+    it("resolves when passed only a list of functions", function() {
+        return Q.series([
+            function() {
+                return 23;
+            },
+            _double,
+            inc
+        ]).then(_expector(47));
+    });
+
+    it("resolves when passed a promise and a list of functiions", function() {
+        return Q.series(Q(1), [
+            _double,
+            inc
+        ]).then(_expector(3));
+    });
+
+    it("supports value as first argument instead of promise", function() {
+        return Q.series(99, [
+            inc,
+            _double
+        ]).then(_expector(200));
+    });
+});

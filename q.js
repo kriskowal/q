@@ -777,6 +777,11 @@ Promise.prototype.thenReject = function (reason) {
     return when(this, function () { throw reason; });
 };
 
+Promise.prototype.series = function() {
+    var args = Array.prototype.slice.call(arguments, 0);
+    return series.apply(undefined, [this].concat(args));
+};
+
 // Chainable methods
 array_reduce(
     [
@@ -1433,6 +1438,41 @@ function all(promises) {
         }
         return deferred.promise;
     });
+}
+
+/**
+ * Chains a promise with a list of functions (using then)
+ * Example:
+ *      p.then(f1).then(f2).then(f3)
+ * would become
+ *      p.series([f1, f2, f3])
+ * or
+ *      Q.series(p, [f1, f2, f3, f4])
+ * also works for a simple list of promise supporting functions
+ *      Q.series([f1, f2, f3, f4])
+ */
+// By Aaron O'Mullan
+Q.series = series;
+function series(promise, funcs) {
+    var p = promise;
+
+    // One argument
+    if(!funcs) {
+        funcs = promise || [];
+        p = null;
+    }
+
+    // Convert p to pormise if not one
+    if(!isPromise(p)) {
+        p = resolve(p);
+    }
+
+    // Do chaining
+    funcs.forEach(function(f) {
+        p = p.then(f);
+    });
+
+    return p;
 }
 
 /**
