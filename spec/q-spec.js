@@ -1616,14 +1616,12 @@ describe("delay", function () {
         return promise;
     });
 
-    it("should delay rejection", function () {
+    it("should not delay rejection", function () {
         var promise = Q.reject(5).delay(50);
 
-        setTimeout(function () {
-            expect(promise.isPending()).toBe(true);
-        }, 40);
-
-        return promise.then(undefined, function () { });
+        return Q.delay(20).then(function () {
+            expect(promise.isPending()).toBe(false);
+        });
     });
 
     it("should treat a single argument as a time", function () {
@@ -1648,9 +1646,9 @@ describe("delay", function () {
         });
     });
 
-    it("should delegate to faster passed promises, slowing them down", function () {
+    it("should delay after resolution", function () {
         var promise1 = Q.delay("what", 30);
-        var promise2 = Q.delay(promise1, 50);
+        var promise2 = promise1.delay(30);
 
         setTimeout(function () {
             expect(promise1.isPending()).toBe(false);
@@ -1662,19 +1660,6 @@ describe("delay", function () {
         });
     });
 
-    it("should delegate to slower passed promises, staying at their speed", function () {
-        var promise1 = Q.delay("what", 70);
-        var promise2 = Q.delay(promise1, 50);
-
-        setTimeout(function () {
-            expect(promise1.isPending()).toBe(true);
-            expect(promise2.isPending()).toBe(true);
-        }, 60);
-
-        return promise2.then(function (value) {
-            expect(value).toBe("what");
-        });
-    });
 
     it("should pass through progress notifications from passed promises", function () {
         var deferred = Q.defer();
