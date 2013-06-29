@@ -1162,41 +1162,61 @@ function spread(promise, fulfilled, rejected) {
  */
 Q.async = async;
 function async(makeGenerator) {
-    return function () {
-        // when verb is "send", arg is a value
-        // when verb is "throw", arg is an exception
-        function continuer(verb, arg) {
-            var result;
-            if (hasES6Generators) {
-                try {
-                    result = generator[verb](arg);
-                } catch (exception) {
+    return function() {
+        return makeContinuer(makeGenerator.apply(this, arguments));
+    };
+}
+
+function makeContinuer(generator) {
+    // when verb is "send", arg is a value
+    // when verb is "throw", arg is an exception
+    function continuer(verb, arg) {
+        var result;
+        if (hasES6Generators) {
+            try {
+                result = generator[verb](arg);
+            } catch (exception) {
+                return reject(exception);
+            }
+            if (result.done) {
+                return result.value;
+            } else {
+                var val = asyncValue(result.value);                
+                return when(val, callback, errback);
+            }
+        } else {
+            // FIXME: Remove this case when SM does ES6 generators.
+            try {
+                result = generator[verb](arg);
+            } catch (exception) {
+                if (isStopIteration(exception)) {
+                    return exception.value;
+                } else {
                     return reject(exception);
                 }
-                if (result.done) {
-                    return result.value;
-                } else {
-                    return when(result.value, callback, errback);
-                }
-            } else {
-                // FIXME: Remove this case when SM does ES6 generators.
-                try {
-                    result = generator[verb](arg);
-                } catch (exception) {
-                    if (isStopIteration(exception)) {
-                        return exception.value;
-                    } else {
-                        return reject(exception);
-                    }
-                }
-                return when(result, callback, errback);
             }
+            return when(result, callback, errback);
         }
-        var generator = makeGenerator.apply(this, arguments);
-        var callback = continuer.bind(continuer, "send");
-        var errback = continuer.bind(continuer, "throw");
-        return callback();
-    };
+    }
+
+    var callback = continuer.bind(continuer, "send");
+    var errback = continuer.bind(continuer, "throw");
+    return callback();
+};
+
+var dummyGenProto = (function*() {})().constructor;
+function isGeneratorInstance(f) {
+    return f instanceof dummyGenProto;
+}
+
+function asyncValue(val) {
+    if(isGeneratorInstance(val)) {
+        return makeContinuer(val);
+    }
+    else if(Array.isArray(val)) {
+        return Q.all(val.map(asyncValue));
+    }
+    return val;
 }
 
 /**
