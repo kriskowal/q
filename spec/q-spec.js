@@ -1244,6 +1244,35 @@ describe("spread", function () {
 
 });
 
+describe("map", function () {
+
+    it("maps an array to an array of promises", function() {
+        return Q.map(['one', 'two', 'three'], function(s) {
+            return s.length;
+        })
+        .then(function(lengths) {
+            expect(lengths[0]).toBe(3);
+            expect(lengths[1]).toBe(3);
+            expect(lengths[2]).toBe(5);
+        })
+    });
+
+    it("fails if any of the promises fail", function() {
+        return Q([
+            function() {
+                throw new Error('raised from inner')
+            }
+        ])
+        .map(Q.fcall)
+        .all()
+        .then(function() {
+            throw new Error('then handler should not run')
+        }, function () {
+        })
+    });
+
+});
+
 describe("fin", function () {
 
     var exception1 = new Error("boo!");
