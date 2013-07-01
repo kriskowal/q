@@ -787,7 +787,8 @@ array_reduce(
         "post", "send", "mapply", "invoke", "mcall",
         "keys",
         "fapply", "fcall", "fbind",
-        "all", "allResolved",
+        "all", "allSettled",
+        "allResolved", // XXX deprecated
         "timeout", "delay",
         "catch", "finally", "fail", "fin", "progress", "done",
         "nfcall", "nfapply", "nfbind", "denodeify", "nbind",
