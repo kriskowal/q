@@ -1096,9 +1096,12 @@ describe("all", function () {
                 throw new Error('raised from inner')
             }
         ])
-        .then(function() {
+        .map(Q.fcall)
+        .all()
+        .then(function(value) {
             throw new Error('then handler should not run')
-        })
+        }, function () {
+        });
     })
 
     it("resolves after any constituent promise is rejected", function () {
@@ -1140,15 +1143,6 @@ describe("all", function () {
         });
     });
 
-    it("modifies the input array", function () {
-        var input = [Q(0), Q(1)];
-
-        return Q.all(input).then(function (result) {
-            expect(result).toBe(input);
-            expect(input).toEqual([0, 1]);
-        });
-    });
-
 });
 
 describe("allSettled", function () {
@@ -1187,20 +1181,6 @@ describe("allSettled", function () {
         .then(function () {
             expect(fulfilled).toBe(true);
             expect(rejected).toBe(true);
-        });
-    });
-
-    it("modifies the input array", function () {
-        var input = [1, Q(2), Q.reject(3)];
-
-        return Q.allSettled(input)
-        .then(function (snapshots) {
-            expect(snapshots).toBe(input);
-            expect(input).toEqual([
-                { state: "fulfilled", value: 1 },
-                { state: "fulfilled", value: 2 },
-                { state: "rejected", reason: 3 }
-            ]);
         });
     });
 
@@ -1257,16 +1237,278 @@ describe("spread", function () {
 
 describe("map", function () {
 
-	it("maps an array to an array of promises", function() {
-		return Q.map(['one', 'two', 'three'], function(s) {
-			return s.length;
-		})
-		.then(function(lengths) {
-			expect(lengths[0]).toBe(3);
-			expect(lengths[1]).toBe(3);
-			expect(lengths[2]).toBe(5);
-		})
-	});
+    it("maps an array to an array of promises", function() {
+        return Q.map(['one', 'two', 'three'], function(s) {
+            return s.length;
+        })
+        .all()
+        .then(function(lengths) {
+            expect(lengths[0]).toBe(3);
+            expect(lengths[1]).toBe(3);
+            expect(lengths[2]).toBe(5);
+        })
+    });
+
+    it("fails if any of the promises fail", function() {
+        return Q([
+            function() {
+                throw new Error('raised from inner')
+            }
+        ])
+        .map(Q.fcall)
+        .all()
+        .then(function() {
+            throw new Error('then handler should not run')
+        }, function () {
+        })
+    });
+
+    it("handles holes", function () {
+        return Q([1,, 2,, 3])
+        .map(function (n) {
+            return n * 2;
+        })
+        .all()
+        .then(function (values) {
+            expect(values[0]).toBe(2);
+            expect(values[2]).toBe(4);
+            expect(values[4]).toBe(6);
+            expect(1 in values).toBe(false);
+            expect(3 in values).toBe(false);
+        })
+    });
+
+    it("chains without delay", function () {
+        var start = +new Date();
+        return Q([1, 2, 3])
+        .map(function (n) {
+            return Q(n).delay((3 - n) * 10);
+        })
+        .map(function (n) {
+            return Q(n).delay(10 * n);
+        })
+        .all()
+        .then(function (ns) {
+            expect(ns).toEqual([1, 2, 3]);
+            var stop = +new Date();
+            expect(stop - start).toBeLessThan(200);
+        })
+    });
+
+    it("handles indefinite promise queues", function () {
+        var queue = Q.Queue();
+        var partial = 0;
+        queue.send(1);
+        queue.send(2);
+
+        Q.delay(100).then(function () {
+            expect(partial).toBe(6);
+            queue.send(3);
+            queue["return"]();
+        });
+
+        return queue.map(function (n) {
+            return n * 2;
+        })
+        .reduce(function (a, b) {
+            partial += b;
+            return a + b;
+        }, 0)
+        .then(function (value) {
+            expect(value).toBe(12);
+        })
+    });
+
+});
+
+describe("reduce", function () {
+
+    it("should map reduce", function () {
+        return Q([1, 2, 3])
+        .map(function (n) {
+            return Q(n).delay(n * 10)
+        })
+        .map(function (m) {
+            return m * 2;
+        })
+        .reduce(function (a, b) {
+            return a + b;
+        })
+        .then(function (sum) {
+            expect(sum).toBe(12);
+        });
+    });
+
+    it("should map reduce with a basis", function () {
+        return Q([1, 2, 3])
+        .map(function (n) {
+            return Q(n).delay(n * 10)
+        })
+        .map(function (m) {
+            return m * 2;
+        })
+        .reduce(function (a, b) {
+            return a + b;
+        }, 1)
+        .then(function (sum) {
+            expect(sum).toBe(13);
+        });
+    });
+
+    it("should handle no-basis empty case", function () {
+        return Q([]).reduce(function () {})
+        .then(function () {
+            expect(true).toBe(false); // should not get here
+        }, function (error) {
+            expect(error.message).toBe("Can't reduce empty source without a basis");
+        });
+    });
+
+    it("should take from an iterable", function () {
+        var source = {
+            iterator: function () {
+                var i = 0;
+                return {
+                    next: function () {
+                        if (i <= 4) {
+                            return {value: i++};
+                        } else {
+                            return {done: true};
+                        }
+                    }
+                }
+            }
+        };
+        return Q(source)
+        .map(function (n) {
+            return Q(n).delay(100);
+        })
+        .reduce(function (a, b) {
+            return a + b;
+        })
+        .then(function (sum) {
+            expect(sum).toBe(10);
+        })
+    });
+
+    it("should aggregate opportunistically", function () {
+        return Q([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+        .map(function (n) {
+            return Q(n).delay((10 - n) * 10);
+        })
+        .reduce(function (a, b) {
+            return a + b;
+        })
+        .then(function (sum) {
+        })
+    });
+
+    it("supports parallelism limiting", function () {
+        var flight = 0;
+        return Q([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+        .map(function (n) {
+            flight++;
+            expect(flight).toBeLessThan(4);
+            return n * 2;
+        }, 1)
+        .reduce(function (a, b) {
+            flight--;
+            return Q(a + b).delay(10);
+        }, 0, 3)
+        .then(function (sum) {
+            expect(sum).toBe(110);
+        })
+    });
+
+});
+
+describe("forEach", function () {
+    it("should forEach", function () {
+        var n = 1;
+        return Q([1, 2, 3])
+        .forEach(function (v) {
+            expect(n++).toEqual(v);
+        })
+        .then(function (value) {
+            expect(value).toBe(void 0);
+        });
+    });
+
+    it("should send multiple", function () {
+        var deferred = Q.defer();
+
+        var progress = 0;
+
+        Q([1, 2, 3, 4, 5, 6])
+        .forEach(function (v) {
+            progress++;
+            return Q.delay(100);
+        }, 3, function (flight) {
+            expect(flight).toBeLessThan(4);
+        })
+        .then(deferred.resolve, deferred.reject);
+
+        Q()
+        .delay(50)
+        .then(function () {
+            expect(progress).toBe(3);
+        })
+        .delay(100)
+        .then(function () {
+            expect(progress).toBe(6);
+        })
+        .delay(100)
+        .then(function () {
+            expect(deferred.promise.inspect())
+                .toEqual({
+                    state: "fulfilled",
+                    value: undefined
+                })
+        })
+        .thenResolve(deferred.promise);
+    });
+
+});
+
+describe("buffer", function () {
+
+    it("should accumulate up to size", function () {
+        var flight = 0;
+        return Q([1, 2, 3, 4, 5, 6, 7, 8])
+        .map(function (n) {
+            expect(flight).toBeLessThan(4);
+            flight++;
+            return n;
+        }, 1)
+        .buffer(3, function (flight) {
+            expect(flight).toBeLessThan(4);
+        })
+        .forEach(function (n) {
+            flight--;
+            expect(flight).toBeLessThan(4);
+            return Q.delay(10);
+        })
+    });
+
+});
+
+describe("queue", function () {
+
+    it("should emulate a generator with forEach", function () {
+        var queue = Q.Queue();
+        var n = 0;
+        queue.send(0);
+        queue.send(1);
+        queue.send(2);
+        queue.return(10);
+        return queue.forEach(function (value) {
+            expect(value).toBe(n++);
+        })
+        .then(function (result) {
+            expect(result).toBe(10);
+            expect(n).toBe(3);
+        });
+    });
 
 });
 
