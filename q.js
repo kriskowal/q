@@ -646,20 +646,24 @@ function promise(resolver) {
 /**
  * Will be relevant for remote
  */
-Q.passByCopy = passByCopy; // XXX experimental
+Q.passByCopy = passByCopy; // XXX experimental shim
 //var passByCopies = WeakMap();
-function passByCopy(obj) {
-    //freeze(obj);
-    //passByCopies.set(obj, true);
-    return obj;
+function passByCopy(object) {
+    //freeze(object);
+    //passByCopies.set(object, true);
+    return object;
 }
+
+Promise.prototype.passByCopy = function () {
+    return this;
+};
 
 /**
  * Consider making this variadic
  */
 Q.join = join;
 function join(x, y) {
-    return Q.all([x, y]).spread(function(x, y) {
+    return Q([x, y]).spread(function(x, y) {
         if (x === y) {
             // TODO: "===" should be Object.is or equiv
             return x;
@@ -668,6 +672,12 @@ function join(x, y) {
     });
 }
 
+Promise.prototype.join = function (that) {
+    return Q.join(this, that);
+};
+
+/**
+ */
 Q.race = race;
 function race(answerPs) {
     return promise(function(resolve,reject) {
@@ -682,6 +692,9 @@ function race(answerPs) {
     });
 }
 
+Promise.prototype.race = function () {
+    return this.then(Q.race);
+};
 
 /**
  * Constructs a Promise with a promise descriptor object and optional fallback
