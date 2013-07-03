@@ -643,45 +643,67 @@ function promise(resolver) {
     return deferred.promise;
 }
 
-/**
- * Will be relevant for remote
- */
-Q.passByCopy = passByCopy;
-//var passByCopies = WeakMap();
-function passByCopy(obj) {
-    //freeze(obj);
-    //passByCopies.set(obj, true);
-    return obj;
-}
+// XXX experimental.  This method is a way to denote that a local value is
+// serializable and should be immediately dispatched to a remote upon request,
+// instead of passing a reference.
+Q.passByCopy = function (object) {
+    //freeze(object);
+    //passByCopies.set(object, true);
+    return object;
+};
+
+Promise.prototype.passByCopy = function () {
+    //freeze(object);
+    //passByCopies.set(object, true);
+    return this;
+};
 
 /**
- * Consider making this variadic
+ * If two promises eventually fulfill to the same value, promises that value,
+ * but otherwise rejects.
+ * @param x {Any*}
+ * @param y {Any*}
+ * @returns {Any*} a promise for x and y if they are the same, but a rejection
+ * otherwise.
+ *
  */
-Q.join = join;
-function join(x, y) {
-    return Q.all([x, y]).spread(function(x, y) {
+Q.join = function (x, y) {
+    return Q(x).join(y);
+};
+
+Promise.prototype.join = function (that) {
+    return Q([this, that]).spread(function (x, y) {
         if (x === y) {
             // TODO: "===" should be Object.is or equiv
             return x;
+        } else {
+            throw new Error("Can't join: not the same: " + x + " " + y);
         }
-        throw new Error("not the same");
     });
-}
+};
 
+/**
+ * Returns a promise for the first of an array of promises to become fulfilled.
+ * @param answers {Array[Any*]} promises to race
+ * @returns {Any*} the first promise to be fulfilled
+ */
 Q.race = race;
 function race(answerPs) {
-    return promise(function(resolve,reject) {
-//        Switch to this once we can assume at least ES5
-//        answerPs.forEach(function(answerP) {
-//            Q(answerP).then(resolve,reject);
-//        });
-//        Use this in the meantime
-          for (var i = 0, len = answerPs.length; i < len; i++) {
-              Q(answerPs[i]).then(resolve,reject);
-          }
+    return promise(function(resolve, reject) {
+        // Switch to this once we can assume at least ES5
+        // answerPs.forEach(function(answerP) {
+        //     Q(answerP).then(resolve, reject);
+        // });
+        // Use this in the meantime
+        for (var i = 0, len = answerPs.length; i < len; i++) {
+            Q(answerPs[i]).then(resolve, reject);
+        }
     });
 }
 
+Promise.prototype.race = function () {
+    return this.then(Q.race);
+};
 
 /**
  * Constructs a Promise with a promise descriptor object and optional fallback
