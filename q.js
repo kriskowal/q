@@ -635,13 +635,53 @@ function promise(resolver) {
         throw new TypeError("resolver must be a function.");
     }
     var deferred = defer();
-    Q(resolver).fcall(
-        deferred.resolve,
-        deferred.reject,
-        deferred.notify
-    ).fail(deferred.reject);
+    try {
+        resolver(deferred.resolve, deferred.reject, deferred.notify);
+    } catch (reason) {
+        deferred.reject(reason);
+    }
     return deferred.promise;
 }
+
+/**
+ * Will be relevant for remote
+ */
+Q.passByCopy = passByCopy; // XXX experimental
+//var passByCopies = WeakMap();
+function passByCopy(obj) {
+    //freeze(obj);
+    //passByCopies.set(obj, true);
+    return obj;
+}
+
+/**
+ * Consider making this variadic
+ */
+Q.join = join;
+function join(x, y) {
+    return Q.all([x, y]).spread(function(x, y) {
+        if (x === y) {
+            // TODO: "===" should be Object.is or equiv
+            return x;
+        }
+        throw new Error("not the same");
+    });
+}
+
+Q.race = race;
+function race(answerPs) {
+    return promise(function(resolve,reject) {
+//        Switch to this once we can assume at least ES5
+//        answerPs.forEach(function(answerP) {
+//            Q(answerP).then(resolve,reject);
+//        });
+//        Use this in the meantime
+          for (var i = 0, len = answerPs.length; i < len; i++) {
+              Q(answerPs[i]).then(resolve,reject);
+          }
+    });
+}
+
 
 /**
  * Constructs a Promise with a promise descriptor object and optional fallback
