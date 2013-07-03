@@ -4,7 +4,9 @@ var Q = require("./q");
 module.exports = Queue;
 function Queue() {
     var ends = Q.defer();
-    var closed = Q.defer();
+    var numPut = 0;
+    var numGotten = 0;
+    var total = Q.defer();
     return {
         put: function (value) {
             var next = Q.defer();
@@ -13,23 +15,22 @@ function Queue() {
                 tail: next.promise
             });
             ends.resolve = next.resolve;
+            numPut++;
         },
         get: function () {
             var result = ends.promise.get("head");
             ends.promise = ends.promise.get("tail");
-            return result.fail(function (error) {
-                closed.resolve(error);
-                throw error;
-            });
+            numGotten++;
+            return result;
         },
-        closed: closed.promise,
-        close: function (error) {
-            error = error || new Error("Can't get value from closed queue");
-            var end = {head: Q.reject(error)};
-            end.tail = end;
-            ends.resolve(end);
-            return closed.promise;
+        close: function (reason) {
+            ends.reject(reason);
+            total.resolve(numPut);
+        },
+        getLength: function() {
+            return total.promise.then(function(tot) {
+                return tot - numGotten;
+            });
         }
     };
 }
-

@@ -116,7 +116,7 @@ describe("queue", function () {
             })
         })
         .then(function () {
-            queue.close();
+            queue.close(new Error("foo"));
         })
         .done();
 
@@ -124,6 +124,11 @@ describe("queue", function () {
             return queue.get()
             .then(function (value) {
                 expect(value).toBe(1);
+            });
+        })
+        .then(function () {
+            return queue.getLength().then(function(len) {
+                expect(len).toBe(1);
             });
         })
         .then(function () {
@@ -142,39 +147,16 @@ describe("queue", function () {
             expect(error.message).toBe("Can't get value from closed queue");
             return queue.get();
         })
+        .then(function () {
+            return queue.getLength().then(function(len) {
+                expect(len).toBe(0);
+            });
+        })
         .catch(function (error) {
             expect(error.message).toBe("Can't get value from closed queue");
-        })
-        .then(function () {
-            return queue.closed;
         })
         .then(function (error) {
             expect(error.message).toBe("Can't get value from closed queue");
         })
     });
-
-    it("should close with alternate error", function () {
-
-        var queue = Queue();
-        queue.close(new Error("Alternate reason"));
-
-        return Q.try(function () {
-            return queue.get();
-        })
-        .catch(function (error) {
-            expect(error.message).toBe("Alternate reason");
-            return queue.get();
-        })
-        .catch(function (error) {
-            expect(error.message).toBe("Alternate reason");
-        })
-        .then(function () {
-            return queue.closed;
-        })
-        .then(function (error) {
-            expect(error.message).toBe("Alternate reason");
-        })
-    });
-
 });
-
