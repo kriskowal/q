@@ -1179,20 +1179,6 @@ describe("allSettled", function () {
         });
     });
 
-    it("modifies the input array", function () {
-        var input = [1, Q.resolve(2), Q.reject(3)];
-
-        return Q.allSettled(input)
-        .then(function (snapshots) {
-            expect(snapshots).toBe(input);
-            expect(input).toEqual([
-                { state: "fulfilled", value: 1 },
-                { state: "fulfilled", value: 2 },
-                { state: "rejected", reason: 3 }
-            ]);
-        });
-    });
-
 });
 
 describe("spread", function () {
