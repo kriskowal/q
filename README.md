@@ -34,22 +34,23 @@ step1(function (value1) {
 With a promise library, you can flatten the pyramid.
 
 ```javascript
-Q.fcall(step1)
-.then(step2)
-.then(step3)
-.then(step4)
+Q.fcall(promisedStep1)
+.then(promisedStep2)
+.then(promisedStep3)
+.then(promisedStep4)
 .then(function (value4) {
     // Do something with value4
-}, function (error) {
-    // Handle any error from step1 through step4
+})
+.catch(function (error) {
+    // Handle any error from all above steps
 })
 .done();
 ```
 
-With this approach, you also get implicit error propagation,
-just like ``try``, ``catch``, and ``finally``.  An error in
-``step1`` will flow all the way to ``step5``, where it’s
-caught and handled.
+With this approach, you also get implicit error propagation, just like `try`,
+`catch`, and `finally`.  An error in `promisedStep1` will flow all the way to
+the `catch` function, where it’s caught and handled.  (Here `promisedStepN` is
+a version of `stepN` that returns a promise.)
 
 The callback approach is called an “inversion of control”.
 A function that accepts a callback instead of a return value
