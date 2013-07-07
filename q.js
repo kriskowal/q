@@ -706,6 +706,59 @@ Promise.prototype.race = function () {
 };
 
 /**
+ * Will be relevant for remote
+ */
+Q.passByCopy = passByCopy; // XXX experimental shim
+//var passByCopies = WeakMap();
+function passByCopy(object) {
+    //freeze(object);
+    //passByCopies.set(object, true);
+    return object;
+}
+
+Promise.prototype.passByCopy = function () {
+    return this;
+};
+
+/**
+ * Consider making this variadic
+ */
+Q.join = join;
+function join(x, y) {
+    return Q([x, y]).spread(function(x, y) {
+        if (x === y) {
+            // TODO: "===" should be Object.is or equiv
+            return x;
+        }
+        throw new Error("not the same");
+    });
+}
+
+Promise.prototype.join = function (that) {
+    return Q.join(this, that);
+};
+
+/**
+ */
+Q.race = race;
+function race(answerPs) {
+    return promise(function(resolve,reject) {
+//        Switch to this once we can assume at least ES5
+//        answerPs.forEach(function(answerP) {
+//            Q(answerP).then(resolve,reject);
+//        });
+//        Use this in the meantime
+          for (var i = 0, len = answerPs.length; i < len; i++) {
+              Q(answerPs[i]).then(resolve,reject);
+          }
+    });
+}
+
+Promise.prototype.race = function () {
+    return this.then(Q.race);
+};
+
+/**
  * Constructs a Promise with a promise descriptor object and optional fallback
  * function.  The descriptor contains methods like when(rejected), get(name),
  * set(name, value), post(name, args), and delete(name), which all
