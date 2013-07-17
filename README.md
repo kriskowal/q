@@ -321,7 +321,7 @@ functions, you'll want something like this:
 ```javascript
 var funcs = [foo, bar, baz, qux];
 
-var result = Q.resolve(initialVal);
+var result = Q(initialVal);
 funcs.forEach(function (f) {
     result = result.then(f);
 });
@@ -333,7 +333,7 @@ You can make this slightly more compact using `reduce`:
 ```javascript
 return funcs.reduce(function (soFar, f) {
     return soFar.then(f);
-}, Q.resolve(initialVal));
+}, Q(initialVal));
 ```
 
 Or, you could use th ultra-compact version:
@@ -518,7 +518,7 @@ This is a simplified implementation of ``Q.timeout``
 function timeout(promise, ms) {
     var deferred = Q.defer();
     Q.when(promise, deferred.resolve);
-    Q.when(delay(ms), function () {
+    delay(ms).then(function () {
         deferred.reject(new Error("Timed out"));
     });
     return deferred.promise;
@@ -617,7 +617,7 @@ Most libraries only provide a partially functional ``then`` method.
 This thankfully is all we need to turn them into vibrant Q promises.
 
 ```javascript
-return Q.when($.ajax(...))
+return Q($.ajax(...))
 .then(function () {
 });
 ```
