@@ -5,7 +5,7 @@ with care.
 Q has an ``async`` function.  This can be used to
 decorate a generator function such that ``yield`` is
 effectively equivalent to ``await`` or ``defer`` syntax as
-supported by languages like Go and, reportedly, C#3.
+supported by languages like Go and C# 5.
 
 Generator functions are presently on the standards track for ES6.  As of
 May 2013, they are only fully supported by bleeding edge V8, which
