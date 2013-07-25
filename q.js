@@ -296,6 +296,8 @@ function iterate(values) {
         throw new Error("Can't iterate: " + values);
     } else if (typeof values.iterator === "function") {
         return values.iterator();
+    } else if (typeof values.iterate === "function") {
+        return values.iterate();
     } else if (typeof values.next === "function") {
         return values;
     } else if (typeof values.length === "number") {
@@ -1398,6 +1400,7 @@ Q.fbind = function (object /*...args*/) {
         ]);
     };
 };
+
 Promise.prototype.fbind = function (/*...args*/) {
     var promise = this;
     var args = array_slice(arguments);
@@ -1424,11 +1427,16 @@ Promise.prototype.keys = function () {
 };
 
 /**
+ * @see Promise#iterate
  */
 Q.iterate = function (object) {
     return Q(object).dispatch("iterate", []);
 };
 
+/**
+ * Sends a message to a promise for an array or other iterable and returns a
+ * promise for an iterator.
+ */
 Promise.prototype.iterate = function () {
     return this.dispatch("iterate", []);
 };
@@ -1574,29 +1582,31 @@ Q.map = function (object, callback, maxInFlight, notify) {
 Promise.prototype.map = function (callback, maxInFlight, notify) {
     var inFlight = 0;
     var done = false;
-    var pipe = Pipe(this, maxInFlight, notify);
+    var pipe = new Pipe(this, maxInFlight, notify);
+    var iterator = pipe.output.iterate();
+    var generator = pipe.output.generate();
     callback = Q(callback);
     Q.reduce(pipe.input, function (undefined, value, index) {
         inFlight++;
         callback.fcall(value)
         .then(function (value) {
             inFlight--;
-            pipe.output.send(value, index);
+            generator["yield"](value, index);
             if (done && inFlight === 0) {
-                pipe.output["return"]();
+                generator["return"]();
             }
         })
         .then(null, function (error) {
-            pipe.output["throw"](error);
+            generator["throw"](error);
         });
     }, void 0)
     .then(function () {
         done = true;
         if (inFlight === 0) {
-            pipe.output["return"]();
+            generator["return"]();
         }
     });
-    return Q(pipe.output);
+    return Q(iterator);
 };
 
 /**
@@ -1689,18 +1699,19 @@ function buffer(object, maxInFlight, notify) {
 Promise.prototype.buffer = function (maxInFlight, notify) {
     var pipe = new Pipe(this, maxInFlight, notify);
     var iterator = Q(pipe.input).iterate();
+    var generator = pipe.output.generate();
     function next() {
         return iterator.invoke("next")
         .then(function (iteration) {
             next();
-            pipe.output.put(iteration);
+            generator.put(iteration);
         })
         .then(null, function (error) {
-            pipe.output["throw"](error);
+            generator["throw"](error);
         });
     }
     next();
-    return Q(pipe.output);
+    return Q(pipe.output).iterate();
 };
 
 /**
@@ -2115,59 +2126,32 @@ function Queue() {
 }
 
 /**
- * When using a Queue as an asycnronous iteration transport, returns a promise
- * for the next iteration.  Iterations are objects like `{value}` for an
- * iteration, which can be supplemented with an index like `{value, index}` if
- * the source is an array or array-like, and `{value, done: true}` for the
- * completion of the iteration, optionally with a return value, or a rejected
- * promise if the simulated generator threw an error.
- * @returns {Iteration*}
+ * Returns an asynchronous iterator that that wraps the consumer end of a
+ * Queue.
  */
-Queue.prototype.next = function () {
-    return this.get();
+Queue.prototype.iterate = function () {
+    return new this.QueueIterator(this.get);
 };
 
 /**
- * When using a Queue as an asynchronous iteration transport, adds a value to
- * the queue of iterations.  The value may be at an optional given index.  If
- * no index is provided, the iteration will be given a sequence number.
- * @param {Any} value
- * @param {Number?} index
+ * Returns an asynchronous "generator" that wraps the producing side of a
+ * Queue.  The "generator" is merely an object that has "yield", "return", and
+ * "throw" methods that emulate the corresponding keywords within a generator
+ * function.
  */
-Queue.prototype.send = function (value, index) {
-    if (index === undefined) {
-        index = this.index++;
-    }
-    return this.put({value: value, index: index});
+Queue.prototype.generate = function () {
+    return new this.QueueGenerator(this.put);
 };
 
 /**
- * When using a Queue as an asynchronous iteration transport, adds a completion
- * value to the queue of iterations.  This signals the end of the sequence,
- * like closing a stream.
+ * @see QueueIterator
  */
-Queue.prototype["return"] = function (value) {
-    this.put({value: value, done: true});
-};
+Queue.prototype.QueueIterator = QueueIterator;
 
 /**
- * When using a Queue as an asynchronous iteration transport, adds a thrown
- * exception to the queue.  This signals the end of the sequence, like closing
- * a stream with an error, or throwing an exception from a generator.
+ * @see QueueGenerator
  */
-Queue.prototype["throw"] = function (error) {
-    this.put(Q.reject(error));
-};
-
-/**
- * Allows the iteration to interoperate with shimmed ES6 iterators with the
- * Iterable duck type.  The queue itself is the iterator, so simply returns
- * itself.
- * @returns this
- */
-Queue.prototype.iterator = function () {
-    return this;
-};
+Queue.prototype.QueueGenerator = QueueGenerator;
 
 /**
  * @see Promise#map
@@ -2206,6 +2190,68 @@ Queue.prototype.buffer = function (maxInFlight, notify) {
  */
 Queue.prototype.all = function () {
     return Q(this).all();
+};
+
+/**
+ * A wrapper for the receiving end of a Queue that provides the *asynchronous*
+ * iterator interface.
+ * @constructor
+ */
+function QueueIterator(get) {
+    this.get = get;
+}
+
+/**
+ * When using a Queue as an asynchronous iteration transport, returns a promise
+ * for the next iteration.  Iterations are objects like `{value}` for an
+ * iteration, which can be supplemented with an index like `{value, index}` if
+ * the source is an array or array-like, and `{value, done: true}` for the
+ * completion of the iteration, optionally with a return value, or a rejected
+ * promise if the simulated generator threw an error.
+ * @returns {Iteration*}
+ */
+QueueIterator.prototype.next = function () {
+    return this.get();
+};
+
+/**
+ * A wrapper for the producing end of a Queue that provides methods for
+ * emulating a generator function.
+ */
+function QueueGenerator(put) {
+    this.put = put;
+}
+
+/**
+ * When using a Queue as an asynchronous iteration transport, adds a value to
+ * the queue of iterations.  The value may be at an optional given index.  If
+ * no index is provided, the iteration will be given a sequence number.
+ * @param {Any} value
+ * @param {Number?} index
+ */
+QueueGenerator.prototype["yield"] = function (value, index) {
+    if (index === undefined) {
+        index = this.index++;
+    }
+    return this.put({value: value, index: index});
+};
+
+/**
+ * When using a Queue as an asynchronous iteration transport, adds a completion
+ * value to the queue of iterations.  This signals the end of the sequence,
+ * like closing a stream.
+ */
+QueueGenerator.prototype["return"] = function (value) {
+    this.put({value: value, done: true});
+};
+
+/**
+ * When using a Queue as an asynchronous iteration transport, adds a thrown
+ * exception to the queue.  This signals the end of the sequence, like closing
+ * a stream with an error, or throwing an exception from a generator.
+ */
+QueueGenerator.prototype["throw"] = function (error) {
+    this.put(Q.reject(error));
 };
 
 /**
