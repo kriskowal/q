@@ -192,6 +192,7 @@ var outputPromise = getInputPromise()
 If you are writing JavaScript for modern engines only or using
 CoffeeScript, you may use `finally` instead of `fin`.
 
+
 ### Chaining
 
 There are two ways to chain promises.  You can chain promises either
@@ -342,6 +343,7 @@ Or, you could use th ultra-compact version:
 return funcs.reduce(Q.when, Q());
 ```
 
+
 ### Handling Errors
 
 One sometimes-unintuive aspect of promises is that if you throw an
@@ -375,6 +377,7 @@ return foo()
 });
 ```
 
+
 ### Progress Notification
 
 It's possible for promises to report their progress, e.g. for tasks that take a
@@ -401,6 +404,7 @@ return uploadFile().progress(function (progress) {
     // We get notified of the upload's progress
 });
 ```
+
 
 ### The End
 
@@ -467,7 +471,6 @@ numbers.
 ```javascript
 return Q.fcall(eventualAdd, 2, 2);
 ```
-
 
 #### Using Deferreds
 
@@ -579,6 +582,7 @@ requestOkText("http://localhost:3000")
     console.log("Request progress: " + Math.round(progress * 100) + "%");
 });
 ```
+
 
 ### The Middle
 
@@ -724,6 +728,7 @@ FS.readFile("foo.txt", "utf-8", deferred.makeNodeResolver());
 return deferred.promise;
 ```
 
+
 ### Long Stack Traces
 
 Q comes with optional support for “long stack traces,” wherein the `stack`
@@ -777,11 +782,687 @@ This feature does come with somewhat-serious performance and memory overhead,
 however. If you're working with lots of promises, or trying to scale a server
 to many users, you should probably keep it off. But in development, go for it!
 
+
+### Primer on Iterators and Generators
+
+EcmaScript 6 introduces a brand of iterators to JavaScript.  Contact
+your local JavaScript engine for information on how to try them out.
+They have appeared in very recent versions of V8 (Chrome and Node) and
+SpiderMonkey (Firefox) but are hidden behind flags at time of writing.
+
+An iterator is an object that has a `next` method.  The `next` method
+returns an "iteration", which is an object that conveys either a value
+or whether the iterator has reached its end using `value` and `done`
+properties.  The EcmaScript 6 draft spec [calls][] the "iteration" the
+"iterator result object".
+
+[calls]: http://people.mozilla.org/~jorendorff/es6-draft.html#sec-15.19.4.3.4
+
+```javascript
+iteration.next() // {value: 1}
+iteration.next() // {value: 2}
+iteration.next() // {value: 3}
+iteration.next() // {done: true}
+```
+
+EcmaScript 6 also introduces generator functions.  A generator function
+is a "shallow coroutine", a function that pauses and resumes at explicit
+"yield" expressions.  When called, a generator function returns an
+iterator.
+
+```javascript
+function *range(start, stop, step) {
+    while (start < step) {
+        yield start;
+        start += step;
+    }
+}
+
+var iterator = range(0, Infinity, 1);
+iterator.next() // {value: 0};
+iterator.next() // {value: 1};
+iterator.next() // {value: 2};
+```
+
+The `next` method gains the ability to convey the return value of the
+generator function in addition to communicating that the iteration has
+come to an end.
+
+```javascript
+function *startRace() {
+    yield 3;
+    yield 2;
+    yield 1;
+    return "Go!";
+}
+
+var starter = startRace();
+starter.next() // {value: 3};
+starter.next() // {value: 2};
+starter.next() // {value: 1};
+starter.next() // {value: 'Go!', done: true};
+```
+
+With generators, the `next` method also gains the ability to
+convey a value for the `yield` expression, making it both the sender and
+receiver of information.  If the generator throws an exception while
+trying to reach the next `yield`, the `next` method will throw that
+exception.
+
+```javascript
+function *contrivedExample(previous) {
+    while (true) {
+        previous = yield previous + 1;
+    }
+}
+
+var oneUp = contrivedExample(0);
+oneUp.next(100) // {value: 1}
+oneUp.next(-100) // {value: 101}
+oneUp.next() // {value: -99}
+```
+
+
+### Asynchronous Iterators
+
+This library introduces the notion of an asynchronous iterator.  The
+`next` function again gains a new ability.  Instead of returning an
+iteration, it returns a promise for an iteration.  Additionally, the
+iteration may have an `index` property, so if you are iterating an
+array, you can use `iteratation.index` to infer the index that
+`iteration.value` came from.  Implementing `next` is sufficent for Q to
+recognize a value that is an iterator.
+
+Of course, just as with a normal iterator, the `iteration.value` may be
+a promise as well, separating the issue of synchronizing the order of
+delivery from the issue of synchronizing the order of the resolution of
+the transported values.
+
+Implementing an `iterate` or `iterator` method is sufficient for Q to
+recognize an iterable and iterate it accordingly.  `iterator` because
+SpiderMonkey established that precedent, `iterate` because that's what
+it should be and because ES6 did not continue that precedent, favoring
+private names, and thus avoiding the duck-type issue entirely.
+
+Q can consume iterators and can produce asynchronous iterators using the
+functions `forEach`, `map`, `reduce`, and `buffer`.
+
+
+### Promises as Streams
+
+A promise for an iterable can be used as a stream, including the ability
+to moderate the rate of consumption to approach the rate of production,
+which is often called "back pressure" in the Unix pipe metaphore.
+
+Q provides the methods `forEach`, `map`, `reduce`, and `buffer` for
+using a promise as a stream.  The `all` method can also accumulate
+values from a stream.
+
+The stream functions all accept optional `maxInFlight` and `notify`
+arguments.  `maxInFlight` determines the upper limit on how many
+concurrent operations the function can schedule and the default varies.
+`notify` is an optional callback that provides the current `inFlight`
+and shared `maxInFlight` values for an operation.
+
+
+#### map
+
+The `map` method consumes up to `maxInFlight` values from the input
+stream while processing those values.  It takes a callback that may
+return a promise for a corresponding value and produces a stream of
+those values.  Values are consumed at the same rate as the callback.
+
+In this example, we transform a stream of user identifiers into a stream
+of users, getting user information from the database, piplining up to
+100 requests at any given time.
+
+```javascript
+Q(userIds).map(function (id) {
+    return getUserForId(id);
+}, 100)
+.all(function (users) {
+    // all users available in memory.
+    // this might not be a good idea.
+})
+.done();
+```
+
+To enforce serial processing, `maxInFlight` may be set to 1.  By
+default, it is infinite.
+
+The output stream closes when the input has been consumed in its
+entirety *and* all results have been queued on the output stream.
+
+#### forEach
+
+The `forEach` method consumes up to `maxInFlight` values from the input
+stream while processing those values.  It takes a callback that may
+return a promise *for scheuduling and synchronization purposes only*.
+The fulfillment of the callback is ignored, but rejections propagate and
+halt the loop.
+
+This example starts as the previous.  We consume the stream of users one
+at a time with an artificial delay of 100 milliseconds between printing
+each user's name.  When the list is finished, we print an underline.
+
+```javascript
+Q(userIds).map(function (id) {
+    return getUserForId(id);
+}, 100)
+.forEach(function (user) {
+    console.log(user.name);
+    return Q.delay(100);
+})
+.then(function () {
+    console.log("-----");
+})
+.done();
+```
+
+Note that the artificial delay on the `forEach` may dominate the
+scheduling constraints.  As such, the `map` operation might slow down,
+accumulating up to 100 users on its output stream but requesting a new
+one once every 100ms on average.
+
+#### reduce
+
+The `reduce` method, much like its forebear on `Array.prototype`,
+accepts an aggregator function.  It also takes an optional `basis`, and
+once you've opted in to having a basis instead of just using the first
+value from the source, you can also provide `maxInFlight` and `notify`.
+
+In this example, we accumulate a sum using a combinator (Code-ish for
+"combiner") that returns a promise.
+
+```javascript
+Q(source).reduce(function (sum, number) {
+    return slowCombinator(sum, number);
+}, 1, 100);
+```
+
+Not being able to specify `maxInFlight` or `notify` without opting into
+a basis is a known and unsolved wart of the interface.  For your
+consolation, most reductions have an appropriate "identity" for
+reduction, like 0 for computing a sum of numbers, 1 for computing a
+product of numbers, empty arrays and strings for concatenation, null for
+just about anything else, but streams of heterogenous values can be
+problematic.
+
+The default `maxInFlight` is infinite. Values are aggregated as they
+come, and if the aggregator is slow, the reduction may overschedule the
+process and saturate memory.  Remember, the major performance benefit of
+using Node follows from all IO operations being asynchronous, but when
+the process runs out of real memory, swapping virtual memory pages is
+inherently *synchronous*.
+
+`reduce` eventually consumes all of the values from the input and
+aggregates them opportunistically.  That is, as each value from the
+input becomes available, it is placed in a pool of values that can be
+aggregated.  Up to `maxInFlight` values will be plucked from that pool
+and sent off for aggregation using the given callback, first-to-come:
+first-served.  When the aggregator completes, the new compound value
+returns to the pool.  In the end, there will only be one value in the
+pool and that is the result.
+
+Note that if the source comes from a `map`, both `map` and `reduce` are
+opportunistic.  A `map` will stream values as they become available,
+regardless of the order or timing of the mapping relation (barring
+exceptions).
+
+```javascript
+Q([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+.map(function (n) {
+    return Q(n).delay(Math.random() * 1000);
+})
+.reduce(function (total, n) {
+    console.log('combining', n, 'with', total, 'for', total + n, 'so far');
+    return total + n;
+}, 0)
+.then(function (total) {
+    console.log('grand total', total);
+})
+.done();
+```
+
+For output like:
+
+```
+combining 9 with 0 for 9 so far
+combining 3 with 9 for 12 so far
+combining 5 with 12 for 17 so far
+combining 2 with 17 for 19 so far
+combining 8 with 19 for 27 so far
+combining 6 with 27 for 33 so far
+combining 1 with 33 for 34 so far
+combining 7 with 34 for 41 so far
+combining 4 with 41 for 45 so far
+combining 10 with 45 for 55 so far
+grand total 55
+```
+
+Note that throttling the mapper or reducer limits the range of values available
+to the combiner.
+
+```javascript
+var Q = require("./q");
+Q([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+.map(function (n) {
+    return Q(n).delay(Math.random() * 1000);
+}) // <- could be constrained here
+.reduce(function (total, n) {
+    console.log('combining', n, 'with', total, 'for', total + n, 'so far');
+    return total + n;
+}, 0, 3) // <- extra argument here
+.then(function (total) {
+    console.log('grand total', total);
+})
+.done();
+```
+
+For output that favors earlier values initially:
+
+```
+combining 1 with 0 for 1 so far
+combining 3 with 1 for 4 so far
+combining 2 with 4 for 6 so far
+combining 7 with 6 for 13 so far
+combining 5 with 13 for 18 so far
+combining 4 with 18 for 22 so far
+combining 9 with 22 for 31 so far
+combining 6 with 31 for 37 so far
+combining 10 with 37 for 47 so far
+combining 8 with 47 for 55 so far
+grand total 55
+```
+
+If `maxInFlight` is 1, `reduce` is serial, equivalent to the
+left-to-right `reduce` on `Array.prototype`.  A right-to-left reduce
+does not make sense for streams, but you can use `all` and `invoke`
+`reduceRight` on the resulting array.
+
+```javascript
+Q([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+.map(function (n) {
+    return Q(n).delay(Math.random() * 1000);
+})
+.all()
+.invoke("reduceRight", function (total, number) {
+    console.log('adding', number, 'to', total, 'for', total + number, 'so far');
+    return total + number;
+})
+.then(function (total) {
+    console.log("Grand total", total);
+})
+.done();
+```
+
+Which accumulates all of the input in memory and walks from right to left.
+
+```
+adding 9 to 10 for 19 so far
+adding 8 to 19 for 27 so far
+adding 7 to 27 for 34 so far
+adding 6 to 34 for 40 so far
+adding 5 to 40 for 45 so far
+adding 4 to 45 for 49 so far
+adding 3 to 49 for 52 so far
+adding 2 to 52 for 54 so far
+adding 1 to 54 for 55 so far
+Grand total 55
+```
+
+Note that the output is in exactly the reverse order of the input, despite the
+randomization produced by `map`.  This is because `map` has communicated the
+iteration `index` from the input array to the output stream and `all` has
+reassembled the array in its original order.  The strict order is not an
+indication that `map` yielded the values in that order.
+
+#### buffer
+
+The `buffer` method sends its input directly to its output, accumulating some
+number of values in memory.  This is useful for reducing latency delays when
+consuming iterations from a remote iterator.
+
+In this example, there is a remote array.  We want to log every value
+from that remote array and do not want to wait for all of them to
+accumulate in local memory.
+
+```javascript
+Q(remoteArray)
+.forEach(function (value) {
+    console.log(value);
+})
+.done();
+```
+
+We also do not want to reenact this scenario:
+
+```
+next()
+wait one round trip time (typically 60ms)
+log one value
+next()
+wait one round trip time
+log one value
+...
+```
+
+To achive this, we add a buffer.
+
+```javascript
+Q(remoteArray)
+.buffer(100)
+.forEach(function (value) {
+    console.log(value);
+})
+.done();
+```
+
+Thus, the replay would look more like:
+
+```
+next() 100 times
+wait one round trip time
+log one value
+next()
+log one value
+next()
+...
+```
+
+
+### Infinite Promise Queue
+
+An infinite promise queue is a first-on-first-off (FIFO) structure.  It
+has two methods, `get` and `put`, which are implicitly bound to the
+queue and can safely be passed as functions.
+
+The `get` method returns a promise and the `put` method resolves the
+respective promise.  Unlike a synchronous queue, because `get` returns a
+promise, you can call `get` before calling `put`.  The consumer and
+producer side of a queue do not need to even be aware of each other's
+existence.  Also, because `put` accepts values or promises, the promises
+returned by `get` do not need to be resolved in order.
+
+In this example, note that we call `get` once immediately, and then we
+call `get` again after the first promise is resolved.  This should
+ensure that the first and second messages are logged in order.
+
+Note that we wait 100 milliseconds before putting anything on the queue.
+At that time, we put *a promise* for the first message on the queue, and
+resolve the second message immediately.  Thus, the second message is
+fulfilled first, before the consumer has even asked for it.
+
+```javascript
+var Queue = require("q").Queue;
+var queue = Queue();
+
+return queue.get()
+.then(function (first) {
+    console.log(first);
+    return queue.get()
+})
+.then(function (second) {
+    console.log(second);
+})
+.done();
+
+Q.delay(100)
+.then(function () {
+    queue.put(Q("Hello").delay(100));
+    queue.put("World");
+})
+.done();
+```
+
+In summary, an infinite asynchronous promise queue is a fascinating
+machine that preserves consistent FIFO rules, but relaxes all rules
+about the order in which values are produced or consumed.  In addition,
+the implementation is incredibly succinct.  It is a variation on a
+singly linked list, a Lisp list.
+
+```javascript
+var ends = Q.defer();
+this.put = function (value) {
+    var next = Q.defer();
+    ends.resolve({
+        head: value,
+        tail: next.promise
+    });
+    ends.resolve = next.resolve;
+};
+this.get = function () {
+    var result = ends.promise.get("head");
+    ends.promise = ends.promise.get("tail");
+    return result;
+};
+```
+
+Note that `get` and `put` are implicitly bound to the Queue.  This means
+that these functions can be vended to producers and consumers
+separately, allowing fine grain control over which actors have the
+capability to consume and produce.
+
+
+### Asynchronous Semaphores
+
+A queue can be used as an asynchronous semaphore.  A railroad semaphore
+is a sign or light that says whether it is safe for a train to proceed
+down a certain track.  The far more pervasive traffic light by rights
+could be called a semaphore, but motorists are still asleep at the
+wheel.
+
+Semaphores in programming usually guard the usage of a limited resource,
+like a pool of file descriptors or database connections.  Semaphores are
+a generalization on mutual exclusion (mutex) where there can be more
+than one resource in the pool.
+
+With an infinite promise queue, you would put all your resources in the
+queue initially.  Competitors would `get` a promise for that resource
+when one becomes available, and return that resource to the queue with
+`put` when they are finished.
+
+```javascript
+var pool = Queue();
+
+pool.put(resource1);
+pool.put(resource2);
+pool.put(resource3);
+
+pool.get().then(function (resource) {
+    return useResource(resource)
+    .finally(function () {
+        pool.put(resource);
+    });
+})
+```
+
+Q provides a `Semaphore` constructor that it uses internally for
+scheduling.  Such resource pools abstractly represent the number of
+additional jobs that may be performed concurrently, as represented by
+the `maxInFlight` argument of `forEach`, `map`, `reduce`, and `buffer`.
+As such, the resource itself is undefined, but the pool size is variable
+and `undefined` implies that the resource is infinite.  Since modeling
+an infinite promise queue in memory is not practical, the `Semaphore`
+constructor returns a queue that resolves any `get` request immediately,
+and ignores all `put` requests.
+
+```javascript
+var limited = Semaphore(3);
+var infinite = Semaphore();
+```
+
+
+### Queue Iterator
+
+A Queue implements `iterate`, which returns an asynchronous iterator.
+This allows us to very simply use an infinite promise queue as a
+transport for iterations.
+
+```javascript
+var queue = Queue();
+var iterator = queue.iterate();
+
+iterator.next()
+.then(function (iteration) {
+    console.log(iteration.value);
+})
+.done();
+```
+
+In keeping with the Principle of Least-authority, the iterator only has
+the authority to consume values from the queue.
+
+Note that since queues are iteraable, we can use `forEach`, `map`,
+`reduce`, and `buffer` as described above on promises for iterables and,
+in fact, the latter three *return* promises for queue iterators.
+
+
+### Queue Generator
+
+A queue generator provides a convenient interface for transporting
+iterations to a queue iterator through a queue.  Queue generators are
+not generator functions, but are analogous.  The generator has methods
+`yield`, `return`, and `throw` that model the behavior of the eponymous
+keyword inside a generator function.  `yield` produces an iteration with
+a given `value` and an optional `index`.  `return` produces a terminal
+iteration with an optional "return" value.  `throw` produces a rejected
+promise for an iteration.
+
+```javascript
+var queue = Queue();
+var iterator = queue.iterate();
+var generator = queue.generate();
+
+generator.yield(3);
+generator.yield(2);
+generator.yield(1);
+generator.return("Go!");
+```
+
+The `forEach` method of a promise for an iterable works with queue
+iterators in the same way it would with a generator iterator, even to
+the point of treating the return value as the resolution of the
+completion promise.
+
+```javascript
+Q(iterator).forEach(function (countDown) {
+    console.log(countDown);
+})
+.then(function (go) {
+    console.log(go);
+})
+```
+
+
+### Pipes
+
+One of the fundamental scheduling mechanisms of Unix is a pipe.  A pipe
+is a finite buffer of kernel memory shared by two processes.  If the
+producer fills the buffer faster than the consumer drains it, this is a
+signal to the operating system that the consumer must be put to sleep
+until an attempt to write to that buffer is guaranteed to succeed.
+
+This library provides an analogous pipe for internal scheduling
+purposes.  It is very unlikely that you will need to use it directly
+since it is an implementation detail of `forEach`, `map`, `reduce`, and
+`buffer`.
+
+A pipe contains a scheduling semaphore of a particular size (`undefined`
+again means unlimited) that determines the number of concurrent jobs
+that may be undertaken between taking a value from the input and placing
+a result in the output.  The pipe *does* presume a one to one
+correspondence between values taken from input and placed in output.
+
+The pipe consists of an `input` queue, an `output` queue, and an
+internal scheduling queue.  The user provides an iterable for the true
+input source.  Once `maxInFlight` values have been drawn from the true
+input, the pipe ensures that additional values will only be requested
+after the same quantity of values are consumed from the true output.
+
+This is an implementation for a scheduling buffer, eliding very few
+details of the actual implementation.
+
+```javascript
+var pipe = new Q.Pipe(source, maxInFlight);
+var inbox = pipe.input.iterate();
+
+function job() {
+    // waits for a value to become available
+    inbox.next().then(function (iteration) {
+        // as long as they're coming, keep asking
+        job();
+        // start this job
+        return process(iteration.value);
+    })
+    .then(function (result) {
+        outbox.yield(result);
+    })
+}
+job();
+
+var outbox = pipe.output.generate();
+return pipe.output.iterate();
+```
+
+One elided detail is that the input may be a promise for a remote
+iterable, in which case we do not need to have a local iterator but can
+instead send the "iterate" message to the remote and get a promise for a
+remote iterator on which we may invoke the remote "next" method to
+transfer remote iterations on demand.
+
+
+### Generators for Control-flow
+
+A generator can be used as a "trampouline" for promises to regain use of
+all of the control flow abstractions afforded to us by JavaScript.  The
+`async` method decorates a generator function and turns it into a
+function that returns a promise for the eventual return value of the
+generator, but internally uses the `yield` to explicitly pause the
+current event and wait for that promise to resolve.  When that promise
+resolves, the `yield` expression either takes on the fulfillment value
+or throws an exception right into the the generator function's control
+flow and stack.
+
+The `spawn` method is equivalent to decorating a function with `async`,
+immediately invoking it, and using `done` to ensure that errors are
+handled.
+
+In this example, we have a an asynchronous generator function that
+consumes iterations from an iterator, waits for the iteration's value,
+waits for the iteration's index, then calls the map function waiting for
+its result.  It then accumulates the sum of all the mapped results and
+returns the aggregate value, finally fulfilling the returned promise.
+
+```javascript
+var asyncMapSum = Q.async(function *(source, map) {
+    map = yield map;
+    var sum = 0;
+    do {
+        var iteration = yield source.next();
+        sum += yield map(
+            yield iteration.value,
+            yield iteration.index
+        );
+    } while (!iteration.done);
+    return sum;
+});
+
+Q.spawn(function () {
+    var sum = yield asyncMapSum(range(0, 10, 1), function (number) {
+        return askServerForCorrespondingValue(number);
+    });
+    console.log(sum);
+});
+```
+
+
 ## Reference
 
 A method-by-method [Q API reference][reference] is available on the wiki.
 
 [reference]: https://github.com/kriskowal/q/wiki/API-Reference
+
 
 ## More Examples
 
@@ -791,6 +1472,7 @@ the Flickr API, Q is there for you.
 
 [examples]: https://github.com/kriskowal/q/wiki/Examples-Gallery
 
+
 ## Tests
 
 You can view the results of the Q test suite [in your browser][tests]!
@@ -799,6 +1481,6 @@ You can view the results of the Q test suite [in your browser][tests]!
 
 ---
 
-Copyright 2009-2012 Kristopher Michael Kowal
+Copyright 2009-2013 Kristopher Michael Kowal
 MIT License (enclosed)
 
