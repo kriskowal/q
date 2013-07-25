@@ -1,19 +1,11 @@
 var Q = require('../../q');
 
-function delay(millis, answer) {
-    const deferredResult = Q.defer();
-    setTimeout(function() {
-        deferredResult.resolve(answer);
-    }, millis);
-    return deferredResult.promise;
-}
-
 function foo() {
-    return delay(1000, 5);
+    return Q.delay(5, 1000);
 }
 
 function bar() {
-    return delay(1000, 10);
+    return Q.delay(10, 1000);
 }
 
 Q.spawn(function*() {
