@@ -1091,7 +1091,7 @@ describe("all", function () {
     });
 
     it("fails if any of the promises fail", function() {
-        return Q.all([
+        return Q([
             function() {
                 throw new Error('raised from inner')
             }
@@ -1297,14 +1297,15 @@ describe("map", function () {
 
     it("handles indefinite promise queues", function () {
         var queue = Q.Queue();
+        var generator = queue.generate();
         var partial = 0;
-        queue.send(1);
-        queue.send(2);
+        generator["yield"](1);
+        generator["yield"](2);
 
         Q.delay(100).then(function () {
             expect(partial).toBe(6);
-            queue.send(3);
-            queue["return"]();
+            generator["yield"](3);
+            generator["return"]();
         });
 
         return queue.map(function (n) {
@@ -1496,11 +1497,12 @@ describe("queue", function () {
 
     it("should emulate a generator with forEach", function () {
         var queue = Q.Queue();
+        var generator = queue.generate();
         var n = 0;
-        queue.send(0);
-        queue.send(1);
-        queue.send(2);
-        queue.return(10);
+        generator["yield"](0);
+        generator["yield"](1);
+        generator["yield"](2);
+        generator.return(10);
         return queue.forEach(function (value) {
             expect(value).toBe(n++);
         })
