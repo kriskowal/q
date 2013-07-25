@@ -1,33 +1,40 @@
 var Q = require('../../q');
 
-function delay(millis, answer) {
-    const deferredResult = Q.defer();
-    setTimeout(function() {
-        deferredResult.resolve(answer);
-    }, millis);
-    return deferredResult.promise;
-}
-
-function alreadyResolved(answer) {
-    const deferredResult = Q.defer();
-    deferredResult.resolve(answer)
-    return deferredResult.promise;
-}
-
-var waitForAll = Q.async(function*() {
-    var ps = [
-        delay(500,"a"),
-        delay(1000,"b"),
-        alreadyResolved("c")
-    ];
-
+// we get back blocking semantics - can use promises
+// with if, while, for etc
+var filter = Q.async(function*(promises,test) {
     var results = [];
-    for(var i = 0; i < ps.length; i++) {
-        results.push( yield ps[i] );
+    for(var i = 0; i < promises.length; i++) {
+        var val = yield promises[i];
+        if(test(val)) results.push(val);
     }
     return results;
 });
 
-waitForAll().then(function(all) {
-    console.log(all);
+var alreadyResolved = Q;
+var promises = [
+    Q.delay("a",500),
+    Q.delay("d",1000),
+    alreadyResolved("l")
+];
+
+filter(promises,function(letter) {
+    return "f" > letter;
+}).done(function(all) {
+    console.log(all); // [ "a", "d" ]
 });
+
+
+// we can use try and catch to handle rejected promises
+var logRejections = Q.async(function*(work) {
+    try {
+        yield work;
+        console.log("Never end up here");
+    } catch(e) {
+        console.log("Caught:",e);
+    }
+});
+
+var reject = Q.defer();
+reject.reject("Oh dear");
+logRejections(reject.promise); // Caught: Oh dear
