@@ -1207,7 +1207,7 @@ Q.async = function (makeGenerator) {
             }
         }
         var generator = makeGenerator.apply(this, arguments);
-        var callback = continuer.bind(continuer, "send");
+        var callback = continuer.bind(continuer, "next");
         var errback = continuer.bind(continuer, "throw");
         return callback();
     };
