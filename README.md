@@ -110,6 +110,10 @@ event loop (i.e. `process.nextTick` in Node). This gives you a nice
 guarantee when mentally tracing the flow of your code, namely that
 ``then`` will always return before either handler is executed.
 
+In this tutorial, we begin with how to consume and work with promises. We'll
+talk about how to create them, and thus create functions like
+`promiseMeSomething` that return promises, [below](#the-beginning).
+
 
 ### Propagation
 
