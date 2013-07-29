@@ -1,40 +1,42 @@
-var Q = require('../../q');
+"use strict";
 
-// we get back blocking semantics - can use promises
-// with if, while, for etc
-var filter = Q.async(function*(promises,test) {
+var Q = require("../../q");
+
+// We get back blocking semantics: can use promises with `if`, `while`, `for`,
+// etc.
+var filter = Q.async(function* (promises, test) {
     var results = [];
-    for(var i = 0; i < promises.length; i++) {
+    for (var i = 0; i < promises.length; i++) {
         var val = yield promises[i];
-        if(test(val)) results.push(val);
+        if (test(val)) {
+            results.push(val);
+        }
     }
     return results;
 });
 
-var alreadyResolved = Q;
 var promises = [
-    Q.delay("a",500),
-    Q.delay("d",1000),
-    alreadyResolved("l")
+    Q.delay("a", 500),
+    Q.delay("d", 1000),
+    Q("l")
 ];
 
-filter(promises,function(letter) {
+filter(promises, function (letter) {
     return "f" > letter;
-}).done(function(all) {
+}).done(function (all) {
     console.log(all); // [ "a", "d" ]
 });
 
 
 // we can use try and catch to handle rejected promises
-var logRejections = Q.async(function*(work) {
+var logRejections = Q.async(function* (work) {
     try {
         yield work;
         console.log("Never end up here");
-    } catch(e) {
-        console.log("Caught:",e);
+    } catch (e) {
+        console.log("Caught:", e.message);
     }
 });
 
-var reject = Q.defer();
-reject.reject("Oh dear");
-logRejections(reject.promise); // Caught: Oh dear
+var rejection = Q.reject(new Error("Oh dear"));
+logRejections(rejection); // Caught: Oh dear

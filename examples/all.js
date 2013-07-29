@@ -1,12 +1,13 @@
+"use strict";
 
 var Q = require("../q");
 
-var eventually = function (eventually) {
-    return Q.delay(eventually, 1000);
-};
+function eventually(value) {
+    return Q.delay(value, 1000);
+}
 
-var x = Q.all([1, 2, 3].map(eventually));
-Q.when(x, function (x) {
+Q.all([1, 2, 3].map(eventually))
+.done(function (result) {
     console.log(x);
 });
 
@@ -16,5 +17,5 @@ Q.all([
 ])
 .spread(function (x, y) {
     console.log(x, y);
-});
-
+})
+.done();
