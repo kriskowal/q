@@ -1085,12 +1085,11 @@ describe("propagation", function () {
 });
 
 describe("all", function () {
-
-    it("resolves when passed an empty array", function () {
+    it("fulfills when passed an empty array", function () {
         return Q.all([]);
     });
 
-    it("resolves after any constituent promise is rejected", function () {
+    it("rejects after any constituent promise is rejected", function () {
         var toResolve = Q.defer(); // never resolve
         var toReject = Q.defer();
         var promises = [toResolve.promise, toReject.promise];
@@ -1115,7 +1114,7 @@ describe("all", function () {
         });
     });
 
-    it("resolves when passed an sparse array", function () {
+    it("fulfills when passed an sparse array", function () {
         var toResolve = Q.defer();
         var promises = [];
         promises[0] = Q(0);
@@ -1136,6 +1135,35 @@ describe("all", function () {
             expect(result).toBe(input);
             expect(input).toEqual([0, 1]);
         });
+    });
+
+    it("sends [index, value] progress updates", function () {
+        var deferred1 = Q.defer();
+        var deferred2 = Q.defer();
+
+        var progressValues = [];
+
+        Q.delay(50).then(function () {
+            deferred1.notify("a");
+        });
+        Q.delay(100).then(function () {
+            deferred2.notify("b");
+            deferred2.resolve();
+        });
+        Q.delay(150).then(function () {
+            deferred1.notify("c");
+            deferred1.resolve();
+        });
+
+        return Q.all([deferred1.promise, deferred2.promise]).then(
+            function () {
+                expect(progressValues).toEqual([[0, "a"], [1, "b"], [0, "c"]]);
+            },
+            undefined,
+            function (progressValue) {
+                progressValues.push(progressValue);
+            }
+        )
     });
 
 });

@@ -1505,12 +1505,19 @@ function all(promises) {
                 promises[index] = snapshot.value;
             } else {
                 ++countDown;
-                when(promise, function (value) {
-                    promises[index] = value;
-                    if (--countDown === 0) {
-                        deferred.resolve(promises);
+                when(
+                    promise,
+                    function (value) {
+                        promises[index] = value;
+                        if (--countDown === 0) {
+                            deferred.resolve(promises);
+                        }
+                    },
+                    deferred.reject,
+                    function (progress) {
+                        deferred.notify([index, progress]);
                     }
-                }, deferred.reject);
+                );
             }
         }, void 0);
         if (countDown === 0) {
