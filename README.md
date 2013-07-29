@@ -92,8 +92,16 @@ Promises have a ``then`` method, which you can use to get the eventual
 return value (fulfillment) or thrown exception (rejection).
 
 ```javascript
+function promiseMeSomething() {
+  return Q.fcall(function(){
+    console.log('Doing something async');
+    return ['some', 'results']; // Return the result
+  });
+}
+
 promiseMeSomething()
 .then(function (value) {
+  console.log(value); // ['some', 'results']
 }, function (reason) {
 });
 ```

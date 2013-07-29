@@ -77,8 +77,7 @@ var qFileName;
 
 // shims
 
-// used for fallback in "allResolved"
-var noop = function () {};
+function noop() {}
 
 // Use the fastest possible means to execute a task in a future turn
 // of the event loop.
@@ -286,47 +285,39 @@ var object_keys = Object.keys || function (object) {
     return keys;
 };
 
-var object_toString = uncurryThis(Object.prototype.toString);
-
 function isObject(value) {
     return value === Object(value);
 }
 
-// generator related shims
+// iterator related shims
 
-// FIXME: Remove this function once ES6 generators are in SpiderMonkey.
-function isStopIteration(exception) {
-    return (
-        object_toString(exception) === "[object StopIteration]" ||
-        exception instanceof QReturnValue
-    );
+function iterate(values) {
+    if (!values) {
+        throw new Error("Can't iterate: " + values);
+    } else if (typeof values.iterator === "function") {
+        return values.iterator();
+    } else if (typeof values.next === "function") {
+        return values;
+    } else if (typeof values.length === "number") {
+        return array_iterate(values);
+    } else {
+        throw new Error("Can't iterate: " + values);
+    }
 }
 
-// FIXME: Remove this helper and Q.return once ES6 generators are in
-// SpiderMonkey.
-var QReturnValue;
-if (typeof ReturnValue !== "undefined") {
-    QReturnValue = ReturnValue;
-} else {
-    QReturnValue = function (value) {
-        this.value = value;
-    };
-}
-
-// Until V8 3.19 / Chromium 29 is released, SpiderMonkey is the only
-// engine that has a deployed base of browsers that support generators.
-// However, SM's generators use the Python-inspired semantics of
-// outdated ES6 drafts.  We would like to support ES6, but we'd also
-// like to make it possible to use generators in deployed browsers, so
-// we also support Python-style generators.  At some point we can remove
-// this block.
-var hasES6Generators;
-try {
-    /* jshint evil: true, nonew: false */
-    new Function("(function* (){ yield 1; })");
-    hasES6Generators = true;
-} catch (e) {
-    hasES6Generators = false;
+function array_iterate(values) {
+    var index = 0;
+    function next() {
+        while (index < values.length && !(index in values)) {
+            index++;
+        }
+        if (index < values.length) {
+            return {value: values[index], index: index++};
+        } else {
+            return {done: true};
+        }
+    }
+    return {next: next, send: next};
 }
 
 // long stack traces
@@ -455,12 +446,12 @@ function Q(value) {
     // If the object is already a Promise, return it directly.  This enables
     // the resolve function to both be used to created references from objects,
     // but to tolerably coerce non-promises to promises.
-    if (isPromise(value)) {
+    if (Q.isPromise(value)) {
         return value;
     }
 
     // assimilate thenables
-    if (isPromiseAlike(value)) {
+    if (Q.isPromiseAlike(value)) {
         return coerce(value);
     } else {
         return fulfill(value);
@@ -521,8 +512,8 @@ function defer() {
         if (messages) {
             return promise;
         }
-        var nearerValue = nearer(resolvedPromise);
-        if (isPromise(nearerValue)) {
+        var nearerValue = Q.nearer(resolvedPromise);
+        if (Q.isPromise(nearerValue)) {
             resolvedPromise = nearerValue; // shorten chain
         }
         return nearerValue;
@@ -862,10 +853,9 @@ Promise.prototype.then = function (fulfilled, rejected, progressed) {
  * @param progressed function to be called on any progress notifications
  * @return promise for the return value from the invoked callback
  */
-Q.when = when;
-function when(value, fulfilled, rejected, progressed) {
+Q.when = function (value, fulfilled, rejected, progressed) {
     return Q(value).then(fulfilled, rejected, progressed);
-}
+};
 
 Promise.prototype.thenResolve = function (value) {
     return this.then(function () { return value; });
@@ -894,41 +884,37 @@ Q.thenReject = function (promise, reason) {
  */
 
 // XXX should we re-do this?
-Q.nearer = nearer;
-function nearer(value) {
-    if (isPromise(value)) {
+Q.nearer = function (value) {
+    if (Q.isPromise(value)) {
         var inspected = value.inspect();
         if (inspected.state === "fulfilled") {
             return inspected.value;
         }
     }
     return value;
-}
+};
 
 /**
  * @returns whether the given object is a promise.
  * Otherwise it is a fulfilled value.
  */
-Q.isPromise = isPromise;
-function isPromise(object) {
+Q.isPromise = function (object) {
     return isObject(object) &&
         typeof object.promiseDispatch === "function" &&
         typeof object.inspect === "function";
-}
+};
 
-Q.isPromiseAlike = isPromiseAlike;
-function isPromiseAlike(object) {
+Q.isPromiseAlike = function (object) {
     return isObject(object) && typeof object.then === "function";
-}
+};
 
 /**
  * @returns whether the given object is a pending promise, meaning not
  * fulfilled or rejected.
  */
-Q.isPending = isPending;
-function isPending(object) {
-    return isPromise(object) && object.inspect().state === "pending";
-}
+Q.isPending = function (object) {
+    return Q.isPromise(object) && object.inspect().state === "pending";
+};
 
 Promise.prototype.isPending = function () {
     return this.inspect().state === "pending";
@@ -938,10 +924,9 @@ Promise.prototype.isPending = function () {
  * @returns whether the given object is a value or fulfilled
  * promise.
  */
-Q.isFulfilled = isFulfilled;
-function isFulfilled(object) {
-    return !isPromise(object) || object.inspect().state === "fulfilled";
-}
+Q.isFulfilled = function (object) {
+    return !Q.isPromise(object) || object.inspect().state === "fulfilled";
+};
 
 Promise.prototype.isFulfilled = function () {
     return this.inspect().state === "fulfilled";
@@ -950,10 +935,9 @@ Promise.prototype.isFulfilled = function () {
 /**
  * @returns whether the given object is a rejected promise.
  */
-Q.isRejected = isRejected;
-function isRejected(object) {
-    return isPromise(object) && object.inspect().state === "rejected";
-}
+Q.isRejected = function (object) {
+    return Q.isPromise(object) && object.inspect().state === "rejected";
+};
 
 Promise.prototype.isRejected = function () {
     return this.inspect().state === "rejected";
@@ -1111,6 +1095,9 @@ function fulfill(value) {
         },
         "keys": function () {
             return object_keys(value);
+        },
+        "iterate": function () {
+            return iterate(value);
         }
     }, void 0, function inspect() {
         return { state: "fulfilled", value: value };
@@ -1145,12 +1132,13 @@ function coerce(promise) {
  */
 Q.master = master;
 function master(object) {
+    var promise = Q(object);
     return Promise({
         "isDef": function () {}
     }, function fallback(op, args) {
-        return dispatch(object, op, args);
+        return promise.dispatch(op, args);
     }, function () {
-        return Q(object).inspect();
+        return promise.inspect();
     });
 }
 
@@ -1201,36 +1189,21 @@ Promise.prototype.spread = function (fulfilled, rejected) {
  *    the generator function altogether, and is translated into a
  *    rejection for the promise returned by the decorated generator.
  */
-Q.async = async;
-function async(makeGenerator) {
+Q.async = function (makeGenerator) {
     return function () {
         // when verb is "send", arg is a value
         // when verb is "throw", arg is an exception
         function continuer(verb, arg) {
             var result;
-            if (hasES6Generators) {
-                try {
-                    result = generator[verb](arg);
-                } catch (exception) {
-                    return reject(exception);
-                }
-                if (result.done) {
-                    return result.value;
-                } else {
-                    return when(result.value, callback, errback);
-                }
+            try {
+                result = generator[verb](arg);
+            } catch (exception) {
+                return reject(exception);
+            }
+            if (result.done) {
+                return result.value;
             } else {
-                // FIXME: Remove this case when SM does ES6 generators.
-                try {
-                    result = generator[verb](arg);
-                } catch (exception) {
-                    if (isStopIteration(exception)) {
-                        return exception.value;
-                    } else {
-                        return reject(exception);
-                    }
-                }
-                return when(result, callback, errback);
+                return Q(result.value).then(callback, errback);
             }
         }
         var generator = makeGenerator.apply(this, arguments);
@@ -1238,7 +1211,7 @@ function async(makeGenerator) {
         var errback = continuer.bind(continuer, "throw");
         return callback();
     };
-}
+};
 
 /**
  * The spawn function is a small wrapper around async that immediately
@@ -1247,40 +1220,9 @@ function async(makeGenerator) {
  * handler. This is useful because it's extremely common to run
  * generators at the top-level to work with libraries.
  */
-Q.spawn = spawn;
-function spawn(makeGenerator) {
+Q.spawn = function (makeGenerator) {
     Q.done(Q.async(makeGenerator)());
-}
-
-// FIXME: Remove this interface once ES6 generators are in SpiderMonkey.
-/**
- * Throws a ReturnValue exception to stop an asynchronous generator.
- *
- * This interface is a stop-gap measure to support generator return
- * values in older Firefox/SpiderMonkey.  In browsers that support ES6
- * generators like Chromium 29, just use "return" in your generator
- * functions.
- *
- * @param value the return value for the surrounding generator
- * @throws ReturnValue exception with the value.
- * @example
- * // ES6 style
- * Q.async(function* () {
- *      var foo = yield getFooPromise();
- *      var bar = yield getBarPromise();
- *      return foo + bar;
- * })
- * // Older SpiderMonkey style
- * Q.async(function () {
- *      var foo = yield getFooPromise();
- *      var bar = yield getBarPromise();
- *      Q.return(foo + bar);
- * })
- */
-Q["return"] = _return;
-function _return(value) {
-    throw new QReturnValue(value);
-}
+};
 
 /**
  * The promised function decorator ensures that any promise arguments
@@ -1297,14 +1239,13 @@ function _return(value) {
  * @param {function} callback The function to decorate
  * @returns {function} a function that has been decorated.
  */
-Q.promised = promised;
-function promised(callback) {
+Q.promised = function (callback) {
     return function () {
-        return spread([this, all(arguments)], function (self, args) {
+        return spread([this, Q.all(arguments)], function (self, args) {
             return callback.apply(self, args);
         });
     };
-}
+};
 
 /**
  * sends a message to a value in a future turn
@@ -1483,93 +1424,322 @@ Promise.prototype.keys = function () {
 };
 
 /**
- * Turns an array of promises into a promise for an array.  If any of
- * the promises gets rejected, the whole array is rejected immediately.
- * @param {Array*} an array (or promise for an array) of values (or
- * promises for values)
- * @returns a promise for an array of the corresponding values
  */
-// By Mark Miller
-// http://wiki.ecmascript.org/doku.php?id=strawman:concurrency&rev=1308776521#allfulfilled
-Q.all = all;
-function all(promises) {
-    return when(promises, function (promises) {
-        var countDown = 0;
-        var deferred = defer();
-        array_reduce(promises, function (undefined, promise, index) {
-            var snapshot;
-            if (
-                isPromise(promise) &&
-                (snapshot = promise.inspect()).state === "fulfilled"
-            ) {
-                promises[index] = snapshot.value;
-            } else {
-                ++countDown;
-                when(promise, function (value) {
-                    promises[index] = value;
-                    if (--countDown === 0) {
-                        deferred.resolve(promises);
-                    }
-                }, deferred.reject);
-            }
-        }, void 0);
-        if (countDown === 0) {
-            deferred.resolve(promises);
-        }
-        return deferred.promise;
-    });
-}
+Q.iterate = function (object) {
+    return Q(object).dispatch("iterate", []);
+};
 
-Promise.prototype.all = function () {
-    return all(this);
+Promise.prototype.iterate = function () {
+    return this.dispatch("iterate", []);
 };
 
 /**
- * Waits for all promises to be settled, either fulfilled or
- * rejected.  This is distinct from `all` since that would stop
- * waiting at the first rejection.  The promise returned by
- * `allResolved` will never be rejected.
- * @param promises a promise for an array (or an array) of promises
- * (or values)
- * @return a promise for an array of promises
+ * Aggregates all of the input into a single value, asynchronously.  `reduce`
+ * uses a pool of acreted values, optionally starting with some `basis`.  Each
+ * time a value becomes available both from the input and the pool of bases,
+ * the values are taken out and asynchronously combined.  When the combination
+ * has been fulfilled, the result is placed back in the pool.  When the input
+ * is exhausted, the result is the last value remaining in in the pool of
+ * accumulated values.
+ *
+ * The result is rejected if and when any of the input values or combined
+ * values are rejected.
+ *
+ * By default, the reducer will consume the entire input as it becomes
+ * available.  With a `maxInFlight` argument, the reducer will only consume
+ * enough to keep that number of concurrent reductions in progress.
+ *
+ * @param {Iterable*} input
+ * @param {Function} callback a function that accepts a value from the base
+ * pool and a value from the input, and produces a combined base to be returned
+ * to the pool.
+ * @param {Number?} maxInFlight the maximum number of concurrent reductions to
+ * perform at any given time.  If `undefined`, there is no upper bound.
+ * @param {Function} notify an optional callback to inform when the number of
+ * `inFlight` reductions changes.  The callback also receives `maxInFlight`.
+ * @returns {Any*} a promise for the last remaining base after all other bases
+ * have been combined with values from the input.
  */
-Q.allResolved = deprecate(allResolved, "allResolved", "allSettled");
-function allResolved(promises) {
-    return when(promises, function (promises) {
-        promises = array_map(promises, Q);
-        return when(all(array_map(promises, function (promise) {
-            return when(promise, noop, noop);
-        })), function () {
-            return promises;
-        });
-    });
-}
-
-Promise.prototype.allResolved = function () {
-    return allResolved(this);
+Q.reduce = function (object, callback, basis, maxInFlight, notify) {
+    if (arguments.length < 2) {
+        return Q(object).reduce(callback);
+    } else {
+        return Q(object).reduce(callback, basis, maxInFlight, notify);
+    }
 };
 
-Q.allSettled = allSettled;
-function allSettled(values) {
-    return when(values, function (values) {
-        return all(array_map(values, function (value, i) {
-            return when(
-                value,
-                function (fulfillmentValue) {
-                    values[i] = { state: "fulfilled", value: fulfillmentValue };
-                    return values[i];
-                },
-                function (reason) {
-                    values[i] = { state: "rejected", reason: reason };
-                    return values[i];
+Promise.prototype.reduce = function (callback, basis, maxInFlight, notify) {
+    var iterator = this.dispatch("iterate", []);
+    var inFlight = 0;
+    var done = false;
+    var deferred = defer();
+
+    // fulfilled bases, ready for aggregation
+    var bases = new Queue();
+    var semaphore = new Semaphore(maxInFlight);
+
+    callback = Q(callback);
+    if (notify) {
+        notify = Q(notify);
+    }
+
+    var needsBasis;
+    if (arguments.length < 2) {
+        needsBasis = true;
+    } else {
+        Q(basis).then(bases.put);
+        needsBasis = false;
+    }
+
+    function next() {
+        return semaphore.get()
+        .then(function () {
+            return iterator.invoke("next");
+        })
+        .then(function (iteration) {
+            if (iteration.done) {
+                done = true;
+                check();
+            } else if (needsBasis) {
+                Q(iteration.value)
+                    .then(function (value) {
+                        bases.put(value);
+                        semaphore.put();
+                    })
+                    .then(null, deferred.reject);
+                needsBasis = false;
+                next();
+            } else {
+                ++inFlight;
+                if (notify) {
+                    notify.fcall(inFlight, maxInFlight).done();
                 }
-            );
-        })).thenResolve(values);
+                next();
+                return Q(iteration.value)
+                .then(function (value) {
+                    bases.get().then(function (basis) {
+                        callback.fcall(basis, value, iteration.index)
+                            .then(function (value) {
+                                bases.put(value);
+                                semaphore.put();
+                            })
+                            .then(null, deferred.reject);
+                        --inFlight;
+                        if (notify) {
+                            notify.fcall(inFlight, maxInFlight).done();
+                        }
+                        check();
+                    })
+                    .then(null, deferred.reject);
+                });
+            }
+        })
+        .then(null, deferred.reject);
+    }
+
+    function check() {
+        if (inFlight === 0 && done) {
+            if (needsBasis) {
+                deferred.reject(new Error("Can't reduce empty source without a basis"));
+            } else {
+                deferred.resolve(bases.get());
+            }
+        }
+    }
+
+    next();
+
+    return deferred.promise;
+};
+
+/**
+ * Transforms input values into output values asynchronously.
+ * @param {Iterable*} input an iterable (albeit an array or iterator) (or a
+ * promise for such)
+ * @param {Function} callback a relation from the inputs to the outputs, which
+ * may return a promise.
+ * @param {Number} maxInFlight the number of transformations to process at any
+ * given time.
+ * @param {Function} notify a callback to inform how many transformations are
+ * being processed at any time.  Sends both the `inFlight` and `maxInFlight`
+ * numbers.
+ * @param {Queue*} output a promise for a Queue of the respective outputs
+ * through the relation when they are fulfilled.
+ */
+
+Q.map = function (object, callback, maxInFlight, notify) {
+    return Q(object).map(callback, maxInFlight, notify);
+};
+
+Promise.prototype.map = function (callback, maxInFlight, notify) {
+    var inFlight = 0;
+    var done = false;
+    var pipe = Pipe(this, maxInFlight, notify);
+    callback = Q(callback);
+    Q.reduce(pipe.input, function (undefined, value, index) {
+        inFlight++;
+        callback.fcall(value)
+        .then(function (value) {
+            inFlight--;
+            pipe.output.send(value, index);
+            if (done && inFlight === 0) {
+                pipe.output["return"]();
+            }
+        })
+        .then(null, function (error) {
+            pipe.output["throw"](error);
+        });
+    }, void 0)
+    .then(function () {
+        done = true;
+        if (inFlight === 0) {
+            pipe.output["return"]();
+        }
     });
+    return Q(pipe.output);
+};
+
+/**
+ * Accepts a source of promises and returns a promise to send the corresponding
+ * values to the given callback, serially or with limited concurrency.
+ * With a `maxInFlight` value of 1, `forEach` waits for the returned promise
+ * from the previous callback before sending the next value.
+ * @param {Iterable*} source an iterable (albeit an array, queue, iterator,
+ * generator) (or a promise for such) that produces a sequence of values (or
+ * promises for values)
+ * @param {Function} callback a function to call with each value, which returns
+ * undefined (or a promise for undefined) when the callback has completed its
+ * work.
+ * @param {Number?} maxInFlight the maximum number of iterations to process
+ * concurrently.  The default is 1.
+ * @param {Function?} notify
+ * @returns {Undefined*} a promise for the completion.  Note that for
+ * generators, this is the completion value.  Other iterators may also send a
+ * completion value if `next` returns `{done, value}`.
+ */
+
+Q.forEach = function (object, callback, maxInFlight, notify) {
+    return Q(object).forEach(callback, maxInFlight, notify);
+};
+
+Promise.prototype.forEach = function (callback, maxInFlight, notify) {
+    if (maxInFlight === void 0) {
+        maxInFlight = 1;
+    }
+
+    // initialize the semaphore
+    var semaphore = new Semaphore(maxInFlight);
+    var inFlight = 0;
+
+    var iterator = this.dispatch("iterate", []);
+    var deferred = defer();
+
+    callback = Q(callback);
+    if (notify) {
+        notify = Q(notify);
+    }
+
+    function next() {
+        semaphore.get().then(function () {
+            return iterator.invoke("next")
+            .then(function (iteration) {
+                if (notify) {
+                    notify.fcall(++inFlight, maxInFlight).done();
+                }
+                if (iteration.done) {
+                    deferred.resolve(iteration.value);
+                } else {
+                    next();
+                    return Q(iteration.value)
+                    .then(function (value) {
+                        return callback.fcall(value, iteration.index);
+                    })
+                    .then(function () {
+                        if (notify) {
+                            notify.fcall(--inFlight, maxInFlight).done();
+                        }
+                        semaphore.put();
+                    }, deferred.reject);
+                }
+            });
+        });
+    }
+
+    next();
+
+    return deferred.promise;
+};
+
+/**
+ * Fills a local buffer with as many as `maxInFlight` values from a source
+ * stream and provides them on demand.  This is useful before `forEach` if the
+ * source has high latency on `next`, such as a remote iterable.
+ * @param {Iterable*} input
+ * @param {Number} maxInFlight maximum number of values from input to
+ * accumulate in this buffer.
+ * @param {Function?} notify a callback to inform when the number of buffered
+ * values (`inFlight`) changes.  The callback also receives the `maxInFlight`.
+ * @returns {Queue*} output
+ */
+Q.buffer = buffer;
+function buffer(object, maxInFlight, notify) {
+    return Q(object).buffer(maxInFlight, notify);
 }
 
+Promise.prototype.buffer = function (maxInFlight, notify) {
+    var pipe = new Pipe(this, maxInFlight, notify);
+    var iterator = Q(pipe.input).iterate();
+    function next() {
+        return iterator.invoke("next")
+        .then(function (iteration) {
+            next();
+            pipe.output.put(iteration);
+        })
+        .then(null, function (error) {
+            pipe.output["throw"](error);
+        });
+    }
+    next();
+    return Q(pipe.output);
+};
+
+/**
+ * Turns an array of promises into a promise for an array.  If any of
+ * the promises gets rejected, the whole array is rejected immediately.
+ * @param {Iterable*} input array or promise (or a promise for such) of values
+ * (or promises for values)
+ * @returns a promise for an array of the corresponding values
+ */
+Q.all = function (input) {
+    var output = [];
+    return Q.reduce(input, function (undefined, value, index) {
+        output[index] = value;
+    }, void 0)
+    .then(function () {
+        return output;
+    });
+};
+
+Promise.prototype.all = function () {
+    return Q.all(this);
+};
+
+/**
+ */
+Q.allSettled = function (values) {
+    return Q(values).allSettled();
+};
+
 Promise.prototype.allSettled = function () {
-    return allSettled(this);
+    return this.then(function (promises) {
+        return Q.all(array_map(promises, function (value) {
+            var promise = Q(value);
+            function regardless() {
+                return promise.inspect();
+            }
+            return promise.then(regardless, regardless);
+        }));
+    });
 };
 
 /**
@@ -1885,10 +2055,9 @@ Promise.prototype.ninvoke = function (name /*...args*/) {
  * @param {Function} nodeback a Node.js-style callback
  * @returns either the promise or nothing
  */
-Q.nodeify = nodeify;
-function nodeify(object, nodeback) {
+Q.nodeify = function (object, nodeback) {
     return Q(object).nodeify(nodeback);
-}
+};
 
 Promise.prototype.nodeify = function (nodeback) {
     if (nodeback) {
@@ -1905,6 +2074,226 @@ Promise.prototype.nodeify = function (nodeback) {
         return this;
     }
 };
+
+/**
+ * An infinite promise queue is an asynchronous linked list that allows the
+ * consumer to get a promise for a value before the producer has put one, or a
+ * producer to put a value before the the consumer has asked for it.  Of
+ * course, the more mundane case of a producer putting and then the consumer
+ * getting works just as well.
+ *
+ * Additionally, a Queue supports the iterator API, specifically the iterator
+ * API as returned by ES6 generators, with one crucial difference.  `next`
+ * returns a promise for the next iteration.  This works by using an infinite
+ * promise queue as an asynchronous transport for iterations.  Borrowing the
+ * terms from the generator API, `send` and `throw`, and supplementing them
+ * with `return`, the queue can be teased to behave like a generator by calling
+ * these functions to produce a sequence of iterations.
+ *
+ * @constructor
+ */
+Q.Queue = Queue;
+function Queue() {
+    if (!(this instanceof Queue)) {
+        return new Queue();
+    }
+    var ends = Q.defer();
+    this.put = function (value) {
+        var next = Q.defer();
+        ends.resolve({
+            head: value,
+            tail: next.promise
+        });
+        ends.resolve = next.resolve;
+    };
+    this.get = function () {
+        var result = ends.promise.get("head");
+        ends.promise = ends.promise.get("tail");
+        return result;
+    };
+    this.index = 0;
+}
+
+/**
+ * When using a Queue as an asycnronous iteration transport, returns a promise
+ * for the next iteration.  Iterations are objects like `{value}` for an
+ * iteration, which can be supplemented with an index like `{value, index}` if
+ * the source is an array or array-like, and `{value, done: true}` for the
+ * completion of the iteration, optionally with a return value, or a rejected
+ * promise if the simulated generator threw an error.
+ * @returns {Iteration*}
+ */
+Queue.prototype.next = function () {
+    return this.get();
+};
+
+/**
+ * When using a Queue as an asynchronous iteration transport, adds a value to
+ * the queue of iterations.  The value may be at an optional given index.  If
+ * no index is provided, the iteration will be given a sequence number.
+ * @param {Any} value
+ * @param {Number?} index
+ */
+Queue.prototype.send = function (value, index) {
+    if (index === undefined) {
+        index = this.index++;
+    }
+    return this.put({value: value, index: index});
+};
+
+/**
+ * When using a Queue as an asynchronous iteration transport, adds a completion
+ * value to the queue of iterations.  This signals the end of the sequence,
+ * like closing a stream.
+ */
+Queue.prototype["return"] = function (value) {
+    this.put({value: value, done: true});
+};
+
+/**
+ * When using a Queue as an asynchronous iteration transport, adds a thrown
+ * exception to the queue.  This signals the end of the sequence, like closing
+ * a stream with an error, or throwing an exception from a generator.
+ */
+Queue.prototype["throw"] = function (error) {
+    this.put(Q.reject(error));
+};
+
+/**
+ * Allows the iteration to interoperate with shimmed ES6 iterators with the
+ * Iterable duck type.  The queue itself is the iterator, so simply returns
+ * itself.
+ * @returns this
+ */
+Queue.prototype.iterator = function () {
+    return this;
+};
+
+/**
+ * @see Promise#map
+ */
+Queue.prototype.map = function (callback, maxInFlight, notify) {
+    return Q(this).map(callback, maxInFlight, notify);
+};
+
+/**
+ * @see Promise#reduce
+ */
+Queue.prototype.reduce = function (callback, basis, maxInFlight) {
+    if (arguments.length < 2) {
+        return Q(this).reduce(callback);
+    } else {
+        return Q(this).reduce(callback, basis, maxInFlight);
+    }
+};
+
+/**
+ * @see Promise#forEach
+ */
+Queue.prototype.forEach = function (callback, maxInFlight) {
+    return Q(this).forEach(callback, maxInFlight);
+};
+
+/**
+ * @see Promise#buffer
+ */
+Queue.prototype.buffer = function (maxInFlight, notify) {
+    return Q(this).buffer(maxInFlight, notify);
+};
+
+/**
+ * @see Promise#all
+ */
+Queue.prototype.all = function () {
+    return Q(this).all();
+};
+
+/**
+ * A convenient constructor for a Queue that is used to synchronize a limited
+ * resource, like a buffer, database connection pool, or similar.  Since
+ * it is common within this library to make buffering optional, an unspecified
+ * `maxInFlight` argument implies that this should not behave as a semaphore
+ * at all, so `get` and `put` become effectively no-ops.
+ * @param {Number?} maxInFlight the maximum number of the underlying resource.
+ * This can be manipulated at run time by calling `put` (to increase by one),
+ * but this is a convenient place to initialize it.
+ * @constructor
+ */
+Q.Semaphore = Semaphore;
+function Semaphore(maxInFlight) {
+    if (!(this instanceof Semaphore)) {
+        return new Semaphore(maxInFlight);
+    }
+    if (maxInFlight !== void 0) {
+        var queue = new Queue();
+        this.get = queue.get;
+        this.put = queue.put;
+        for (var i = 0; i < maxInFlight; i++) {
+            queue.put();
+        }
+    } else {
+        this.get = Q;
+        this.put = noop;
+    }
+}
+
+Semaphore.prototype = object_create(Queue.prototype);
+
+/**
+ * A pipe is a tool for controlling scheduling of work by watching input and
+ * output streams.  The pipe receives the true input and produces controlled
+ * input and output streams.  The producer is responsible for sending results
+ * to the output Queue using the generator API.  The rate at which the producer
+ * sends data will regulate the rate at which the consumer can take values from
+ * the input iterator.
+ * @param {Iterable} trueInput
+ * @param {Number?} maxInFlight (infinite if undefined)
+ * @returns {{input, output}} pipe The input is an iterator that will only
+ * yield up to `maxInFlight` values at a time.  Sending data to the output
+ * Queue signals that some input has been taken out of flight.
+ * @constructor
+ */
+Q.Pipe = Pipe;
+function Pipe(trueInput, maxInFlight, notify) {
+    if (!(this instanceof Pipe)) {
+        return new Pipe(trueInput, maxInFlight);
+    }
+
+    trueInput = Q(trueInput).iterate();
+    if (notify) {
+        notify = Q(notify);
+    }
+
+    var semaphore = new Semaphore(maxInFlight);
+    var inFlight = 0;
+
+    var input = {
+        next: function () {
+            return semaphore.get().then(function () {
+                if (notify) {
+                    inFlight++;
+                    notify.fcall(inFlight, maxInFlight).done();
+                }
+                return trueInput.invoke("next");
+            });
+        }
+    };
+
+    var output = object_create(Queue.prototype);
+    var trueOutput = new Queue();
+    output.get = function () {
+        if (notify) {
+            inFlight--;
+            notify.fcall(inFlight, maxInFlight).done();
+        }
+        semaphore.put();
+        return trueOutput.get();
+    };
+    output.put = trueOutput.put;
+
+    this.input = input;
+    this.output = output;
+}
 
 // All code before this point will be filtered from stack traces.
 var qEndingLine = captureLine();
