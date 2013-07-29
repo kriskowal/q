@@ -1141,6 +1141,12 @@ describe("all", function () {
 });
 
 describe("allSettled", function () {
+    it("works on an empty array", function () {
+        return Q.allSettled([])
+        .then(function (snapshots) {
+            expect(snapshots).toEqual([]);
+        });
+    });
 
     it("deals with a mix of non-promises and promises", function () {
         return Q.allSettled([1, Q(2), Q.reject(3)])
@@ -1150,8 +1156,6 @@ describe("allSettled", function () {
                 { state: "fulfilled", value: 2 },
                 { state: "rejected", reason: 3 }
             ]);
-        }, function () {
-            expect(true).toBe(false);
         });
     });
 
