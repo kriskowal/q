@@ -1,5 +1,6 @@
-/!\ Warning: The behavior described here is likely to be quickly obseleted by
-developments in standardization and implementation.  Tread with care.
+:warning: Warning: The behavior described here is likely to be quickly
+obseleted by developments in standardization and implementation.  Tread with
+care.
 
 Q has an `async` function.  This can be used to decorate a generator function
 such that `yield` is effectively equivalent to `await` or `defer` syntax as
