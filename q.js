@@ -204,8 +204,8 @@ var nextTick =(function () {
 // hard-to-minify characters.
 // See Mark Miller’s explanation of what this does.
 // http://wiki.ecmascript.org/doku.php?id=conventions:safe_meta_programming
+var call = Function.call;
 function uncurryThis(f) {
-    var call = Function.call;
     return function () {
         return call.apply(f, arguments);
     };
