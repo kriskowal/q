@@ -1137,7 +1137,7 @@ describe("all", function () {
         });
     });
 
-    it("sends [index, value] progress updates", function () {
+    it("sends { index, value } progress updates", function () {
         var deferred1 = Q.defer();
         var deferred2 = Q.defer();
 
@@ -1157,7 +1157,11 @@ describe("all", function () {
 
         return Q.all([deferred1.promise, deferred2.promise]).then(
             function () {
-                expect(progressValues).toEqual([[0, "a"], [1, "b"], [0, "c"]]);
+                expect(progressValues).toEqual([
+                    { index: 0, value: "a" },
+                    { index: 1, value: "b" },
+                    { index: 0, value: "c" }
+                ]);
             },
             undefined,
             function (progressValue) {

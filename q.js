@@ -1515,7 +1515,7 @@ function all(promises) {
                     },
                     deferred.reject,
                     function (progress) {
-                        deferred.notify([index, progress]);
+                        deferred.notify({ index: index, value: progress });
                     }
                 );
             }
