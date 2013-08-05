@@ -1,4 +1,5 @@
-// vim:ts=4:sts=4:sw=4:
+
+define('q',['require','exports','module'],function (require, exports, module) {// vim:ts=4:sts=4:sw=4:
 /*!
  *
  * Copyright 2009-2012 Kris Kowal under the terms of the MIT
@@ -25,7 +26,7 @@
  * limitations under the License.
  *
  */
-"use strict";
+
 
 var hasStacks = false;
 try {
@@ -142,21 +143,9 @@ var nextTick =(function () {
         // modern browsers
         // http://www.nonblocking.io/2011/06/windownexttick.html
         var channel = new MessageChannel();
-        // At least Safari Version 6.0.5 (8536.30.1) intermittently cannot create
-        // working message ports the first time a page loads.
-        channel.port1.onmessage = function () {
-            requestTick = requestPortTick;
-            channel.port1.onmessage = flush;
-            flush();
-        };
-        var requestPortTick = function () {
-            // Opera requires us to provide a message payload, regardless of
-            // whether we use it.
-            channel.port2.postMessage(0);
-        };
+        channel.port1.onmessage = flush;
         requestTick = function () {
-            setTimeout(flush, 0);
-            requestPortTick();
+            channel.port2.postMessage(0);
         };
 
     } else {
@@ -1532,31 +1521,27 @@ Promise.prototype.allResolved = function () {
     return allResolved(this);
 };
 
-/**
- * @see Promise#allSettled
- */
 Q.allSettled = allSettled;
-function allSettled(promises) {
-    return Q(promises).allSettled();
+function allSettled(values) {
+    return when(values, function (values) {
+        return all(array_map(values, function (value, i) {
+            return when(
+                value,
+                function (fulfillmentValue) {
+                    values[i] = { state: "fulfilled", value: fulfillmentValue };
+                    return values[i];
+                },
+                function (reason) {
+                    values[i] = { state: "rejected", reason: reason };
+                    return values[i];
+                }
+            );
+        })).thenResolve(values);
+    });
 }
 
-/**
- * Turns an array of promises into a promise for an array of their states (as
- * returned by `inspect`) when they have all settled.
- * @param {Array[Any*]} values an array (or promise for an array) of values (or
- * promises for values)
- * @returns {Array[State]} an array of states for the respective values.
- */
 Promise.prototype.allSettled = function () {
-    return this.then(function (promises) {
-        return all(array_map(promises, function (promise) {
-            promise = Q(promise);
-            function regardless() {
-                return promise.inspect();
-            }
-            return promise.then(regardless, regardless);
-        }));
-    });
+    return allSettled(this);
 };
 
 /**
@@ -1897,3 +1882,5 @@ module.exports = Q;
 
 // All code before this point will be filtered from stack traces.
 var qEndingLine = captureLine();
+
+});
