@@ -50,7 +50,9 @@
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.9",
     "grunt-contrib-uglify": "~0.2.2",
-    "matcha": "~0.2.0"
+    "matcha": "~0.2.0",
+    "grunt-browserify": "~1.2.1",
+    "grunt-contrib-requirejs": "~0.4.1"
   },
   "scripts": {
     "test": "jasmine-node spec && promises-aplus-tests spec/aplus-adapter",
