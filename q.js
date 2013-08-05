@@ -1556,27 +1556,31 @@ Promise.prototype.allResolved = function () {
     return allResolved(this);
 };
 
+/**
+ * @see Promise#allSettled
+ */
 Q.allSettled = allSettled;
-function allSettled(values) {
-    return when(values, function (values) {
-        return all(array_map(values, function (value, i) {
-            return when(
-                value,
-                function (fulfillmentValue) {
-                    values[i] = { state: "fulfilled", value: fulfillmentValue };
-                    return values[i];
-                },
-                function (reason) {
-                    values[i] = { state: "rejected", reason: reason };
-                    return values[i];
-                }
-            );
-        })).thenResolve(values);
-    });
+function allSettled(promises) {
+    return Q(promises).allSettled();
 }
 
+/**
+ * Turns an array of promises into a promise for an array of their states (as
+ * returned by `inspect`) when they have all settled.
+ * @param {Array[Any*]} values an array (or promise for an array) of values (or
+ * promises for values)
+ * @returns {Array[State]} an array of states for the respective values.
+ */
 Promise.prototype.allSettled = function () {
-    return allSettled(this);
+    return this.then(function (promises) {
+        return all(array_map(promises, function (promise) {
+            promise = Q(promise);
+            function regardless() {
+                return promise.inspect();
+            }
+            return promise.then(regardless, regardless);
+        }));
+    });
 };
 
 /**
