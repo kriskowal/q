@@ -3,47 +3,48 @@
 var fs = require("fs");
 
 module.exports = function (grunt) {
-    ["grunt-contrib-uglify", "grunt-contrib-requirejs", "grunt-browserify"]
+    ["grunt-contrib-uglify",
+     "grunt-contrib-clean",
+     "grunt-amd-wrap",
+     "grunt-global-wrap"]
         .forEach(grunt.loadNpmTasks);
 
-    grunt.registerTask("create-global-entry", function () {
-        fs.writeFileSync("q-global.js", "window.Q = require(\"./q\");");
-    });
-    grunt.registerTask("delete-global-entry", function () {
-        fs.unlinkSync("q-global.js");
-    });
-
     grunt.initConfig({
-        requirejs: {
-            compile: {
-                options: {
-                    cjsTranslate: true,
-                    out: "release/q.amd.js",
-                    optimize: "none",
-                    include: ["q"]
-                }
+        clean: {
+            artifacts: ["release/"]
+        },
+        amdwrap: {
+            artifacts: {
+                expand: true,
+                src: ["q.js", "queue.js"],
+                dest: "release/amd/"
             }
         },
-        browserify: {
-            "release/q.js": ["q-global.js"],
-            options: {
-                detectGlobals: false // don't detect and insert a `process` shim.
+        globalwrap: {
+            artifacts: {
+                main: "q.js",
+                global: "Q",
+                dest: "release/q.js",
+
+                // don't detect and insert a `process` shim.
+                bundleOptions: { detectGlobals: false }
             }
         },
         uglify: {
-            "release/q.amd.min.js": ["release/q.amd.js"],
-            "release/q.min.js": ["release/q.js"],
-            options: {
-                report: "gzip"
+            artifacts: {
+                files: [{
+                    expand: true,
+                    cwd: "release/",
+                    src: ["**/*.js"],
+                    dest: "release/",
+                    ext: ".min.js"
+                }],
+                options: {
+                    report: "gzip"
+                }
             }
         }
     });
 
-    grunt.registerTask("default", [
-        "requirejs",
-        "create-global-entry",
-        "browserify",
-        "delete-global-entry",
-        "uglify"
-    ]);
+    grunt.registerTask("default", ["clean", "amdwrap", "globalwrap", "uglify"]);
 };
