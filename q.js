@@ -986,11 +986,7 @@ function displayUnhandledReasons() {
 function logUnhandledReasons() {
     for (var i = 0; i < unhandledReasons.length; i++) {
         var reason = unhandledReasons[i];
-        if (reason && typeof reason.stack !== "undefined") {
-            console.warn("Unhandled rejection reason:", reason.stack);
-        } else {
-            console.warn("Unhandled rejection reason (no stack):", reason);
-        }
+        console.warn("Unhandled rejection reason:", reason);
     }
 }
 
@@ -1017,7 +1013,11 @@ function trackRejection(promise, reason) {
     }
 
     unhandledRejections.push(promise);
-    unhandledReasons.push(reason);
+    if (reason && typeof reason.stack !== "undefined") {
+        unhandledReasons.push(reason.stack);
+    } else {
+        unhandledReasons.push("(no stack) " + reason);
+    }
     displayUnhandledReasons();
 }
 
