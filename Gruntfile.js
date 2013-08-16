@@ -1,12 +1,14 @@
 "use strict";
 
 var fs = require("fs");
+var path = require("path");
 
 module.exports = function (grunt) {
     ["grunt-contrib-uglify",
      "grunt-contrib-clean",
      "grunt-amd-wrap",
-     "grunt-global-wrap"]
+     "grunt-global-wrap",
+     "grunt-s3"]
         .forEach(grunt.loadNpmTasks);
 
     grunt.initConfig({
@@ -43,8 +45,26 @@ module.exports = function (grunt) {
                     report: "gzip"
                 }
             }
+        },
+        s3: {
+            artifacts: {
+                options: {
+                    bucket: "q-releases",
+                    access: "public-read",
+                    region: "us-west-1",
+                    key: process.env.S3_KEY,
+                    secret: process.env.S3_SECRET
+                },
+                upload: [{
+                    // See https://github.com/pifantastic/grunt-s3/issues/91 for
+                    // why we use this funky syntax instead of the standard.
+                    src: "release/**/*.js",
+                    rel: path.basename(path.resolve(__dirname, "release"))
+                }]
+            }
         }
     });
 
-    grunt.registerTask("default", ["clean", "amdwrap", "globalwrap", "uglify"]);
+    grunt.registerTask("pre-browser-test", ["clean", "globalwrap"]);
+    grunt.registerTask("release", ["clean", "amdwrap", "globalwrap", "uglify", "s3"]);
 };
