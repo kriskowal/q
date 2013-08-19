@@ -450,6 +450,7 @@ var debugBuffer = [];
 var debugIndex = 0;
 function debug() {
     var args = array_slice(arguments);
+    args.push(new Date().toISOString());
     if (inspector) {
         inspector.postMessage(args);
     } else {
@@ -533,9 +534,6 @@ function defer() {
 
     var deferred = object_create(defer.prototype);
     var promise = object_create(Promise.prototype);
-    var debugId = debugCounter++;
-
-    debug("defer", debugId);
 
     promise.promiseDispatch = function (resolve, op, operands) {
         var args = array_slice(arguments);
@@ -584,6 +582,10 @@ function defer() {
         }
     }
 
+    var debugId = debugCounter++;
+    promise.debugId = debugId;
+    debug("defer", debugId, filterStackString(promise.stack || ""));
+
     // NOTE: we do the checks for `resolvedPromise` in each method, instead of
     // consolidating them into `become`, since otherwise we'd create new
     // promises with the lines `become(whatever(value))`. See e.g. GH-252.
@@ -598,7 +600,7 @@ function defer() {
             });
         }, void 0);
 
-        debug("resolve", debugId);
+        debug("resolve", promise.debugId, newPromise.debugId);
 
         messages = void 0;
         progressListeners = void 0;
@@ -630,6 +632,14 @@ function defer() {
     deferred.notify = function (progress) {
         if (resolvedPromise) {
             return;
+        }
+
+        try {
+            debug("progress", debugId, progress);
+        } catch (error) {
+            // the progress object might not be serializable.
+            // we tried, oh well
+            debug("progress", debugId);
         }
 
         array_reduce(progressListeners, function (undefined, progressListener) {
@@ -1090,22 +1100,22 @@ Q.stopUnhandledRejectionTracking = function () {
 
 resetUnhandledRejections();
 
+function addPortListener(port, handlers) {
+    port.addEventListener("message", function (event) {
+        var message = event.data;
+        if (Array.isArray(message) && message.length) {
+            var type = message[0];
+            var handler = handlers[type];
+            if (handler) {
+                handler.apply(event, message.slice(1));
+            }
+        }
+    });
+}
+
 if (typeof window !== "undefined" && typeof window.postMessage === "function") {
 
     var inspector;
-
-    function addPortListener(port, handlers) {
-        port.addEventListener("message", function (event) {
-            var message = event.data;
-            if (Array.isArray(message) && message.length) {
-                var type = message[0];
-                var handler = handlers[type];
-                if (handler) {
-                    handler.apply(event, message.slice(1));
-                }
-            }
-        });
-    }
 
     addPortListener(window, {
         "can-watch-promises": function () {
@@ -1138,7 +1148,6 @@ if (typeof window !== "undefined" && typeof window.postMessage === "function") {
  */
 Q.reject = reject;
 function reject(reason) {
-    var debugId = debugCounter++;
     var message, stack;
     if (typeof reason === "object") {
         if (reason.message) {
@@ -1152,21 +1161,25 @@ function reject(reason) {
     } else {
         message = "" + reason;
     }
-    debug("reject", debugId, message, stack);
     var rejection = Promise({
         "when": function (rejected) {
             // note that the error has been handled
             if (rejected) {
-                debug("handle", debugId);
                 untrackRejection(this);
             }
-            return rejected ? rejected(reason) : this;
+            var resolution = Q(rejected ? rejected(reason) : this);
+            debug("handle", debugId, resolution.debugId);
+            return resolution;
         }
     }, function fallback() {
         return this;
     }, function inspect() {
         return { state: "rejected", reason: reason };
     });
+
+    var debugId = debugCounter++;
+    rejection.debugId = debugId;
+    debug("reject", debugId, message, filterStackString(stack || ""));
 
     // Note that the reason has not been handled.
     trackRejection(rejection, reason);
@@ -1180,8 +1193,7 @@ function reject(reason) {
  */
 Q.fulfill = fulfill;
 function fulfill(value) {
-    var debugId = debugCounter++;
-    return Promise({
+    var promise = Promise({
         "when": function () {
             return value;
         },
@@ -1212,6 +1224,10 @@ function fulfill(value) {
     }, void 0, function inspect() {
         return { state: "fulfilled", value: value };
     });
+    var debugId = debugCounter++;
+    promise.debugId = debugId;
+    debug("fulfill", debugId);
+    return promise;
 }
 
 /**
@@ -1606,13 +1622,22 @@ function all(promises) {
                     promise,
                     function (value) {
                         promises[index] = value;
+                        deferred.notify({
+                            index: index,
+                            value: 1,
+                            length: promises.length
+                        });
                         if (--countDown === 0) {
                             deferred.resolve(promises);
                         }
                     },
                     deferred.reject,
                     function (progress) {
-                        deferred.notify({ index: index, value: progress });
+                        deferred.notify({
+                            index: index,
+                            value: progress,
+                            length: promises.length
+                        });
                     }
                 );
             }
