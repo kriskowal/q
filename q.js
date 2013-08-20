@@ -1149,7 +1149,7 @@ if (typeof window !== "undefined" && typeof window.postMessage === "function") {
 Q.reject = reject;
 function reject(reason) {
     var message, stack;
-    if (typeof reason === "object") {
+    if (reason && typeof reason === "object") {
         if (reason.message) {
             message = reason.message;
         } else {
