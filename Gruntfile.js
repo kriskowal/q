@@ -3,6 +3,28 @@
 var fs = require("fs");
 var path = require("path");
 
+// compute a release name for S3 based on the version in package.json and
+// whether the git HEAD matches the tag for the corresponding version
+var config = require("./package.json");
+var headPath = path.join(__dirname, ".git", "HEAD");
+var tagPath = path.join(__dirname, ".git", "refs", "tags", "v" + config.version);
+var releaseName;
+if (fs.existsSync(headPath)) {
+    var headHash = fs.readFileSync(headPath, "ascii").trim();
+    if (fs.existsSync(tagPath)) {
+        var tagHash = fs.readFileSync(tagPath, "ascii").trim();
+        if (tagHash === headHash) {
+            releaseName = config.version;
+        } else {
+            releaseName = headHash;
+        }
+    } else {
+        releaseName = headHash;
+    }
+} else {
+    releaseName = "default";
+}
+
 module.exports = function (grunt) {
     ["grunt-contrib-uglify",
      "grunt-contrib-clean",
