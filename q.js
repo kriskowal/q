@@ -535,12 +535,10 @@ function defer() {
     }, "valueOf", "inspect");
 
     promise.inspect = function () {
-        if (messages) {
+        if (messages || !resolvedPromise) {
             return { state: "pending" };
         } else if (resolvedPromise) {
             return resolvedPromise.inspect();
-        } else {
-            return { state: "accepted", value: acceptedValue };
         }
     };
 
