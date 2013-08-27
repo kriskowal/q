@@ -572,6 +572,10 @@ function defer() {
 
         acceptedValue = value;
 
+        if (isPromise(acceptedValue)) {
+            adopt();
+        }
+
         // dispatch queued messages, if any
         if (messages.length) {
             adopt();
