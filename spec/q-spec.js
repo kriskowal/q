@@ -2454,14 +2454,21 @@ describe("unhandled rejection reporting", function () {
     it("reports the most basic case", function () {
         Q.reject("a reason");
 
-        expect(Q.getUnhandledReasons()).toEqual(["a reason"]);
+        expect(Q.getUnhandledReasons()).toEqual(["(no stack) a reason"]);
+    });
+
+    it("reports a stack trace", function () {
+        var error = new Error("a reason");
+        Q.reject(error);
+
+        expect(Q.getUnhandledReasons()).toEqual([error.stack]);
     });
 
     it("doesn't let you mutate the internal array", function () {
         Q.reject("a reason");
 
         Q.getUnhandledReasons().length = 0;
-        expect(Q.getUnhandledReasons()).toEqual(["a reason"]);
+        expect(Q.getUnhandledReasons()).toEqual(["(no stack) a reason"]);
     });
 
     it("resets after calling `Q.resetUnhandledRejections`", function () {
