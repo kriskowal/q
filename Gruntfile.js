@@ -6,8 +6,8 @@ var path = require("path");
 // compute a release name for S3 based on the version in package.json and
 // whether the git HEAD matches the tag for the corresponding version
 var config = require("./package.json");
-var headPath = path.join(__dirname, ".git", "HEAD");
-var tagPath = path.join(__dirname, ".git", "refs", "tags", "v" + config.version);
+var headPath = path.resolve(__dirname, ".git", "HEAD");
+var tagPath = path.resolve(__dirname, ".git", "refs", "tags", "v" + config.version);
 var releaseName;
 if (fs.existsSync(headPath)) {
     var headHash = fs.readFileSync(headPath, "ascii").trim();
@@ -34,6 +34,7 @@ module.exports = function (grunt) {
         .forEach(grunt.loadNpmTasks);
 
     grunt.initConfig({
+        releaseName: releaseName,
         clean: {
             artifacts: ["release/"]
         },
@@ -41,14 +42,14 @@ module.exports = function (grunt) {
             artifacts: {
                 expand: true,
                 src: ["q.js", "queue.js"],
-                dest: "release/amd/"
+                dest: "release/<%= releaseName %>/amd/"
             }
         },
         globalwrap: {
             artifacts: {
                 main: "q.js",
                 global: "Q",
-                dest: "release/q.js",
+                dest: "release/<%= releaseName %>/q.js",
 
                 // don't detect and insert a `process` shim.
                 bundleOptions: { detectGlobals: false }
