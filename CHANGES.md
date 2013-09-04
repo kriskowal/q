@@ -1,5 +1,21 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
+## 0.9.7
+
+ - :warning: `q.min.js` is no longer checked-in.  It is however still
+   created by Grunt and NPM.
+ - Fixes a bug that inhibited `Q.async` with implementations of the new
+   ES6 generators.
+ - Fixes a bug with `nextTick` affecting Safari 6.0.5 the first time a
+   page loads when an `iframe` is involved.
+ - Introduces `passByCopy`, `join`, and `race`.
+ - Shows stack traces or error messages on the console, instead of
+   `Error` objects.
+ - Elimintates wrapper methods for improved performance.
+ - `Q.all` now propagates progress notifications of the form you might
+   expect of ES6 iterations, `{value, index}` where the `value` is the
+   progress notification from the promise at `index`.
+
 ## 0.9.6
 
  - Fixes a bug in recognizing the difference between compatible Q
