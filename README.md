@@ -77,13 +77,32 @@ The Q module can be loaded as:
 -   Using [NuGet](http://nuget.org/) as [Q](https://nuget.org/packages/q)
 
 Q can exchange promises with jQuery, Dojo, When.js, WinJS, and more.
-Additionally, there are many libraries that produce and consume Q promises for
-everything from file system/database access or RPC to templating. For a list of
-some of the more popular ones, see [Libraries][].
 
-Please join the Q-Continuum [mailing list](https://groups.google.com/forum/#!forum/q-continuum).
+## Resources
 
+Our [wiki][] contains a number of useful resources, including:
+
+- A method-by-method [Q API reference][reference].
+- A growing [examples gallery][examples], showing how Q can be used to make
+  everything better. From XHR to database access to accessing the Flickr API,
+  Q is there for you.
+- There are many libraries that produce and consume Q promises for everything
+  from file system/database access or RPC to templating. For a list of some of
+  the more popular ones, see [Libraries][].
+- If you want materials that introduce the promise concept generally, and the
+  below tutorial isn't doing it for you, check out our collection of
+  [presentations, blog posts, and podcasts][resources].
+- A guide for those [coming from jQuery's `$.Deferred`][jquery].
+
+We'd also love to have you join the Q-Continuum [mailing list][].
+
+[wiki]: https://github.com/kriskowal/q/wiki
+[reference]: https://github.com/kriskowal/q/wiki/API-Reference
+[examples]: https://github.com/kriskowal/q/wiki/Examples-Gallery
 [Libraries]: https://github.com/kriskowal/q/wiki/Libraries
+[resources]: https://github.com/kriskowal/q/wiki/General-Promise-Resources
+[jquery]: https://github.com/kriskowal/q/wiki/Coming-from-jQuery
+[mailing list]: https://groups.google.com/forum/#!forum/q-continuum
 
 
 ## Tutorial
@@ -781,28 +800,14 @@ This feature does come with somewhat-serious performance and memory overhead,
 however. If you're working with lots of promises, or trying to scale a server
 to many users, you should probably keep it off. But in development, go for it!
 
-## Reference
-
-A method-by-method [Q API reference][reference] is available on the wiki.
-
-[reference]: https://github.com/kriskowal/q/wiki/API-Reference
-
-## More Examples
-
-A growing [examples gallery][examples] is available on the wiki, showing how Q
-can be used to make everything better. From XHR to database access to accessing
-the Flickr API, Q is there for you.
-
-[examples]: https://github.com/kriskowal/q/wiki/Examples-Gallery
-
 ## Tests
 
 You can view the results of the Q test suite [in your browser][tests]!
 
 [tests]: https://rawgithub.com/kriskowal/q/master/spec/q-spec.html
 
----
+## License
 
-Copyright 2009-2012 Kristopher Michael Kowal
+Copyright 2009–2013 Kristopher Michael Kowal
 MIT License (enclosed)
 
