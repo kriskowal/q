@@ -5,7 +5,7 @@ node_js:
 script:
   npm run lint && npm test
 after_success:
-  grunt release
+  npm run release
 env:
   global:
   - secure: I/XyqSk7mlCseUzJcZfZrSVd/05O092eabNz6Lnm1jU2QTHzCxlaKLov/WMPwoYvm88gs07KJDZeybGfiYr8CXz7NiFbQdpaWRaTx0uVoQfxQ51kqwqCAXR40ARz76/gUr5llLEhSYhZ5x5KzoyxnKIPXZBwqiSsMQzwHMp2IxE=
