@@ -8,21 +8,21 @@ var path = require("path");
 var config = require("./package.json");
 var headPath = path.resolve(__dirname, ".git", "HEAD");
 var tagPath = path.resolve(__dirname, ".git", "refs", "tags", "v" + config.version);
-var releaseName;
+var releasePath;
 if (fs.existsSync(headPath)) {
     var headHash = fs.readFileSync(headPath, "ascii").trim();
     if (fs.existsSync(tagPath)) {
         var tagHash = fs.readFileSync(tagPath, "ascii").trim();
         if (tagHash === headHash) {
-            releaseName = config.version;
+            releasePath = config.version;
         } else {
-            releaseName = headHash;
+            releasePath = "commits/" + headHash;
         }
     } else {
-        releaseName = headHash;
+        releasePath = "commits/" + headHash;
     }
 } else {
-    releaseName = "default";
+    releasePath = "default";
 }
 
 module.exports = function (grunt) {
@@ -34,7 +34,7 @@ module.exports = function (grunt) {
         .forEach(grunt.loadNpmTasks);
 
     grunt.initConfig({
-        releaseName: releaseName,
+        releasePath: releasePath,
         clean: {
             artifacts: ["release/"]
         },
@@ -42,14 +42,14 @@ module.exports = function (grunt) {
             artifacts: {
                 expand: true,
                 src: ["q.js", "queue.js"],
-                dest: "release/<%= releaseName %>/amd/"
+                dest: "release/<%= releasePath %>/amd/"
             }
         },
         globalwrap: {
             artifacts: {
                 main: "q.js",
                 global: "Q",
-                dest: "release/<%= releaseName %>/q.js",
+                dest: "release/<%= releasePath %>/q.js",
 
                 // don't detect and insert a `process` shim.
                 bundleOptions: { detectGlobals: false }
@@ -59,9 +59,9 @@ module.exports = function (grunt) {
             artifacts: {
                 files: [{
                     expand: true,
-                    cwd: "release/",
-                    src: ["**/*.js"],
-                    dest: "release/",
+                    cwd: "release/<%= releasePath %>/",
+                    src: ["q.js"],
+                    dest: "release/<%= releasePath %>/",
                     ext: ".min.js"
                 }],
                 options: {
