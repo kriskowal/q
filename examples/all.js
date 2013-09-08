@@ -8,7 +8,7 @@ function eventually(value) {
 
 Q.all([1, 2, 3].map(eventually))
 .done(function (result) {
-    console.log(x);
+    console.log(result);
 });
 
 Q.all([
