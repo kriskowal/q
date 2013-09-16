@@ -40,6 +40,9 @@
         bootstrap("promise", definition);
 
     // CommonJS
+    // - custom setup of RequireJS provides 'exports' variable without 'module'
+    //   function loadExtension @
+    //   https://github.com/adobe/brackets/blob/master/src/utils/ExtensionLoader.js
     } else if (typeof module !== "undefined" && typeof exports === "object") {
         module.exports = definition();
 
