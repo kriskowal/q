@@ -40,7 +40,7 @@
         bootstrap("promise", definition);
 
     // CommonJS
-    } else if (typeof exports === "object") {
+    } else if (typeof module !== "undefined" && typeof exports === "object") {
         module.exports = definition();
 
     // RequireJS
