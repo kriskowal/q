@@ -3,26 +3,30 @@
 var fs = require("fs");
 var path = require("path");
 
+var refPattern = /^ref: (.*)$/;
+function followGitRef(ref) {
+    var match = refPattern.exec(ref);
+    if (match) {
+        var refPath = path.resolve(__dirname, ".git", match[1]);
+        if (fs.existsSync(refPath)) {
+            return followGitRef(fs.readFileSync(refPath, "ascii").trim());
+        }
+    } else {
+        return ref;
+    }
+}
+
 // compute a release name for S3 based on the version in package.json and
 // whether the git HEAD matches the tag for the corresponding version
 var config = require("./package.json");
-var headPath = path.resolve(__dirname, ".git", "HEAD");
-var tagPath = path.resolve(__dirname, ".git", "refs", "tags", "v" + config.version);
+var headHash = followGitRef("ref: HEAD");
+var versionHash = followGitRef("ref: refs/tags/v" + config.version);
+
 var releasePath;
-if (fs.existsSync(headPath)) {
-    var headHash = fs.readFileSync(headPath, "ascii").trim();
-    if (fs.existsSync(tagPath)) {
-        var tagHash = fs.readFileSync(tagPath, "ascii").trim();
-        if (tagHash === headHash) {
-            releasePath = config.version;
-        } else {
-            releasePath = "commits/" + headHash;
-        }
-    } else {
-        releasePath = "commits/" + headHash;
-    }
+if (headHash === versionHash) {
+    releasePath = config.version;
 } else {
-    releasePath = "default";
+    releasePath = "";
 }
 
 module.exports = function (grunt) {
@@ -89,5 +93,6 @@ module.exports = function (grunt) {
     });
 
     grunt.registerTask("pre-browser-test", ["clean", "globalwrap"]);
+    grunt.registerTask("build", ["clean", "amdwrap", "globalwrap", "uglify"]);
     grunt.registerTask("release", ["clean", "amdwrap", "globalwrap", "uglify", "s3"]);
 };

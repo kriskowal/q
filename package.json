@@ -72,9 +72,6 @@
     }
   },
   "volo": {
-    "url": "http://q-releases.s3-website-us-west-1.amazonaws.com/amd/q.js"
-  },
-  "directories": {
-    "test": "./spec"
+    "url": "http://q-releases.s3-website-us-west-1.amazonaws.com/{version}/amd/q.js"
   }
 }
