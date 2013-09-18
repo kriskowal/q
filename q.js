@@ -69,74 +69,10 @@ function uncurryThis(f) {
 
 var array_slice = uncurryThis(Array.prototype.slice);
 
-var array_reduce = uncurryThis(
-    Array.prototype.reduce || function (callback, basis) {
-        var index = 0,
-            length = this.length;
-        // concerning the initial value, if one is not provided
-        if (arguments.length === 1) {
-            // seek to the first value in the array, accounting
-            // for the possibility that is is a sparse array
-            do {
-                if (index in this) {
-                    basis = this[index++];
-                    break;
-                }
-                if (++index >= length) {
-                    throw new TypeError();
-                }
-            } while (1);
-        }
-        // reduce
-        for (; index < length; index++) {
-            // account for the possibility that the array is sparse
-            if (index in this) {
-                basis = callback(basis, this[index], index);
-            }
-        }
-        return basis;
-    }
-);
-
-var array_indexOf = uncurryThis(
-    Array.prototype.indexOf || function (value) {
-        // not a very good shim, but good enough for our one use of it
-        for (var i = 0; i < this.length; i++) {
-            if (this[i] === value) {
-                return i;
-            }
-        }
-        return -1;
-    }
-);
-
-var array_map = uncurryThis(
-    Array.prototype.map || function (callback, thisp) {
-        var self = this;
-        var collect = [];
-        array_reduce(self, function (undefined, value, index) {
-            collect.push(callback.call(thisp, value, index, self));
-        }, void 0);
-        return collect;
-    }
-);
-
 var object_create = Object.create || function (prototype) {
     function Type() { }
     Type.prototype = prototype;
     return new Type();
-};
-
-var object_hasOwnProperty = uncurryThis(Object.prototype.hasOwnProperty);
-
-var object_keys = Object.keys || function (object) {
-    var keys = [];
-    for (var key in object) {
-        if (object_hasOwnProperty(object, key)) {
-            keys.push(key);
-        }
-    }
-    return keys;
 };
 
 var object_toString = uncurryThis(Object.prototype.toString);
@@ -411,11 +347,11 @@ function defer() {
         resolvedPromise = newPromise;
         promise.source = newPromise;
 
-        array_reduce(messages, function (undefined, message) {
+        messages.forEach(function (message) {
             asap(function () {
                 newPromise.promiseDispatch.apply(newPromise, message);
             });
-        }, void 0);
+        });
 
         messages = void 0;
         progressListeners = void 0;
@@ -449,11 +385,11 @@ function defer() {
             return;
         }
 
-        array_reduce(progressListeners, function (undefined, progressListener) {
+        progressListeners.forEach(function (progressListener) {
             asap(function () {
                 progressListener(progress);
             });
-        }, void 0);
+        });
     };
 
     return deferred;
@@ -880,7 +816,7 @@ function untrackRejection(promise) {
         return;
     }
 
-    var at = array_indexOf(unhandledRejections, promise);
+    var at = unhandledRejections.indexOf(promise);
     if (at !== -1) {
         unhandledRejections.splice(at, 1);
         unhandledReasons.splice(at, 1);
@@ -964,7 +900,7 @@ function fulfill(value) {
             return value.apply(thisp, args);
         },
         "keys": function () {
-            return object_keys(value);
+            return Object.keys(value);
         }
     }, void 0, function inspect() {
         return { state: "fulfilled", value: value };
@@ -1350,7 +1286,7 @@ function all(promises) {
     return when(promises, function (promises) {
         var countDown = 0;
         var deferred = defer();
-        array_reduce(promises, function (undefined, promise, index) {
+        Array.prototype.forEach.call(promises, function (promise, index) {
             var snapshot;
             if (
                 isPromise(promise) &&
@@ -1373,7 +1309,7 @@ function all(promises) {
                     }
                 );
             }
-        }, void 0);
+        });
         if (countDown === 0) {
             deferred.resolve(promises);
         }
@@ -1397,8 +1333,8 @@ Promise.prototype.all = function () {
 Q.allResolved = deprecate(allResolved, "allResolved", "allSettled");
 function allResolved(promises) {
     return when(promises, function (promises) {
-        promises = array_map(promises, Q);
-        return when(all(array_map(promises, function (promise) {
+        promises = promises.map(Q);
+        return when(all(promises.map(function (promise) {
             return when(promise, noop, noop);
         })), function () {
             return promises;
@@ -1427,7 +1363,7 @@ function allSettled(promises) {
  */
 Promise.prototype.allSettled = function () {
     return this.then(function (promises) {
-        return all(array_map(promises, function (promise) {
+        return all(promises.map(function (promise) {
             promise = Q(promise);
             function regardless() {
                 return promise.inspect();
