@@ -25,48 +25,6 @@
  * limitations under the License.
  *
  */
-
-(function (definition) {
-    // Turn off strict mode for this function so we can assign to global.Q
-    /* jshint strict: false */
-
-    // This file will function properly as a <script> tag, or a module
-    // using CommonJS and NodeJS or RequireJS module formats.  In
-    // Common/Node/RequireJS, the module exports the Q API and when
-    // executed as a simple <script>, it creates a Q global instead.
-
-    // Montage Require
-    if (typeof bootstrap === "function") {
-        bootstrap("promise", definition);
-
-    // CommonJS
-    // The existence `require`, `exports`, *and* `object` in scope strongly
-    // implies that this is a CommonJS environment, as opposed to a RequireJS
-    // environment which would have `require` and `define`.  This must be
-    // specific enough to eliminate the possibility that this is being run by
-    // Adobe Brackets, which provides global `require` and `exports`, but not
-    // `module`.
-    } else if (typeof module === "object" && typeof exports === "object") {
-        module.exports = definition();
-
-    // RequireJS
-    } else if (typeof define === "function" && define.amd) {
-        define(definition);
-
-    // SES (Secure EcmaScript)
-    } else if (typeof ses !== "undefined") {
-        if (!ses.ok()) {
-            return;
-        } else {
-            ses.makeQ = definition;
-        }
-
-    // <script>
-    } else {
-        Q = definition();
-    }
-
-})(function () {
 "use strict";
 
 var hasStacks = false;
@@ -1935,9 +1893,7 @@ Promise.prototype.nodeify = function (nodeback) {
     }
 };
 
+module.exports = Q;
+
 // All code before this point will be filtered from stack traces.
 var qEndingLine = captureLine();
-
-return Q;
-
-});

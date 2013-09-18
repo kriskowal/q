@@ -50,16 +50,19 @@
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.9",
     "grunt-contrib-uglify": "~0.2.2",
-    "matcha": "~0.2.0"
+    "grunt-contrib-clean": "~0.5.0",
+    "matcha": "~0.2.0",
+    "grunt-global-wrap": "~1.1.0",
+    "grunt-amd-wrap": "~1.0.0",
+    "grunt-s3": "~0.2.0-alpha.2"
   },
   "scripts": {
     "test": "jasmine-node spec && promises-aplus-tests spec/aplus-adapter",
-    "test-browser": "opener spec/q-spec.html",
+    "test-browser": "grunt pre-browser-test && opener spec/q-spec.html",
+    "release": "grunt release",
     "benchmark": "matcha",
     "lint": "jshint q.js",
-    "cover": "cover run node_modules/jasmine-node/bin/jasmine-node spec && cover report html && opener cover_html/index.html",
-    "minify": "grunt",
-    "prepublish": "grunt"
+    "cover": "cover run node_modules/jasmine-node/bin/jasmine-node spec && cover report html && opener cover_html/index.html"
   },
   "overlay": {
     "teleport": {
@@ -67,6 +70,9 @@
         "system": ">=0.0.4"
       }
     }
+  },
+  "volo": {
+    "url": "http://q-releases.s3-website-us-west-1.amazonaws.com/amd/q.js"
   },
   "directories": {
     "test": "./spec"

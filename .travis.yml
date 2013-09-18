@@ -1,7 +1,12 @@
 language: node_js
 node_js:
-  - "0.6"
   - "0.8"
   - "0.10"
 script:
   npm run lint && npm test
+after_success:
+  npm run release
+env:
+  global:
+  - secure: I/XyqSk7mlCseUzJcZfZrSVd/05O092eabNz6Lnm1jU2QTHzCxlaKLov/WMPwoYvm88gs07KJDZeybGfiYr8CXz7NiFbQdpaWRaTx0uVoQfxQ51kqwqCAXR40ARz76/gUr5llLEhSYhZ5x5KzoyxnKIPXZBwqiSsMQzwHMp2IxE=
+  - secure: DkLzzPv8N9dPUf437kKTqzSEZNAjDsI+JqDLLjO+SzE8Epal7BQCkE/dTrbzEhb9hmZ2EvM6nRDSq4VlSBh2FUuXmDbs6/ABSxP/+YJ/YeNWJeuOHGqhbVIwA1G2Gp/d/xjwFhAJ5PiTAhV0MlepSE76stYZIPgGyre+YkGQJsk=
