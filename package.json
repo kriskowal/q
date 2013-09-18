@@ -40,7 +40,9 @@
     "node": ">=0.6.0",
     "teleport": ">=0.2.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "asap": "~1.0.0"
+  },
   "devDependencies": {
     "jshint": "~2.1.9",
     "cover": "*",
