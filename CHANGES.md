@@ -1,5 +1,11 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
+## 0.9.8
+
+ - :warning: `nextTick` is deprecated in anticipation of migration to
+   the next major version of Q where it will be exposed by the `asap`
+   package instead.
+
 ## 0.9.7
 
  - :warning: `q.min.js` is no longer checked-in.  It is however still

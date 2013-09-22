@@ -483,7 +483,7 @@ Q.resolve = Q;
  * Performs a task in a future turn of the event loop.
  * @param {Function} task
  */
-Q.nextTick = nextTick;
+Q.nextTick = deprecate(nextTick, "nextTick", "the 'asap' npm package");
 
 /**
  * Controls whether or not long stack traces will be on
