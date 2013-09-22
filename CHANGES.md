@@ -24,6 +24,8 @@
  - :warning: Withdrew support for SpiderMonkey style generators.
  - :warning: `Q.all` no longer reuses the input array for the output
    array.
+ - :warning: `Q.nextTick` is no longer supported.  Please use `asap`
+   from the `asap` package directly.
 
 ## 0.9.7
 
