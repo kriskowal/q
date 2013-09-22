@@ -1,5 +1,27 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
+## 1.0.0 :warning: BACKWARD INCOMPATIBILITY
+
+ - 1.0! :cake:
+ - :warning: As of `1.0`, Q will require ECMAScript 5. Using `es5-shim`,
+   nor even `es5-sham`, is not sufficient to make legacy engines
+   compatible because Q requires a WeakMap shim that depends on ES5
+   properties.  The `0.9` version train will continue to support older
+   browsers and will attempt to provide a forward-compatible feature set
+   if you take care to eliminate all deprecation warnings before
+   migrating.
+ - :warning: Release management has changed.  The source for this
+   library is `q.js` and is only suitable for consumption as a CommonJS,
+   ergo Node.js, module.  Releases are created using `grunt`, including
+   `release/q.js`, which is suitable for use as a `<script>`, and
+   `release/amd/q.js`, which is suitable for use as an AMD module.  All
+   new versions will be published to S3.
+ - :warning: Q now depends on a WeakMap shim.  If you are using an AMD
+   loader, you will need to bring in https://github.com/drses/weak-map.
+   If you are using Q as a `<script>`, this has been embedded in the
+   release.  If you are using Q in Node.js, the dependency is taken care
+   of by NPM.
+
 ## 0.9.7
 
  - :warning: `q.min.js` is no longer checked-in.  It is however still
@@ -405,7 +427,7 @@ Their replacements are listed here:
    enumerable property has bad side-effects.  Libraries that
    depend on this (for example, QQ) will need to be revised.
 
-## 0.7.0 - BACKWARD INCOMPATIBILITY
+## 0.7.0 - :warning: BACKWARD INCOMPATIBILITY
 
  - WARNING: Removed ``report`` and ``asap``
  - WARNING: The ``callback`` argument of the ``fin``
@@ -424,7 +446,7 @@ Their replacements are listed here:
  - Improved minification results.
  - Improved readability.
 
-## 0.6.0 - BACKWARD INCOMPATIBILITY
+## 0.6.0 - :warning: BACKWARD INCOMPATIBILITY
 
  - WARNING: In practice, the implementation of ``spy`` and
    the name ``fin`` were useful.  I've removed the old
@@ -468,7 +490,7 @@ Their replacements are listed here:
  - Switched to using ``MessageChannel`` for next tick task
    enqueue in browsers that support it.
 
-## 0.5.0 - MINOR BACKWARD INCOMPATIBILITY
+## 0.5.0 - :warning: MINOR BACKWARD INCOMPATIBILITY
 
  - Exceptions are no longer reported when consumed.
  - Removed ``error`` from the API.  Since exceptions are
@@ -514,7 +536,7 @@ Their replacements are listed here:
    be resolved gracefully, and failing to do so,
    to dump an error message.
 
-## 0.4.0 - BACKWARD INCOMPATIBLE*
+## 0.4.0 - :warning: BACKWARD INCOMPATIBLE*
 
  - *Removed the utility modules. NPM and Node no longer
    expose any module except the main module.  These have
@@ -525,7 +547,7 @@ Their replacements are listed here:
  - Fixed some issues with asap, when it resolves to
    undefined, or throws an exception.
 
-## 0.3.0 - BACKWARD-INCOMPATIBLE
+## 0.3.0 - :warning: BACKWARD-INCOMPATIBLE
 
  - The `post` method has been reverted to its original
    signature, as provided in Tyler Close's `ref_send` API.
@@ -631,7 +653,7 @@ Their replacements are listed here:
  - Deprecated `defined` from `q`, with intent to move it to
    `q/util`.
 
-## 0.2.0 - BACKWARD INCOMPATIBLE
+## 0.2.0 - :warning: BACKWARD INCOMPATIBLE
 
  - Changed post(ref, name, args) to variadic
    post(ref, name, ...args). BACKWARD INCOMPATIBLE
