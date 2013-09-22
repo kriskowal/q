@@ -258,13 +258,6 @@ function Q(value) {
 Q.resolve = Q;
 
 /**
- * Performs a task in a future turn of the event loop.
- * @param {Function} task
- */
-// TODO deprecate
-Q.nextTick = asap;
-
-/**
  * Controls whether or not long stack traces will be on
  */
 Q.longStackSupport = false;

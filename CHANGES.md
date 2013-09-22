@@ -21,6 +21,8 @@
    If you are using Q as a `<script>`, this has been embedded in the
    release.  If you are using Q in Node.js, the dependency is taken care
    of by NPM.
+ - :warning: `Q.nextTick` is no longer supported.  Please use `asap`
+   from the `asap` package directly.
 
 ## 0.9.7
 

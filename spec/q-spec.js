@@ -7,6 +7,7 @@
 if (typeof Q === "undefined" && typeof require !== "undefined") {
     // For Node compatibility.
     global.Q = require("../q");
+    global.asap = require("asap");
     require("./lib/jasmine-promise");
 }
 
@@ -92,7 +93,7 @@ describe("defer and when", function () {
             expect(value).toEqual(10);
             turn++;
         });
-        Q.nextTick(function () {
+        asap(function () {
             expect(turn).toEqual(1);
             deferred.resolve(10);
             turn++;
@@ -111,7 +112,7 @@ describe("defer and when", function () {
             expect(value).toEqual(-1);
             turn++;
         });
-        Q.nextTick(function () {
+        asap(function () {
             expect(turn).toEqual(1);
             deferred.reject(-1);
             turn++;
@@ -1467,7 +1468,7 @@ describe("done", function () {
         describe("and the callback throws", function () {
             it("should rethrow that error in the next turn and return nothing", function () {
                 var turn = 0;
-                Q.nextTick(function () {
+                asap(function () {
                     ++turn;
                 });
 
@@ -1515,7 +1516,7 @@ describe("done", function () {
         describe("and the errback throws", function () {
             it("should rethrow that error in the next turn and return nothing", function () {
                 var turn = 0;
-                Q.nextTick(function () {
+                asap(function () {
                     ++turn;
                 });
 
@@ -1542,7 +1543,7 @@ describe("done", function () {
         describe("and there is no errback", function () {
             it("should throw the original error in the next turn", function () {
                 var turn = 0;
-                Q.nextTick(function () {
+                asap(function () {
                     ++turn;
                 });
 
@@ -1821,7 +1822,7 @@ describe("thenables", function () {
         var progressValueArrays = [];
         return Q({
             then: function (fulfilled, rejected, progressed) {
-                Q.nextTick(function () {
+                asap(function () {
                     progressed(1, 2);
                     progressed(3, 4, 5);
                     fulfilled();
@@ -1840,7 +1841,7 @@ describe("thenables", function () {
         var progressValueArrays = [];
         return Q.when({
             then: function (fulfilled, rejected, progressed) {
-                Q.nextTick(function () {
+                asap(function () {
                     progressed(1, 2);
                     progressed(3, 4, 5);
                     fulfilled();
