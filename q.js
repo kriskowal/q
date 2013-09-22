@@ -39,35 +39,11 @@ try {
 var qStartingLine = captureLine();
 var qFileName;
 
-// shims
+var asap = require("asap");
+var WeakMap = require("weak-map");
 
 // used for fallback in "allResolved"
 var noop = function () {};
-
-var asap = require("asap");
-
-// Attempt to make generics safe in the face of downstream
-// modifications.
-// There is no situation where this is necessary.
-// If you need a security guarantee, these primordials need to be
-// deeply frozen anyway, and if you don’t need a security guarantee,
-// this is just plain paranoid.
-// However, this does have the nice side-effect of reducing the size
-// of the code by reducing x.call() to merely x(), eliminating many
-// hard-to-minify characters.
-// See Mark Miller’s explanation of what this does.
-// http://wiki.ecmascript.org/doku.php?id=conventions:safe_meta_programming
-var call = Function.call;
-function uncurryThis(f) {
-    return function () {
-        return call.apply(f, arguments);
-    };
-}
-// This is equivalent, but slower:
-// uncurryThis = Function_bind.bind(Function_bind.call);
-// http://jsperf.com/uncurrythis
-
-var array_slice = uncurryThis(Array.prototype.slice);
 
 var object_create = Object.create || function (prototype) {
     function Type() { }
@@ -94,7 +70,7 @@ function makeStackTraceLong(error, promise) {
         error.stack.indexOf(STACK_JUMP_SEPARATOR) === -1
     ) {
         var stacks = [];
-        for (var p = promise; !!p; p = p.source) {
+        for (var p = promise; !!p; p = handlers.get(p).became) {
             if (p.stack) {
                 stacks.unshift(p.stack);
             }
@@ -193,8 +169,9 @@ function deprecate(callback, name, alternative) {
     };
 }
 
-// end of shims
-// beginning of real work
+// end of long stack traces
+
+var handlers = new WeakMap();
 
 /**
  * Constructs a promise for an immediate reference, passes promises through, or
@@ -219,6 +196,32 @@ function Q(value) {
 Q.resolve = Q;
 
 /**
+ * TODO
+ */
+function getHandler(promise) {
+    var handler = handlers.get(promise);
+    if (!handler || !handler.became) {
+        return handler;
+    }
+    handler = followHandler(handler);
+    handlers.set(promise, handler);
+    return handler;
+}
+
+function followHandler(handler) {
+    if (!handler.became) {
+        return handler;
+    } else {
+        handler.became = followHandler(handler.became);
+        return handler.became;
+    }
+}
+
+var theViciousCycleError = new Error("Can't resolve a promise with itself");
+var theViciousCycleRejection = reject(theViciousCycleError);
+var theViciousCycleHandler = getHandler(theViciousCycleRejection);
+
+/**
  * Controls whether or not long stack traces will be on
  */
 Q.longStackSupport = false;
@@ -241,43 +244,24 @@ function defer() {
     // forward to the resolved promise.  We coerce the resolution value to a
     // promise using the `resolve` function because it handles both fully
     // non-thenable values and other thenables gracefully.
-    var messages = [], progressListeners = [], resolvedPromise;
+    var messages = [], progressListeners = [];
 
     var deferred = object_create(defer.prototype);
     var promise = object_create(Promise.prototype);
 
-    promise.promiseDispatch = function (resolve, op, operands) {
-        var args = array_slice(arguments);
-        if (messages) {
-            messages.push(args);
+    var handler = {
+        dispatch: function (resolve, op, operands) {
+            messages.push([resolve, op, operands]);
             if (op === "when" && operands[1]) { // progress operand
                 progressListeners.push(operands[1]);
             }
-        } else {
-            asap(function () {
-                resolvedPromise.promiseDispatch.apply(resolvedPromise, args);
-            });
-        }
-    };
-
-    // XXX deprecated
-    promise.valueOf = deprecate(function () {
-        if (messages) {
-            return promise;
-        }
-        var nearerValue = nearer(resolvedPromise);
-        if (isPromise(nearerValue)) {
-            resolvedPromise = nearerValue; // shorten chain
-        }
-        return nearerValue;
-    }, "valueOf", "inspect");
-
-    promise.inspect = function () {
-        if (!resolvedPromise) {
+        },
+        inspect: function () {
             return { state: "pending" };
         }
-        return resolvedPromise.inspect();
     };
+
+    handlers.set(promise, handler);
 
     if (Q.longStackSupport && hasStacks) {
         try {
@@ -293,17 +277,20 @@ function defer() {
         }
     }
 
-    // NOTE: we do the checks for `resolvedPromise` in each method, instead of
-    // consolidating them into `become`, since otherwise we'd create new
-    // promises with the lines `become(whatever(value))`. See e.g. GH-252.
-
     function become(newPromise) {
-        resolvedPromise = newPromise;
-        promise.source = newPromise;
+        handler.became = theViciousCycleHandler;
+        var newHandler = getHandler(newPromise);
+        handler.became = newHandler;
+
+        handlers.set(promise, newHandler);
+        handler = void 0; // A dead resolver should not retain dead objects
+        promise = void 0;
 
         messages.forEach(function (message) {
+            // TODO figure out whether this asap is necessary.  makeQ does not
+            // have it.
             asap(function () {
-                newPromise.promiseDispatch.apply(newPromise, message);
+                newHandler.dispatch.apply(void 0, message);
             });
         });
 
@@ -312,30 +299,25 @@ function defer() {
     }
 
     deferred.promise = promise;
+
     deferred.resolve = function (value) {
-        if (resolvedPromise) {
+        if (!messages) {
             return;
         }
 
         become(Q(value));
     };
 
-    deferred.fulfill = function (value) {
-        if (resolvedPromise) {
-            return;
-        }
-
-        become(fulfill(value));
-    };
     deferred.reject = function (reason) {
-        if (resolvedPromise) {
+        if (!messages) {
             return;
         }
 
         become(reject(reason));
     };
+
     deferred.notify = function (progress) {
-        if (resolvedPromise) {
+        if (!messages) {
             return;
         }
 
@@ -477,43 +459,33 @@ function Promise(descriptor, fallback, inspect) {
 
     var promise = object_create(Promise.prototype);
 
-    promise.promiseDispatch = function (resolve, op, args) {
-        var result;
-        try {
-            if (descriptor[op]) {
-                result = descriptor[op].apply(promise, args);
-            } else {
-                result = fallback.call(promise, op, args);
+    var handler = {
+        dispatch: function (resolve, op, operands) {
+            var result;
+            try {
+                if (descriptor[op]) {
+                    result = descriptor[op].apply(promise, operands);
+                } else {
+                    result = fallback.call(promise, op, operands);
+                }
+            } catch (exception) {
+                result = reject(exception);
             }
-        } catch (exception) {
-            result = reject(exception);
-        }
-        if (resolve) {
-            resolve(result);
-        }
+            if (resolve) {
+                resolve(result);
+            }
+        },
+        inspect: inspect
     };
 
-    promise.inspect = inspect;
-
-    // XXX deprecated `valueOf` and `exception` support
-    if (inspect) {
-        var inspected = inspect();
-        if (inspected.state === "rejected") {
-            promise.exception = inspected.reason;
-        }
-
-        promise.valueOf = deprecate(function () {
-            var inspected = inspect();
-            if (inspected.state === "pending" ||
-                inspected.state === "rejected") {
-                return promise;
-            }
-            return inspected.value;
-        });
-    }
+    handlers.set(promise, handler);
 
     return promise;
 }
+
+Promise.prototype.inspect = function () {
+    return getHandler(this).inspect();
+};
 
 Promise.prototype.toString = function () {
     return "[object Promise]";
@@ -550,7 +522,7 @@ Promise.prototype.then = function (fulfilled, rejected, progressed) {
     }
 
     asap(function () {
-        self.promiseDispatch(function (value) {
+        getHandler(self).dispatch(function (value) {
             if (done) {
                 return;
             }
@@ -568,7 +540,7 @@ Promise.prototype.then = function (fulfilled, rejected, progressed) {
     });
 
     // Progress propagator need to be attached in the current tick.
-    self.promiseDispatch(void 0, "when", [void 0, function (value) {
+    getHandler(this).dispatch(void 0, "when", [void 0, function (value) {
         var newValue;
         var threw = false;
         try {
@@ -655,9 +627,7 @@ function nearer(value) {
  */
 Q.isPromise = isPromise;
 function isPromise(object) {
-    return isObject(object) &&
-        typeof object.promiseDispatch === "function" &&
-        typeof object.inspect === "function";
+    return isObject(object) && !!handlers.get(object);
 }
 
 Q.isPromiseAlike = isPromiseAlike;
@@ -671,11 +641,11 @@ function isPromiseAlike(object) {
  */
 Q.isPending = isPending;
 function isPending(object) {
-    return isPromise(object) && object.inspect().state === "pending";
+    return Q(object).isPending();
 }
 
 Promise.prototype.isPending = function () {
-    return this.inspect().state === "pending";
+    return getHandler(this).inspect().state === "pending";
 };
 
 /**
@@ -1018,10 +988,10 @@ function dispatch(object, op, args) {
 }
 
 Promise.prototype.dispatch = function (op, args) {
-    var self = this;
     var deferred = defer();
+    var self = this;
     asap(function () {
-        self.promiseDispatch(deferred.resolve, op, args);
+        getHandler(self).dispatch(deferred.resolve, op, args);
     });
     return deferred.promise;
 };
