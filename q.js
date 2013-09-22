@@ -1111,9 +1111,11 @@ function fulfill(value) {
         },
         "set": function (name, rhs) {
             value[name] = rhs;
+            return value;
         },
         "delete": function (name) {
             delete value[name];
+            return value;
         },
         "post": function (name, args) {
             // Mark Miller proposes that post with no name should apply a
