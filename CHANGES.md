@@ -15,6 +15,7 @@
  - `Q.all` now propagates progress notifications of the form you might
    expect of ES6 iterations, `{value, index}` where the `value` is the
    progress notification from the promise at `index`.
+ - Deferred methods return the deferred itself for chaining.
 
 ## 0.9.6
 
