@@ -545,37 +545,37 @@ function defer() {
 
     deferred.promise = promise;
     deferred.resolve = function (value) {
-        if (resolvedPromise) {
-            return;
+        if (!resolvedPromise) {
+            become(Q(value));
         }
 
-        become(Q(value));
+        return deferred;
     };
 
     deferred.fulfill = function (value) {
-        if (resolvedPromise) {
-            return;
+        if (!resolvedPromise) {
+            become(fulfill(value));
         }
 
-        become(fulfill(value));
+        return deferred;
     };
     deferred.reject = function (reason) {
-        if (resolvedPromise) {
-            return;
+        if (!resolvedPromise) {
+            become(reject(reason));
         }
 
-        become(reject(reason));
+        return deferred;
     };
     deferred.notify = function (progress) {
-        if (resolvedPromise) {
-            return;
+        if (!resolvedPromise) {
+            array_reduce(progressListeners, function (undefined, progressListener) {
+                nextTick(function () {
+                    progressListener(progress);
+                });
+            }, void 0);
         }
 
-        array_reduce(progressListeners, function (undefined, progressListener) {
-            nextTick(function () {
-                progressListener(progress);
-            });
-        }, void 0);
+        return deferred;
     };
 
     return deferred;
