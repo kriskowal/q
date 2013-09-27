@@ -162,9 +162,14 @@ describe("defer and when", function () {
         return promise;
     });
 
-    it("returns `undefined` from the deferred's methods", function () {
-        expect(Q.defer().resolve()).toBe(undefined);
-        expect(Q.defer().reject()).toBe(undefined);
+    it("returns the deferred for chaining from reslove", function () {
+        var deferred = Q.defer();
+        expect(deferred.resolve()).toBe(deferred);
+    });
+
+    it("returns the deferred for chaining from reject", function () {
+        var deferred = Q.defer();
+        expect(deferred.reject()).toBe(deferred);
     });
 
 });
