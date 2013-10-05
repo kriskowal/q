@@ -1,5 +1,7 @@
 "use strict";
 
+var Q = require("../../q");
+
 /**
  * Modifies the way that individual specs are run to easily test async
  * code with promises.
