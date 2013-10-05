@@ -1,15 +1,11 @@
 "use strict";
 /*jshint newcap: false*/
-/*global Q: true, describe: false, it: false, expect: false, beforeEach: false,
+/*global describe: false, it: false, expect: false, beforeEach: false,
          afterEach: false, require: false, jasmine: false, waitsFor: false,
          runs: false */
 
-if (typeof Q === "undefined" && typeof require !== "undefined") {
-    // For Node compatibility.
-    global.Q = require("../q");
-    global.asap = require("asap");
-    require("./lib/jasmine-promise");
-}
+var Q = require("../q");
+var asap = require("asap");
 
 var REASON = "this is not an error, but it might show up in the console";
 
@@ -2198,12 +2194,14 @@ describe("isPromiseAlike", function () {
 
 if (typeof require === "function") {
     var domain;
+    // using (require) instead of require tricks the browser-side dependency
+    // analysis heuristic into not recognizing the dependency.
     try {
-        domain = require("domain");
+        domain = (require)("domain");
     } catch (e) { }
 
     if (domain) {
-        var EventEmitter = require("events").EventEmitter;
+        var EventEmitter = (require)("events").EventEmitter;
 
         describe("node domain support", function () {
             var d;
@@ -2489,3 +2487,4 @@ describe("unhandled rejection reporting", function () {
         expect(Q.getUnhandledReasons()).toEqual([]);
     });
 });
+
