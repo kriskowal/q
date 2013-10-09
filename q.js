@@ -944,7 +944,7 @@ Promise.prototype.isRejected = function () {
 var unhandledReasons = [];
 var unhandledRejections = [];
 var unhandledReasonsDisplayed = false;
-var trackUnhandledRejections = true;
+var trackUnhandledRejections = false;
 function displayUnhandledReasons() {
     if (
         !unhandledReasonsDisplayed &&
@@ -1023,8 +1023,6 @@ Q.stopUnhandledRejectionTracking = function () {
     }
     trackUnhandledRejections = false;
 };
-
-resetUnhandledRejections();
 
 //// END UNHANDLED REJECTION TRACKING
 
