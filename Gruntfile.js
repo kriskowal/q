@@ -92,7 +92,6 @@ module.exports = function (grunt) {
         }
     });
 
-    grunt.registerTask("pre-browser-test", ["clean", "globalwrap"]);
     grunt.registerTask("build", ["clean", "amdwrap", "globalwrap", "uglify"]);
     grunt.registerTask("release", ["clean", "amdwrap", "globalwrap", "uglify", "s3"]);
 };

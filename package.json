@@ -56,11 +56,11 @@
     "matcha": "~0.2.0",
     "grunt-global-wrap": "~1.1.0",
     "grunt-amd-wrap": "~1.0.0",
-    "grunt-s3": "~0.2.0-alpha.2"
+    "grunt-s3": "~0.2.0-alpha.2",
+    "mr": "~0.13.3"
   },
   "scripts": {
     "test": "jasmine-node spec && promises-aplus-tests spec/aplus-adapter",
-    "test-browser": "grunt pre-browser-test && opener spec/q-spec.html",
     "release": "grunt release",
     "benchmark": "matcha",
     "lint": "jshint q.js",
