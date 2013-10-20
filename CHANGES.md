@@ -16,13 +16,16 @@
    `release/q.js`, which is suitable for use as a `<script>`, and
    `release/amd/q.js`, which is suitable for use as an AMD module.  All
    new versions will be published to S3.
- - :warning: Q now depends on a WeakMap shim.  If you are using an AMD
-   loader, you will need to bring in https://github.com/drses/weak-map.
-   If you are using Q as a `<script>`, this has been embedded in the
-   release.  If you are using Q in Node.js, the dependency is taken care
-   of by NPM.
+ - :warning: Q now depends on an ASAP package and a WeakMap shim.  If
+   you are using an AMD loader, you will need to bring in
+   https://github.com/kriskowal/asap and
+   https://github.com/drses/weak-map.  If you are using Q as a
+   `<script>`, this has been embedded in the release.  If you are using
+   Q in Node.js, the dependency is taken care of by NPM.
  - :warning: `Q.nextTick` is no longer supported.  Please use `asap`
    from the `asap` package directly.
+ - :warning: `valueOf` has been removed.  Please use `inspect().value`
+   instead.
 
 ## 0.9.7
 

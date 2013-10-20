@@ -41,7 +41,8 @@
     "teleport": ">=0.2.0"
   },
   "dependencies": {
-    "asap": "~1.0.0"
+    "asap": "~1.0.0",
+    "weak-map": "~1.0.0"
   },
   "devDependencies": {
     "jshint": "~2.1.9",
