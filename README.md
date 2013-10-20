@@ -800,12 +800,6 @@ This feature does come with somewhat-serious performance and memory overhead,
 however. If you're working with lots of promises, or trying to scale a server
 to many users, you should probably keep it off. But in development, go for it!
 
-## Tests
-
-You can view the results of the Q test suite [in your browser][tests]!
-
-[tests]: https://rawgithub.com/kriskowal/q/master/spec/q-spec.html
-
 ## License
 
 Copyright 2009–2013 Kristopher Michael Kowal
