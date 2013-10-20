@@ -380,6 +380,39 @@ function deprecate(callback, name, alternative) {
     };
 }
 
+// debugger
+
+var debugCounter = 0;
+var debugBuffer = [];
+var debugIndex = 0;
+function debug() {
+    var args = array_slice(arguments);
+    args.push(new Date().toISOString());
+    if (inspector) {
+        inspector.postMessage(args);
+    } else {
+        debugBuffer[debugIndex] = args;
+        debugIndex++;
+        if (debugIndex >= 300) {
+            debugIndex = 0;
+        }
+    }
+}
+
+function inspectDebug() {
+    if (debugIndex === debugBuffer.length) {
+        debugIndex = 0;
+    }
+    for (var index = 0; index < 300; index++, debugIndex++) {
+        if (debugIndex > 300) {
+            debugIndex = 0;
+        }
+        if (index in debugBuffer) {
+            inspector.postMessage(debugBuffer[debugIndex]);
+        }
+    }
+}
+
 // end of shims
 // beginning of real work
 
@@ -486,6 +519,10 @@ function defer() {
         }
     }
 
+    var debugId = debugCounter++;
+    promise.debugId = debugId;
+    debug("defer", debugId, filterStackString(promise.stack || ""));
+
     // NOTE: we do the checks for `resolvedPromise` in each method, instead of
     // consolidating them into `become`, since otherwise we'd create new
     // promises with the lines `become(whatever(value))`. See e.g. GH-252.
@@ -499,6 +536,8 @@ function defer() {
                 newPromise.promiseDispatch.apply(newPromise, message);
             });
         }, void 0);
+
+        debug("resolve", promise.debugId, newPromise.debugId);
 
         messages = void 0;
         progressListeners = void 0;
@@ -530,6 +569,14 @@ function defer() {
     deferred.notify = function (progress) {
         if (resolvedPromise) {
             return;
+        }
+
+        try {
+            debug("progress", debugId, progress);
+        } catch (error) {
+            // the progress object might not be serializable.
+            // we tried, oh well
+            debug("progress", debugId);
         }
 
         array_reduce(progressListeners, function (undefined, progressListener) {
@@ -908,6 +955,7 @@ var unhandledReasonsDisplayed = false;
 var trackUnhandledRejections = true;
 function displayUnhandledReasons() {
     if (
+        !inspector &&
         !unhandledReasonsDisplayed &&
         typeof window !== "undefined" &&
         !window.Touch &&
@@ -945,6 +993,7 @@ function resetUnhandledRejections() {
 }
 
 function trackRejection(promise, reason) {
+
     if (!trackUnhandledRejections) {
         return;
     }
@@ -959,6 +1008,7 @@ function trackRejection(promise, reason) {
 }
 
 function untrackRejection(promise) {
+
     if (!trackUnhandledRejections) {
         return;
     }
@@ -987,6 +1037,46 @@ Q.stopUnhandledRejectionTracking = function () {
 
 resetUnhandledRejections();
 
+function addPortListener(port, handlers) {
+    port.addEventListener("message", function (event) {
+        var message = event.data;
+        if (Array.isArray(message) && message.length) {
+            var type = message[0];
+            var handler = handlers[type];
+            if (handler) {
+                handler.apply(event, message.slice(1));
+            }
+        }
+    });
+}
+
+if (typeof window !== "undefined" && typeof window.postMessage === "function") {
+
+    var inspector;
+
+    addPortListener(window, {
+        "can-watch-promises": function () {
+
+            Q.longStackSupport = true;
+
+            var channel = new MessageChannel();
+            var port = channel.port1;
+            window.postMessage(["promise-channel"], [channel.port2], window.location.origin);
+            addPortListener(port, {
+                "watching-promises": function () {
+                    inspector = port;
+                    inspectDebug();
+                }
+            });
+            port.start();
+
+        }
+    });
+
+    window.postMessage(["can-show-promises"], window.location.origin);
+
+}
+
 //// END UNHANDLED REJECTION TRACKING
 
 /**
@@ -995,19 +1085,38 @@ resetUnhandledRejections();
  */
 Q.reject = reject;
 function reject(reason) {
+    var message, stack;
+    if (reason && typeof reason === "object") {
+        if (reason.message) {
+            message = reason.message;
+        } else {
+            message = "" + reason;
+        }
+        if ("stack" in reason) {
+            stack = reason.stack;
+        }
+    } else {
+        message = "" + reason;
+    }
     var rejection = Promise({
         "when": function (rejected) {
             // note that the error has been handled
             if (rejected) {
                 untrackRejection(this);
             }
-            return rejected ? rejected(reason) : this;
+            var resolution = Q(rejected ? rejected(reason) : this);
+            debug("handle", debugId, resolution.debugId);
+            return resolution;
         }
     }, function fallback() {
         return this;
     }, function inspect() {
         return { state: "rejected", reason: reason };
     });
+
+    var debugId = debugCounter++;
+    rejection.debugId = debugId;
+    debug("reject", debugId, message, filterStackString(stack || ""));
 
     // Note that the reason has not been handled.
     trackRejection(rejection, reason);
@@ -1021,7 +1130,7 @@ function reject(reason) {
  */
 Q.fulfill = fulfill;
 function fulfill(value) {
-    return Promise({
+    var promise = Promise({
         "when": function () {
             return value;
         },
@@ -1052,6 +1161,10 @@ function fulfill(value) {
     }, void 0, function inspect() {
         return { state: "fulfilled", value: value };
     });
+    var debugId = debugCounter++;
+    promise.debugId = debugId;
+    debug("fulfill", debugId);
+    return promise;
 }
 
 /**
@@ -1402,13 +1515,22 @@ function all(promises) {
                     promise,
                     function (value) {
                         promises[index] = value;
+                        deferred.notify({
+                            index: index,
+                            value: 1,
+                            length: promises.length
+                        });
                         if (--countDown === 0) {
                             deferred.resolve(promises);
                         }
                     },
                     deferred.reject,
                     function (progress) {
-                        deferred.notify({ index: index, value: progress });
+                        deferred.notify({
+                            index: index,
+                            value: progress,
+                            length: promises.length
+                        });
                     }
                 );
             }

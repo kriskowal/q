@@ -1158,9 +1158,11 @@ describe("all", function () {
         return Q.all([deferred1.promise, deferred2.promise]).then(
             function () {
                 expect(progressValues).toEqual([
-                    { index: 0, value: "a" },
-                    { index: 1, value: "b" },
-                    { index: 0, value: "c" }
+                    { index: 0, value: "a", length: 2 },
+                    { index: 1, value: "b", length: 2 },
+                    { index: 1, value: 1, length: 2 },
+                    { index: 0, value: "c", length: 2 },
+                    { index: 0, value: 1, length: 2 },
                 ]);
             },
             undefined,
