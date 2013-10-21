@@ -62,7 +62,7 @@ function makeStackTraceLong(error, promise) {
         error.stack.indexOf(STACK_JUMP_SEPARATOR) === -1
     ) {
         var stacks = [];
-        for (var p = promise; !!p && handlers.get(p); p = handlers.get(p).became) {
+        for (var p = promise; !!p && p[BRAND]; p = p[BRAND].became) {
             if (p.stack) {
                 stacks.unshift(p.stack);
             }
@@ -163,15 +163,16 @@ function deprecate(callback, name, alternative) {
 
 // end of long stack traces
 
-var handlers = new WeakMap();
+
+var BRAND = "$" + Math.random().toString(32).slice(2);
 
 function inspect(promise) {
-    var handler = handlers.get(promise);
+    var handler = promise[BRAND];
     if (!handler || !handler.became) {
         return handler;
     }
     handler = followHandler(handler);
-    handlers.set(promise, handler);
+    promise[BRAND] = handler;
     return handler;
 }
 
@@ -547,7 +548,7 @@ function Promise(handler) {
             deferred.reject(reason);
         }
     }
-    handlers.set(this, handler);
+    this[BRAND] = handler;
 }
 
 /**
@@ -563,7 +564,7 @@ Promise.cast = function (value) {
  */
 Q.isPromise = isPromise;
 function isPromise(object) {
-    return isObject(object) && !!handlers.get(object);
+    return isObject(object) && !!object[BRAND];
 }
 
 /**
@@ -927,7 +928,7 @@ function Deferred(promise) {
     // property.  The promise property of the deferred may be assigned to a
     // different promise (as it is in a Queue), but the intrinsic promise does
     // not change.
-    handlers.set(this, inspect(promise));
+    this[BRAND] = inspect(promise);
     this.resolve = this.resolve.bind(this);
     this.reject = this.reject.bind(this);
     this.notify = this.notify.bind(this);
@@ -1084,7 +1085,7 @@ DeferredHandler.prototype.become = function (promise) {
     var handler = inspect(promise);
     this.became = handler;
 
-    handlers.set(promise, handler);
+    promise[BRAND] = handler;
     this.promise = void 0;
 
     this.messages.forEach(function (message) {
