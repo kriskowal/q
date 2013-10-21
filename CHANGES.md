@@ -3,6 +3,13 @@
 ## 1.0.0 :warning: BACKWARD INCOMPATIBILITY
 
  - 1.0! :cake:
+
+## 0.10.0 :warning: BACKWARD INCOMPATIBILITY
+
+This is an intermediate release for projects transitioning to 1.0.
+This release is version 1.0 but includes many deprecation warnings to
+assist in migration to the new interface.
+
  - :warning: As of `1.0`, Q will require ECMAScript 5. Using `es5-shim`,
    nor even `es5-sham`, is not sufficient to make legacy engines
    compatible because Q requires a WeakMap shim that depends on ES5
@@ -22,11 +29,81 @@
    https://github.com/drses/weak-map.  If you are using Q as a
    `<script>`, this has been embedded in the release.  If you are using
    Q in Node.js, the dependency is taken care of by NPM.
+ - :warning: Withdrew support for SpiderMonkey style generators.  Only
+   ES6 generators are supported.
  - :warning: `Q.nextTick` is no longer supported.  Please use `asap`
    from the `asap` package directly.
  - :warning: `valueOf` has been removed.  Please use `inspect().value`
    instead.
- - :warning: Withdrew support for SpiderMonkey style generators.
+ - :warning: The promise protocol no longer supports "set", "delete",
+   and "apply" operations.  Function application is a special case of
+   "post" with an undefined method name, and an additional "thisp"
+   argument for support of "fbind". The "when" message is now called
+   simply "then".  As such, this version of Q is not compatible with
+   Q-Connection `v0.5`.
+ - `spread` now accepts an optional `progressed` argument.
+ - Promises now support vicious cycle detection.  If a deferred promise
+   ultimately depends upon its own resolution, it will be rejected with
+   the singleton vicious cycle error.
+
+Q now supports a `Promise` constructor with two forms.  `new
+Promise(callback(resolve, reject))` and `new Promise(promiseHandler)`.
+Promise handlers are a new concept and will serve as the basis for
+extensibility.
+
+Added:
+
+-   `Promise` for constructing promises of all kinds
+-   `Promise.cast`
+
+Removed. These have migration shims that simply throw errors.
+
+-   `Q.set`, `promise.set`
+-   `Q.delete`, `promise.delete`
+-   `Q.makePromise` in favor of the new `Promise` constructor and
+    promise handler.
+
+The following methods of `Q` are deprecated in favor of their
+equivalents on the `promise` prototype:
+
+-   `progress`, `thenResolve`, `thenReject`, `isPending`, `isFulfilled`,
+    `isRejected`, `dispatch`, `get`, `post`, `invoke`, `keys`
+
+Other deprecations:
+
+-   `Q.master` is no longer needed
+-   `Q.resolve` in favor of `Q` or `Promise.cast`
+-   `Q.fulfill` in favor of `Q` or `Promise.cast`
+-   `Q.isPromiseAlike` in favor of `Q.isThenable`
+-   `Q.nearer` in favor of `promise.inspect`
+-   `Q.when` in favor of `Q().then`
+-   `Q.fail` and `promise.fail` in favor of `promise.catch`
+-   `Q.fin` and `promise.fin` in favor of `promise.finally`
+-   `Q.mapply` and `promise.mapply` in favor of `promise.post`
+-   `Q.send` and `promise.send` in favor of `promise.invoke`
+-   `Q.mcall` and `promise.mcall` in favor of `promise.invoke`
+-   `Q.promise` in favor of `new Q.Promise` with a function
+-   `Q.makePromise` in favor of `new Q.Promise` with a handler object
+-   `promise.fbind` in favor of `Q.fbind`
+-   `deferred.makeNodeResolver()` in favor of
+    `require("q/node").makeNodeResolver(deferred.resolve)`
+-   `promise.passByCopy()` in favor of `Q.passByCopy(promise)`,
+    provisionally
+
+Node.js wrappers that have been moved into their own module have a
+deprecated interface in Q proper.  Notably, `promise.nodeify` has been
+retained as the only Node.js convenience method in Q and on the promise
+prototype.
+
+-   `denodify`, `nfbind`, `nbind`, `npost`, `ninvoke`
+
+But the following experimental aliases are deprecated and do not exist
+in `q/node`:
+
+-   `nsend` for `ninvoke`
+-   `nmcall` for `ninvoke`
+-   `nmapply` for `npost`
+
 
 ## 0.9.7
 
