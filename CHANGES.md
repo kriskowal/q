@@ -26,6 +26,7 @@
    from the `asap` package directly.
  - :warning: `valueOf` has been removed.  Please use `inspect().value`
    instead.
+ - :warning: Withdrew support for SpiderMonkey style generators.
 
 ## 0.9.7
 
