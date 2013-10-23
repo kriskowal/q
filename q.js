@@ -528,7 +528,7 @@ function defer() {
     };
 
     // XXX deprecated
-    promise.valueOf = deprecate(function () {
+    promise.valueOf = function () {
         if (messages) {
             return promise;
         }
@@ -537,7 +537,7 @@ function defer() {
             resolvedPromise = nearerValue; // shorten chain
         }
         return nearerValue;
-    }, "valueOf", "inspect");
+    };
 
     promise.inspect = function () {
         if (!resolvedPromise) {
@@ -769,14 +769,14 @@ function Promise(descriptor, fallback, inspect) {
             promise.exception = inspected.reason;
         }
 
-        promise.valueOf = deprecate(function () {
+        promise.valueOf = function () {
             var inspected = inspect();
             if (inspected.state === "pending" ||
                 inspected.state === "rejected") {
                 return promise;
             }
             return inspected.value;
-        });
+        };
     }
 
     return promise;
