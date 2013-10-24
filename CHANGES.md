@@ -3,6 +3,8 @@
 ## 1.0.0
 
  - :warning: Withdrew support for SpiderMonkey style generators.
+ - :warning: `Q.all` no longer reuses the input array for the output
+   array.
 
 ## 0.9.7
 

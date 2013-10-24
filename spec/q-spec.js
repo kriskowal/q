@@ -1128,12 +1128,12 @@ describe("all", function () {
         });
     });
 
-    it("modifies the input array", function () {
+    it("does not modify the input array", function () {
         var input = [Q(0), Q(1)];
 
         return Q.all(input).then(function (result) {
-            expect(result).toBe(input);
-            expect(input).toEqual([0, 1]);
+            expect(result).not.toBe(input);
+            expect(input).not.toEqual([0, 1]);
         });
     });
 
