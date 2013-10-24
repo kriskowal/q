@@ -1389,21 +1389,22 @@ function all(promises) {
     return when(promises, function (promises) {
         var countDown = 0;
         var deferred = defer();
+        var answers = Array(promises.length);
         array_reduce(promises, function (undefined, promise, index) {
             var snapshot;
             if (
                 isPromise(promise) &&
                 (snapshot = promise.inspect()).state === "fulfilled"
             ) {
-                promises[index] = snapshot.value;
+                answers[index] = snapshot.value;
             } else {
                 ++countDown;
                 when(
                     promise,
                     function (value) {
-                        promises[index] = value;
+                        answers[index] = value;
                         if (--countDown === 0) {
-                            deferred.resolve(promises);
+                            deferred.resolve(answers);
                         }
                     },
                     deferred.reject,
@@ -1414,7 +1415,7 @@ function all(promises) {
             }
         }, void 0);
         if (countDown === 0) {
-            deferred.resolve(promises);
+            deferred.resolve(answers);
         }
         return deferred.promise;
     });
