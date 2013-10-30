@@ -1,10 +1,111 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=60 -->
 
-## 1.0.0
+## 1.0.0 :warning: BACKWARD INCOMPATIBILITY
 
- - :warning: Withdrew support for SpiderMonkey style generators.
+ - 1.0! :cake:
+
+## 0.10.0 :warning: BACKWARD INCOMPATIBILITY
+
+This is an intermediate release for projects transitioning to 1.0.
+This release is version 1.0 but includes many deprecation warnings to
+assist in migration to the new interface.
+
+ - :warning: As of `1.0`, Q will require ECMAScript 5. Using `es5-shim`,
+   nor even `es5-sham`, is not sufficient to make legacy engines
+   compatible because Q requires a WeakMap shim that depends on ES5
+   properties.  The `0.9` version train will continue to support older
+   browsers and will attempt to provide a forward-compatible feature set
+   if you take care to eliminate all deprecation warnings before
+   migrating.
+ - :warning: Release management has changed.  The source for this
+   library is `q.js` and is only suitable for consumption as a CommonJS,
+   ergo Node.js, module.  Releases are created using `grunt`, including
+   `release/q.js`, which is suitable for use as a `<script>`, and
+   `release/amd/q.js`, which is suitable for use as an AMD module.  All
+   new versions will be published to S3.
+ - :warning: Q now depends on an ASAP package and a WeakMap shim.  If
+   you are using an AMD loader, you will need to bring in
+   https://github.com/kriskowal/asap and
+   https://github.com/drses/weak-map.  If you are using Q as a
+   `<script>`, this has been embedded in the release.  If you are using
+   Q in Node.js, the dependency is taken care of by NPM.
+ - :warning: Withdrew support for SpiderMonkey style generators.  Only
+   ES6 generators are supported.
  - :warning: `Q.all` no longer reuses the input array for the output
    array.
+ - :warning: `Q.all` and `Q.allSettled` no longer accept a promise.  Use
+   `Q(promise).all()` or `.allSettled()`.  The original behavior is
+   deprecated.
+ - :warning: `valueOf` has been removed.  Please use `inspect().value`
+   instead.
+ - :warning: The promise protocol no longer supports "set", "delete",
+   and "apply" operations.  Function application is a special case of
+   "post" with an undefined method name, and an additional "thisp"
+   argument for support of "fbind". The "when" message is now called
+   simply "then".  As such, this version of Q is not compatible with
+   Q-Connection `v0.5`.
+ - `spread` now accepts an optional `progressed` argument.
+ - Promises now support vicious cycle detection.  If a deferred promise
+   ultimately depends upon its own resolution, it will be rejected with
+   the singleton vicious cycle error.
+
+Q now supports a `Promise` constructor with two forms.  `new
+Promise(callback(resolve, reject))` and `new Promise(promiseHandler)`.
+Promise handlers are a new concept and will serve as the basis for
+extensibility.
+
+Added:
+
+-   `Promise` for constructing promises of all kinds
+-   `Promise.cast`
+
+Removed. These have migration shims that simply throw errors.
+
+-   `Q.set`, `promise.set`
+-   `Q.delete`, `promise.delete`
+-   `Q.makePromise` in favor of the new `Promise` constructor and
+    promise handler.
+
+The following methods of `Q` are deprecated in favor of their
+equivalents on the `promise` prototype:
+
+-   `progress`, `thenResolve`, `thenReject`, `isPending`, `isFulfilled`,
+    `isRejected`, `dispatch`, `get`, `post`, `invoke`, `keys`
+
+Other deprecations:
+
+-   `Q.master` is no longer needed
+-   `Q.resolve` in favor of `Q` or `Promise.cast`
+-   `Q.fulfill` in favor of `Q` or `Promise.cast`
+-   `Q.isPromiseAlike` in favor of `Q.isThenable`
+-   `Q.nearer` in favor of `promise.inspect`
+-   `Q.when` in favor of `Q().then`
+-   `Q.fail` and `promise.fail` in favor of `promise.catch`
+-   `Q.fin` and `promise.fin` in favor of `promise.finally`
+-   `Q.mapply` and `promise.mapply` in favor of `promise.post`
+-   `Q.send` and `promise.send` in favor of `promise.invoke`
+-   `Q.mcall` and `promise.mcall` in favor of `promise.invoke`
+-   `Q.promise` in favor of `new Q.Promise` with a function
+-   `Q.makePromise` in favor of `new Q.Promise` with a handler object
+-   `promise.fbind` in favor of `Q.fbind`
+-   `deferred.makeNodeResolver()` in favor of
+    `require("q/node").makeNodeResolver(deferred.resolve)`
+-   `promise.passByCopy()` in favor of `Q.passByCopy(promise)`,
+    provisionally
+
+Node.js wrappers that have been moved into their own module have a
+deprecated interface in Q proper.  Notably, `promise.nodeify` has been
+retained as the only Node.js convenience method in Q and on the promise
+prototype.
+
+-   `denodify`, `nfbind`, `nbind`, `npost`, `ninvoke`
+
+But the following experimental aliases are deprecated and do not exist
+in `q/node`:
+
+-   `nsend` for `ninvoke`
+-   `nmcall` for `ninvoke`
+-   `nmapply` for `npost`
 
 ## 0.9.7
 
@@ -411,7 +512,7 @@ Their replacements are listed here:
    enumerable property has bad side-effects.  Libraries that
    depend on this (for example, QQ) will need to be revised.
 
-## 0.7.0 - BACKWARD INCOMPATIBILITY
+## 0.7.0 - :warning: BACKWARD INCOMPATIBILITY
 
  - WARNING: Removed ``report`` and ``asap``
  - WARNING: The ``callback`` argument of the ``fin``
@@ -430,7 +531,7 @@ Their replacements are listed here:
  - Improved minification results.
  - Improved readability.
 
-## 0.6.0 - BACKWARD INCOMPATIBILITY
+## 0.6.0 - :warning: BACKWARD INCOMPATIBILITY
 
  - WARNING: In practice, the implementation of ``spy`` and
    the name ``fin`` were useful.  I've removed the old
@@ -474,7 +575,7 @@ Their replacements are listed here:
  - Switched to using ``MessageChannel`` for next tick task
    enqueue in browsers that support it.
 
-## 0.5.0 - MINOR BACKWARD INCOMPATIBILITY
+## 0.5.0 - :warning: MINOR BACKWARD INCOMPATIBILITY
 
  - Exceptions are no longer reported when consumed.
  - Removed ``error`` from the API.  Since exceptions are
@@ -520,7 +621,7 @@ Their replacements are listed here:
    be resolved gracefully, and failing to do so,
    to dump an error message.
 
-## 0.4.0 - BACKWARD INCOMPATIBLE*
+## 0.4.0 - :warning: BACKWARD INCOMPATIBLE*
 
  - *Removed the utility modules. NPM and Node no longer
    expose any module except the main module.  These have
@@ -531,7 +632,7 @@ Their replacements are listed here:
  - Fixed some issues with asap, when it resolves to
    undefined, or throws an exception.
 
-## 0.3.0 - BACKWARD-INCOMPATIBLE
+## 0.3.0 - :warning: BACKWARD-INCOMPATIBLE
 
  - The `post` method has been reverted to its original
    signature, as provided in Tyler Close's `ref_send` API.
@@ -637,7 +738,7 @@ Their replacements are listed here:
  - Deprecated `defined` from `q`, with intent to move it to
    `q/util`.
 
-## 0.2.0 - BACKWARD INCOMPATIBLE
+## 0.2.0 - :warning: BACKWARD INCOMPATIBLE
 
  - Changed post(ref, name, args) to variadic
    post(ref, name, ...args). BACKWARD INCOMPATIBLE
