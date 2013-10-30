@@ -270,28 +270,29 @@ function defer() {
 // By Mark Miller
 // http://wiki.ecmascript.org/doku.php?id=strawman:concurrency&rev=1308776521#allfulfilled
 Q.all = all;
-function all(promises) {
+function all(questions) {
     // XXX deprecated behavior
-    if (Q.isPromise(promises)) {
+    if (Q.isPromise(questions)) {
         console.warn("Q.all no longer directly unwraps a promise. Use Q(array).all()");
-        return Q(promises).all();
+        return Q(questions).all();
     }
     var countDown = 0;
     var deferred = defer();
-    Array.prototype.forEach.call(promises, function (promise, index) {
+    var answers = Array(questions.length);
+    Array.prototype.forEach.call(questions, function (promise, index) {
         var handler;
         if (
             isPromise(promise) &&
             (handler = promise.inspect()).state === "fulfilled"
         ) {
-            promises[index] = handler.value;
+            answers[index] = handler.value;
         } else {
             ++countDown;
             Q(promise).then(
                 function (value) {
-                    promises[index] = value;
+                    answers[index] = value;
                     if (--countDown === 0) {
-                        deferred.resolve(promises);
+                        deferred.resolve(answers);
                     }
                 },
                 deferred.reject,
@@ -302,7 +303,7 @@ function all(promises) {
         }
     });
     if (countDown === 0) {
-        deferred.resolve(promises);
+        deferred.resolve(answers);
     }
     return deferred.promise;
 }
@@ -311,8 +312,19 @@ function all(promises) {
  * @see Promise#allSettled
  */
 Q.allSettled = allSettled;
-function allSettled(promises) {
-    return Q(promises).allSettled();
+function allSettled(questions) {
+    // XXX deprecated behavior
+    if (Q.isPromise(questions)) {
+        console.warn("Q.allSettled no longer directly unwraps a promise. Use Q(array).allSettled()");
+        return Q(questions).allSettled();
+    }
+    return all(questions.map(function (promise) {
+        promise = Q(promise);
+        function regardless() {
+            return promise.inspect();
+        }
+        return promise.then(regardless, regardless);
+    }));
 }
 
 /**
@@ -720,15 +732,7 @@ Promise.prototype.all = function () {
  * @returns {Array[State]} an array of states for the respective values.
  */
 Promise.prototype.allSettled = function () {
-    return this.then(function (promises) {
-        return all(promises.map(function (promise) {
-            promise = Q(promise);
-            function regardless() {
-                return promise.inspect();
-            }
-            return promise.then(regardless, regardless);
-        }));
-    });
+    return this.then(Q.allSettled);
 };
 
 /**

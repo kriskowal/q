@@ -33,8 +33,9 @@ assist in migration to the new interface.
    ES6 generators are supported.
  - :warning: `Q.all` no longer reuses the input array for the output
    array.
- - :warning: `Q.all` no longer accepts a promise.  Use
-   `Q(promise).all()`.  The original behavior is deprecated.
+ - :warning: `Q.all` and `Q.allSettled` no longer accept a promise.  Use
+   `Q(promise).all()` or `.allSettled()`.  The original behavior is
+   deprecated.
  - :warning: `valueOf` has been removed.  Please use `inspect().value`
    instead.
  - :warning: The promise protocol no longer supports "set", "delete",
