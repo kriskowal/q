@@ -26,8 +26,10 @@ var releasePath;
 if (headHash === versionHash) {
     releasePath = config.version;
 } else {
-    releasePath = "";
+    releasePath = "commits/" + headHash;
 }
+
+console.log("release path: %j", releasePath);
 
 module.exports = function (grunt) {
     ["grunt-contrib-uglify",
