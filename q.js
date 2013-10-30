@@ -1123,6 +1123,12 @@ function ThenableHandler(thenable) {
     this.became = null;
 }
 
+ThenableHandler.prototype.state = "thenable";
+
+ThenableHandler.prototype.inspect = function () {
+    return {state: "thenable"};
+};
+
 ThenableHandler.prototype.cast = function () {
     if (!this.became) {
         var deferred = defer();
