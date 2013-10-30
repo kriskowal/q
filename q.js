@@ -434,7 +434,7 @@ function defer() {
     // forward to the resolved promise.  We coerce the resolution value to a
     // promise using the `resolve` function because it handles both fully
     // non-thenable values and other thenables gracefully.
-    var messages = [], progressListeners = [], resolvedPromise;
+    var messages = [], progressListeners = [], acceptedValue, resolvedPromise;
 
     var deferred = object_create(defer.prototype);
     var promise = object_create(Promise.prototype);
@@ -447,7 +447,10 @@ function defer() {
                 progressListeners.push(operands[1]);
             }
         } else {
-            nextTick(function () {
+            if (!resolvedPromise) {
+                adopt();
+            }
+            nextTick(function () { // TODO evaluate whether this nextTick is necessary
                 resolvedPromise.promiseDispatch.apply(resolvedPromise, args);
             });
         }
@@ -458,6 +461,9 @@ function defer() {
         if (messages) {
             return promise;
         }
+        if (!resolvedPromise) {
+            adopt();
+        }
         var nearerValue = nearer(resolvedPromise);
         if (isPromise(nearerValue)) {
             resolvedPromise = nearerValue; // shorten chain
@@ -466,10 +472,11 @@ function defer() {
     }, "valueOf", "inspect");
 
     promise.inspect = function () {
-        if (!resolvedPromise) {
+        if (messages || !resolvedPromise) {
             return { state: "pending" };
+        } else if (resolvedPromise) {
+            return resolvedPromise.inspect();
         }
-        return resolvedPromise.inspect();
     };
 
     if (Q.longStackSupport && hasStacks) {
@@ -490,45 +497,50 @@ function defer() {
     // consolidating them into `become`, since otherwise we'd create new
     // promises with the lines `become(whatever(value))`. See e.g. GH-252.
 
-    function become(newPromise) {
-        resolvedPromise = newPromise;
-        promise.source = newPromise;
+    function adopt() {
+        resolvedPromise = Q(acceptedValue);
+        promise.source = resolvedPromise;
+    }
 
-        array_reduce(messages, function (undefined, message) {
-            nextTick(function () {
-                newPromise.promiseDispatch.apply(newPromise, message);
-            });
-        }, void 0);
+    function accept(value) {
+        if (!messages) {
+            return;
+        }
+
+        acceptedValue = value;
+
+        if (isPromise(acceptedValue)) {
+            adopt();
+        }
+
+        // dispatch queued messages, if any
+        if (messages.length) {
+            adopt();
+            array_reduce(messages, function (undefined, message) {
+                nextTick(function () {
+                    resolvedPromise.promiseDispatch.apply(resolvedPromise, message);
+                });
+            }, void 0);
+        }
 
         messages = void 0;
         progressListeners = void 0;
+
     }
 
     deferred.promise = promise;
-    deferred.resolve = function (value) {
-        if (resolvedPromise) {
-            return;
-        }
 
-        become(Q(value));
-    };
+    deferred.resolve = accept;
 
-    deferred.fulfill = function (value) {
-        if (resolvedPromise) {
-            return;
-        }
+    // XXX deprecated
+    deferred.fulfill = accept;
 
-        become(fulfill(value));
-    };
     deferred.reject = function (reason) {
-        if (resolvedPromise) {
-            return;
-        }
-
-        become(reject(reason));
+        accept(reject(reason));
     };
+
     deferred.notify = function (progress) {
-        if (resolvedPromise) {
+        if (!messages) {
             return;
         }
 
@@ -761,6 +773,7 @@ Promise.prototype.then = function (fulfilled, rejected, progressed) {
     });
 
     // Progress propagator need to be attached in the current tick.
+    // TODO why? this may be an interference hazard
     self.promiseDispatch(void 0, "when", [void 0, function (value) {
         var newValue;
         var threw = false;
