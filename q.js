@@ -910,7 +910,6 @@ function displayUnhandledReasons() {
     if (
         !unhandledReasonsDisplayed &&
         typeof window !== "undefined" &&
-        !window.Touch &&
         window.console
     ) {
         console.warn("[Q] Unhandled rejection reasons (should be empty):",
