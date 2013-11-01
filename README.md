@@ -156,10 +156,12 @@ robust secure escrow exchange][MarkM].
 The Q module can be loaded as:
 
 -   A ``<script>`` tag (creating a ``Q`` global variable): ~2.5 KB minified and
-    gzipped.
+    gzipped.  Download the latest of [version
+    0.9](https://raw.github.com/kriskowal/q/v0.9/q.js)
 -   A Node.js and CommonJS module, available in [npm](https://npmjs.org/) as
     the [q](https://npmjs.org/package/q) package
--   An AMD module
+-   An AMD module.  [Download version
+    0.9](https://raw.github.com/kriskowal/q/v0.9/q.js)
 -   A [component](https://github.com/component/component) as ``microjs/q``
 -   Using [bower](http://bower.io/) as ``q``
 -   Using [NuGet](http://nuget.org/) as [Q](https://nuget.org/packages/q)
