@@ -5,6 +5,16 @@
          align="right" alt="Promises/A+ logo" />
 </a>
 
+:warning: *Q in `master` is not ready for release.  Please see the
+[v0.9][] branch to download versions of `q.js` or `q.min.js` that work
+stand-alone in a browser.  The version of `q.js` that is checked into
+the `master` branch is a CommonJS module and has dependencies in NPM.
+Stand-alone builds for the next version of Q are available for
+[download][] on Amazon’s S3*.
+
+[v0.9]: https://github.com/kriskowal/q/tree/v0.9
+[download]: http://q-releases.s3-website-us-west-1.amazonaws.com/
+
 If a function cannot return a value or throw an exception without
 blocking, it can return a promise instead.  A promise is an object
 that represents the return value or the thrown exception that the
