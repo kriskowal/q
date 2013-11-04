@@ -23,6 +23,53 @@ proxy for a [remote object][Q-Connection] to overcome latency.
 
 [Q-Connection]: https://github.com/kriskowal/q-connection
 
+
+## Getting Started
+
+The Q module can be loaded as:
+
+-   A ``<script>`` tag (creating a ``Q`` global variable): ~2.5 KB minified and
+    gzipped.  Download the latest of [version
+    0.9](https://raw.github.com/kriskowal/q/v0.9/q.js)
+-   A Node.js and CommonJS module, available in [npm](https://npmjs.org/) as
+    the [q](https://npmjs.org/package/q) package
+-   An AMD module.  [Download version
+    0.9](https://raw.github.com/kriskowal/q/v0.9/q.js)
+-   A [component](https://github.com/component/component) as ``microjs/q``
+-   Using [bower](http://bower.io/) as ``q``
+-   Using [NuGet](http://nuget.org/) as [Q](https://nuget.org/packages/q)
+
+Q can exchange promises with jQuery, Dojo, When.js, WinJS, and more.
+
+## Resources
+
+Our [wiki][] contains a number of useful resources, including:
+
+- A method-by-method [Q API reference][reference].
+- A growing [examples gallery][examples], showing how Q can be used to make
+  everything better. From XHR to database access to accessing the Flickr API,
+  Q is there for you.
+- There are many libraries that produce and consume Q promises for everything
+  from file system/database access or RPC to templating. For a list of some of
+  the more popular ones, see [Libraries][].
+- If you want materials that introduce the promise concept generally, and the
+  below tutorial isn't doing it for you, check out our collection of
+  [presentations, blog posts, and podcasts][resources].
+- A guide for those [coming from jQuery's `$.Deferred`][jquery].
+
+We'd also love to have you join the Q-Continuum [mailing list][].
+
+[wiki]: https://github.com/kriskowal/q/wiki
+[reference]: https://github.com/kriskowal/q/wiki/API-Reference
+[examples]: https://github.com/kriskowal/q/wiki/Examples-Gallery
+[Libraries]: https://github.com/kriskowal/q/wiki/Libraries
+[resources]: https://github.com/kriskowal/q/wiki/General-Promise-Resources
+[jquery]: https://github.com/kriskowal/q/wiki/Coming-from-jQuery
+[mailing list]: https://groups.google.com/forum/#!forum/q-continuum
+
+
+## Introduction
+
 There are many reasons to use promises.  The first reward is that
 promises implicitly propagate errors and values downstream.  Consider
 this synchronous solution to reading a file and parsing its content.
@@ -159,50 +206,6 @@ synchronizing local work, to more advanced problems [like distributed
 robust secure escrow exchange][MarkM].
 
 [MarkM]: http://scholar.google.com/citations?user=PuP2INoAAAAJ&hl=en&oi=ao
-
-
-## Getting Started
-
-The Q module can be loaded as:
-
--   A ``<script>`` tag (creating a ``Q`` global variable): ~2.5 KB minified and
-    gzipped.  Download the latest of [version
-    0.9](https://raw.github.com/kriskowal/q/v0.9/q.js)
--   A Node.js and CommonJS module, available in [npm](https://npmjs.org/) as
-    the [q](https://npmjs.org/package/q) package
--   An AMD module.  [Download version
-    0.9](https://raw.github.com/kriskowal/q/v0.9/q.js)
--   A [component](https://github.com/component/component) as ``microjs/q``
--   Using [bower](http://bower.io/) as ``q``
--   Using [NuGet](http://nuget.org/) as [Q](https://nuget.org/packages/q)
-
-Q can exchange promises with jQuery, Dojo, When.js, WinJS, and more.
-
-## Resources
-
-Our [wiki][] contains a number of useful resources, including:
-
-- A method-by-method [Q API reference][reference].
-- A growing [examples gallery][examples], showing how Q can be used to make
-  everything better. From XHR to database access to accessing the Flickr API,
-  Q is there for you.
-- There are many libraries that produce and consume Q promises for everything
-  from file system/database access or RPC to templating. For a list of some of
-  the more popular ones, see [Libraries][].
-- If you want materials that introduce the promise concept generally, and the
-  below tutorial isn't doing it for you, check out our collection of
-  [presentations, blog posts, and podcasts][resources].
-- A guide for those [coming from jQuery's `$.Deferred`][jquery].
-
-We'd also love to have you join the Q-Continuum [mailing list][].
-
-[wiki]: https://github.com/kriskowal/q/wiki
-[reference]: https://github.com/kriskowal/q/wiki/API-Reference
-[examples]: https://github.com/kriskowal/q/wiki/Examples-Gallery
-[Libraries]: https://github.com/kriskowal/q/wiki/Libraries
-[resources]: https://github.com/kriskowal/q/wiki/General-Promise-Resources
-[jquery]: https://github.com/kriskowal/q/wiki/Coming-from-jQuery
-[mailing list]: https://groups.google.com/forum/#!forum/q-continuum
 
 
 ## Tutorial
