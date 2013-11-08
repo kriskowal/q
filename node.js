@@ -85,6 +85,33 @@ NQ.nbind = function (callback, thisp /*...args*/) {
 };
 
 /**
+ * Wraps a NodeJS EventEmitter object and returns a function
+ * that returns a promise that is:
+ *  - Notified on the named event
+ *  - Rejected on an 'error' event
+ *  - Resolved on a 'close' event
+ * @example
+ * var server = net.createServer();
+ * var serverEvent = Q.ebind(server);
+ * serverEvent('connection')
+ * .progress(handleNewConnection)
+ * .catch(handleServerError)
+ * .then(handleServerShutdown);
+ * server.listen(9001);
+ */
+NQ.ebind = function (eventEmitter) {
+    return function (eventName) {
+        deferred = Q.defer();
+
+        eventEmitter.on(eventName, deferred.notify);
+        eventEmitter.on('error', deferred.reject);
+        eventEmitter.on('close', deferred.resolve);
+
+        return deferred.promise;
+    }
+};
+
+/**
  * Calls a method of a Node-style object that accepts a Node-style
  * callback with a given array of arguments, plus a provided callback.
  * @param object an object that has the named method
