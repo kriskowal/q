@@ -1560,6 +1560,54 @@ Promise.prototype.allSettled = function () {
 };
 
 /**
+ * Turns an array of promises into a promise for an array.  If any of
+ * the promises gets fufilled, the whole array is fufilled immediately.
+ * @param {Array*} an array (or promise for an array) of values (or
+ * promises for values)
+ * @returns a promise for an array of the corresponding values
+ */
+Q.any = any;
+function any(promises) {
+    return when(promises, function (promises) {
+        // The number of promises which have not yet settled.
+        var countDown = 0;
+        var deferred = defer();
+        array_reduce(promises, function (undefined, promise, index) {
+            var snapshot;
+            if (
+                isPromise(promise) &&
+                (snapshot = promise.inspect()).state === "rejected"
+            ) {
+                promises[index] = snapshot.reason;
+            } else {
+                ++countDown;
+                when(
+                    promise,
+                    deferred.resolve,
+                    function (reason) {
+                        promises[index] = reason;
+                        if (--countDown === 0) {
+                            deferred.reject(promises);
+                        }
+                    },
+                    function (progress) {
+                        deferred.notify({ index: index, value: progress });
+                    }
+                );
+            }
+        }, void 0);
+        if (countDown === 0) {
+            deferred.reject(promises);
+        }
+        return deferred.promise;
+    });
+}
+
+Promise.prototype.any = function () {
+    return any(this);
+};
+
+/**
  * Captures the failure of a promise, giving an oportunity to recover
  * with a callback.  If the given promise is fulfilled, the returned
  * promise is fulfilled.

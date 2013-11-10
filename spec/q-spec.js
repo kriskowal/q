@@ -1231,6 +1231,96 @@ describe("allSettled", function () {
 
 });
 
+describe("any", function () {
+    it("rejects when passed an empty array", function () {
+        return Q.any([]).then(function(){
+            throw new Error();
+        }, function(){});
+    });
+
+    it("resolves after any constituent promises is resolved", function () {
+        var toResolve = Q.defer();
+        var toReject = Q.defer(); // never reject
+        var promises = [toResolve.promise, toReject.promise];
+        var promise = Q.any(promises);
+
+        toResolve.resolve(new Error("Resolved"));
+
+        return Q.delay(250)
+        .then(function () {
+            expect(promise.isFulfilled()).toBe(true);
+        })
+        .timeout(1000);
+    });
+
+    it("rejects foreign thenables", function () {
+        var normal = Q.fcall(function(){throw 1;});
+        var foreign = { then: function (resolve, reject, notify) { reject(2); } };
+
+        return Q.any([normal, foreign])
+        .fail(function (result) {
+            expect(result).toEqual([1, 2]);
+        });
+    });
+
+    it("rejects when passed a sparse array", function () {
+        var toReject = Q.defer();
+        var promises = [];
+        promises[0] = Q.fcall(function(){throw 0;});
+        promises[2] = toReject.promise;
+        var promise = Q.any(promises);
+
+        toReject.reject(2);
+
+        return promise.fail(function (result) {
+            expect(result).toEqual([0, void 0, 2]);
+        });
+    });
+
+    it("modifies the input array", function () {
+        var input = [Q.fcall(function(){throw 0;}), Q.fcall(function(){throw 1;})];
+
+        return Q.any(input).fail(function (result) {
+            expect(result).toBe(input);
+            expect(input).toEqual([0, 1]);
+        });
+    });
+
+    it("sends { index, value } progress updates", function () {
+        var deferred1 = Q.defer();
+        var deferred2 = Q.defer();
+
+        var progressValues = [];
+
+        Q.delay(50).then(function () {
+            deferred1.notify("a");
+        });
+        Q.delay(100).then(function () {
+            deferred2.notify("b");
+            deferred2.reject();
+        });
+        Q.delay(150).then(function () {
+            deferred1.notify("c");
+            deferred1.reject();
+        });
+
+        return Q.any([deferred1.promise, deferred2.promise]).then(
+            undefined,
+            function () {
+                expect(progressValues).toEqual([
+                    { index: 0, value: "a" },
+                    { index: 1, value: "b" },
+                    { index: 0, value: "c" }
+                ]);
+            },
+            function (progressValue) {
+                progressValues.push(progressValue);
+            }
+        )
+    });
+
+});
+
 describe("spread", function () {
 
     it("spreads values across arguments", function () {
