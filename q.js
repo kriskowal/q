@@ -1608,6 +1608,33 @@ Promise.prototype.any = function () {
 };
 
 /**
+ * @see Promise#anySettled
+ */
+Q.anySettled = anySettled;
+function anySettled(promises) {
+    return Q(promises).anySettled();
+}
+
+/**
+ * Turns an array of promises into a promise for an array of their states (as
+ * returned by `inspect`) when any settles.
+ * @param {Array[Any*]} values an array (or promise for an array) of values (or
+ * promises for values)
+ * @returns {Array[State]} an array of states for the respective values.
+ */
+Promise.prototype.anySettled = function () {
+    return this.then(function (promises) {
+        return any(array_map(promises, function (promise) {
+            promise = Q(promise);
+            function regardless() {
+                return promise.inspect();
+            }
+            return promise.then(regardless, regardless);
+        }));
+    });
+};
+
+/**
  * Captures the failure of a promise, giving an oportunity to recover
  * with a callback.  If the given promise is fulfilled, the returned
  * promise is fulfilled.

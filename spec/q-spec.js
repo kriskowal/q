@@ -1321,6 +1321,63 @@ describe("any", function () {
 
 });
 
+describe("anySettled", function () {
+    it("works on an empty array", function () {
+        return Q.anySettled([])
+        .then(undefined, function (snapshots) {
+            expect(snapshots).toEqual([]);
+        });
+    });
+
+    it("deals with a mix of non-promises and promises", function () {
+        return Q.allSettled([
+            Q.anySettled([1]).then(function (snapshots) {
+                expect(snapshots).toEqual({ state: "fulfilled", value: 1 });
+            }),
+            Q.anySettled([Q(2)]).then(function (snapshots) {
+                expect(snapshots).toEqual({ state: "fulfilled", value: 2 });
+            }),
+            Q.anySettled([Q.reject(3)]).then(function (snapshots) {
+                expect(snapshots).toEqual({ state: "rejected", reason: 3 });
+            })
+        ]);
+    });
+
+    it("is settled after any constituent promise is settled", function () {
+        var toFulfill = Q.defer();
+        var toReject = Q.defer();
+        var promises = [toFulfill.promise, toReject.promise];
+        var fulfilled = false;
+        var rejected = false;
+
+        Q.fcall(function () {
+            toReject.reject();
+            rejected = true;
+        })
+        .delay(15)
+        .then(function () {
+            toFulfill.resolve();
+            fulfilled = true;
+        });
+
+        return Q.anySettled(promises)
+        .then(function () {
+            expect(fulfilled).toBe(false);
+            expect(rejected).toBe(true);
+        });
+    });
+
+    it("does not modify the input array", function () {
+        var input = [1, Q(2), Q.reject(3)];
+
+        return Q.anySettled(input)
+        .then(function (snapshots) {
+            expect(snapshots).not.toBe(input);
+        });
+    });
+
+});
+
 describe("spread", function () {
 
     it("spreads values across arguments", function () {
