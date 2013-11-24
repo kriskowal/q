@@ -1593,6 +1593,30 @@ Promise.prototype.allSettled = function () {
     });
 };
 
+Q.tasks;
+/**
+ * Chains promises in a given sequential order.
+ * @param {Array[Any*]} functions to execute.
+ */
+Q.chain = function (tasks) {
+    var chainedPromises,
+        promise = function(task){
+            var deferred = Q.defer();
+            task(deferred);
+            return deferred.promise;
+        };
+    if (tasks.length === 0) return;
+    if(!Q.tasks){
+        Q.tasks = [];
+    }
+    Q.tasks.push(promise(tasks.shift(0)));
+    chainedPromises = Q.tasks.slice(0);
+    Q.all(chainedPromises).then(function(result) {
+        result[result.length - 1]();
+    });
+    Q.chain(tasks);
+}
+
 /**
  * Captures the failure of a promise, giving an oportunity to recover
  * with a callback.  If the given promise is fulfilled, the returned
