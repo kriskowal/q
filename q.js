@@ -1593,12 +1593,12 @@ Promise.prototype.allSettled = function () {
     });
 };
 
-Q.tasks;
 /**
  * Chains promises in a given sequential order.
  * @param {Array[Any*]} functions to execute.
+ * @param {Array[Any*]} corresponding promises to functions (optional).
  */
-Q.chain = function (tasks) {
+Q.chain = function (tasks, promises) {
     var chainedPromises,
         promise = function(task){
             var deferred = Q.defer();
@@ -1606,15 +1606,15 @@ Q.chain = function (tasks) {
             return deferred.promise;
         };
     if (tasks.length === 0) return;
-    if(!Q.tasks){
-        Q.tasks = [];
+    if(!promises){
+        promises = [];
     }
-    Q.tasks.push(promise(tasks.shift(0)));
-    chainedPromises = Q.tasks.slice(0);
+    promises.push(promise(tasks.shift(0)));
+    chainedPromises = promises.slice(0);
     Q.all(chainedPromises).then(function(result) {
         result[result.length - 1]();
     });
-    Q.chain(tasks);
+    Q.chain(tasks, promises);
 }
 
 /**
