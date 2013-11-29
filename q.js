@@ -273,7 +273,10 @@ Q.all = all;
 function all(questions) {
     // XXX deprecated behavior
     if (Q.isPromise(questions)) {
-        console.warn("Q.all no longer directly unwraps a promise. Use Q(array).all()");
+        if (typeof console !== "undefined" &&
+            typeof console.warn === "function") {
+            console.warn("Q.all no longer directly unwraps a promise. Use Q(array).all()");
+        }
         return Q(questions).all();
     }
     var countDown = 0;
@@ -315,7 +318,10 @@ Q.allSettled = allSettled;
 function allSettled(questions) {
     // XXX deprecated behavior
     if (Q.isPromise(questions)) {
-        console.warn("Q.allSettled no longer directly unwraps a promise. Use Q(array).allSettled()");
+        if (typeof console !== "undefined" &&
+            typeof console.warn === "function") {
+            console.warn("Q.allSettled no longer directly unwraps a promise. Use Q(array).allSettled()");
+        }
         return Q(questions).allSettled();
     }
     return all(questions.map(function (promise) {
@@ -1161,9 +1167,8 @@ var trackUnhandledRejections = true;
 function displayUnhandledReasons() {
     if (
         !unhandledReasonsDisplayed &&
-        typeof window !== "undefined" &&
-        window.console
-    ) {
+        typeof console !== "undefined" &&
+        typeof console.warn === "function") {
         console.warn("[Q] Unhandled rejection reasons (should be empty):",
                      unhandledReasons);
     }
@@ -1174,7 +1179,10 @@ function displayUnhandledReasons() {
 function logUnhandledReasons() {
     for (var i = 0; i < unhandledReasons.length; i++) {
         var reason = unhandledReasons[i];
-        console.warn("Unhandled rejection reason:", reason);
+        if (typeof console !== "undefined" &&
+            typeof console.warn === "function") {
+            console.warn("Unhandled rejection reason:", reason);
+        }
     }
 }
 
