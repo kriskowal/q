@@ -152,8 +152,10 @@ function captureLine() {
 
 function deprecate(callback, name, alternative) {
     return function () {
-        if (typeof console !== "undefined" &&
-            typeof console.warn === "function") {
+        if (typeof window !== "undefined" &&
+            typeof window.console !== "undefined" &&
+            typeof window.console.warn === "function"
+        ) {
             console.warn(name + " is deprecated, use " + alternative +
                          " instead.", new Error("").stack);
         }
@@ -273,8 +275,10 @@ Q.all = all;
 function all(questions) {
     // XXX deprecated behavior
     if (Q.isPromise(questions)) {
-        if (typeof console !== "undefined" &&
-            typeof console.warn === "function") {
+        if (typeof window !== "undefined" &&
+            typeof window.console !== "undefined" &&
+            typeof window.console.warn === "function"
+        ) {
             console.warn("Q.all no longer directly unwraps a promise. Use Q(array).all()");
         }
         return Q(questions).all();
@@ -318,8 +322,10 @@ Q.allSettled = allSettled;
 function allSettled(questions) {
     // XXX deprecated behavior
     if (Q.isPromise(questions)) {
-        if (typeof console !== "undefined" &&
-            typeof console.warn === "function") {
+        if (typeof window !== "undefined" &&
+            typeof window.console !== "undefined" &&
+            typeof window.console.warn === "function"
+        ) {
             console.warn("Q.allSettled no longer directly unwraps a promise. Use Q(array).allSettled()");
         }
         return Q(questions).allSettled();
@@ -1165,12 +1171,13 @@ var unhandledRejections = [];
 var unhandledReasonsDisplayed = false;
 var trackUnhandledRejections = true;
 function displayUnhandledReasons() {
-    if (
-        !unhandledReasonsDisplayed &&
-        typeof console !== "undefined" &&
-        typeof console.warn === "function") {
-        console.warn("[Q] Unhandled rejection reasons (should be empty):",
-                     unhandledReasons);
+    if (!unhandledReasonsDisplayed &&
+        typeof window !== "undefined" &&
+        typeof window.console !== "undefined" &&
+        typeof window.console.warn === "function"
+    ) {
+           console.warn("[Q] Unhandled rejection reasons (should be empty):",
+                        unhandledReasons);
     }
 
     unhandledReasonsDisplayed = true;
@@ -1179,8 +1186,10 @@ function displayUnhandledReasons() {
 function logUnhandledReasons() {
     for (var i = 0; i < unhandledReasons.length; i++) {
         var reason = unhandledReasons[i];
-        if (typeof console !== "undefined" &&
-            typeof console.warn === "function") {
+        if (typeof window !== "undefined" &&
+            typeof window.console !== "undefined" &&
+            typeof window.console.warn === "function"
+        ) {
             console.warn("Unhandled rejection reason:", reason);
         }
     }
