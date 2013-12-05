@@ -2,14 +2,23 @@
 
 var Q = require("../q");
 
-exports.fulfilled = Q.resolve;
-exports.rejected = Q.reject;
-exports.pending = function () {
-    var deferred = Q.defer();
+exports.deferred = function(){
+	var dfd = Q.defer();
+	return {
+		promise: dfd.promise,
+		resolve: dfd.resolve,
+		reject: dfd.reject
+	};
+};
 
-    return {
-        promise: deferred.promise,
-        fulfill: deferred.resolve,
-        reject: deferred.reject
-    };
+exports.rejected = function(reason){
+	var dfd = Q.defer();
+	dfd.reject(reason);
+	return dfd.promise;
+};
+
+exports.resolved = function(value){
+	var dfd = Q.defer();
+	dfd.resolve(value);
+	return dfd.promise;
 };
