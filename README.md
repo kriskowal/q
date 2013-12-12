@@ -197,7 +197,7 @@ return document.ready.then(setup);
 Promises go on to be a useful primitive for capturing the “causal graph”
 of an asynchronous program, providing “long traces” that capture the
 stacks from all the events that led to an exception.  Promises are also
-useful as proxies for objects in other processes, piplining messages
+useful as proxies for objects in other processes, pipelining messages
 over any inter-process message channel.
 
 The point of promises is that they have scouted the way ahead and will
