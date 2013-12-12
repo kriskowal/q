@@ -2083,6 +2083,62 @@ describe("node support", function () {
 
     });
 
+    describe("nodeified", function() {
+
+      it("calls back with a resolution", function() {
+        var promiseFn = function (arg) {
+          return Q(arg);
+        };
+        var nodeFn = NQ.nodeified(this, promiseFn);
+        var spy = jasmine.createSpy();
+        nodeFn(10, spy);
+        waitsFor(function() {
+          return spy.argsForCall.length;
+        });
+        runs(function () {
+          expect(spy).toHaveBeenCalledWith(null, 10);
+          expect(spy.callCount).toEqual(1);
+        });
+      });
+
+      it("calls back with an error", function() {
+        var promiseFn = function (arg) {
+          return Q.reject(arg);
+        };
+        var nodeFn = NQ.nodeified(this, promiseFn);
+        var spy = jasmine.createSpy();
+        nodeFn(10, spy);
+        waitsFor(function () {
+          return spy.argsForCall.length;
+        });
+        runs(function () {
+          expect(spy).toHaveBeenCalledWith(10);
+          expect(spy.callCount).toEqual(1);
+        });
+      });
+
+      it("binds the context correctly", function() {
+        var obj = {
+          ten: 10,
+          promiseMethod: function () {
+            return Q.reject(this.ten);
+          }
+        };
+        var nodeFn = NQ.nodeified(obj, obj.promiseMethod);
+        var spy = jasmine.createSpy();
+        nodeFn(10, spy);
+        waitsFor(function () {
+          return spy.argsForCall.length;
+        });
+        runs(function () {
+          expect(spy).toHaveBeenCalledWith(10);
+          expect(spy.callCount).toEqual(1);
+        });
+
+      });
+
+    });
+
 });
 
 describe("isPromise", function () {
