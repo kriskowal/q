@@ -192,6 +192,14 @@ describe("always next tick", function () {
 
 });
 
+describe("async generators", function () {
+    it("returns the promise value", function () {
+        return Q.async(function *() {
+            expect(yield Q(42)).toEqual(42);
+        })();
+    });
+});
+
 xdescribe("progress", function () {
 
     it("calls a single progress listener", function () {
