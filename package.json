@@ -61,7 +61,7 @@
     "mr": "~0.13.3"
   },
   "scripts": {
-    "test": "jasmine-node spec && promises-aplus-tests spec/aplus-adapter",
+    "test": "node --harmony node_modules/jasmine-node/lib/jasmine-node/cli.js spec && promises-aplus-tests spec/aplus-adapter",
     "release": "grunt release",
     "benchmark": "matcha",
     "lint": "jshint q.js",
