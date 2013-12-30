@@ -265,6 +265,14 @@ function defer() {
 }
 
 /**
+ * @returns whether the given object is a Q Deferred.
+ */
+Q.isDeferred = isDeferred;
+function isDeferred(object) {
+    return isObject(object) && object instanceof Deferred;
+}
+
+/**
  * Turns an array of promises into a promise for an array.  If any of
  * the promises gets rejected, the whole array is rejected immediately.
  * @param {Array*} an array (or promise for an array) of values (or
