@@ -79,7 +79,7 @@ var maybeOneOneSecondLater = function () {
 maybeOneOneSecondLater().then(callback);
 
 /*
-This design has two weaknesses: 
+This design has two weaknesses:
 
 - The first caller of the then method determines the callback that is used.
   It would be more useful if every registered callback were notified of
@@ -660,9 +660,11 @@ var defer = function () {
                 value = ref(_value);
                 for (var i = 0, ii = pending.length; i < ii; i++) {
                     // XXX
-                    enqueue(function () {
-                        value.then.apply(value, pending[i]);
-                    });
+                    (function (i) {
+                        enqueue(function () {
+                            value.then.apply(value, pending[i]);
+                        });
+                    })(i);
                 }
                 pending = undefined;
             }
@@ -919,7 +921,7 @@ var ref = function (object) {
         del: function (name) {
             delete object[name];
         }
-    }); 
+    });
 };
 
 /*
@@ -952,9 +954,11 @@ var defer = function () {
             if (pending) {
                 value = ref(_value);
                 for (var i = 0, ii = pending.length; i < ii; i++) {
-                    enqueue(function () {
-                        value.promiseSend.apply(value, pending[i]);
-                    });
+                    (function (i) {
+                        enqueue(function () {
+                            value.promiseSend.apply(value, pending[i]);
+                        });
+                    })(i);
                 }
                 pending = undefined;
             }

@@ -16,9 +16,11 @@ var defer = function () {
                 value = ref(_value);
                 for (var i = 0, ii = pending.length; i < ii; i++) {
                     // XXX
-                    enqueue(function () {
-                        value.then.apply(value, pending[i]);
-                    });
+                    (function (i) {
+                        enqueue(function () {
+                            value.then.apply(value, pending[i]);
+                        });
+                    })(i);
                 }
                 pending = undefined;
             }
