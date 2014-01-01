@@ -2106,6 +2106,25 @@ describe("isPromise", function () {
     });
 });
 
+describe("isDeferred", function () {
+    it("returns true if passed a Deferred", function () {
+        expect(Q.isDeferred(Q.defer())).toBe(true);
+    });
+
+    it("returns false if not passed a Deferred", function () {
+        expect(Q.isDeferred()).toBe(false);
+        expect(Q.isDeferred(undefined)).toBe(false);
+        expect(Q.isDeferred(null)).toBe(false);
+        expect(Q.isDeferred(true)).toBe(false);
+        expect(Q.isDeferred('str')).toBe(false);
+        expect(Q.isDeferred(42)).toBe(false);
+        expect(Q.isDeferred({})).toBe(false);
+        expect(Q.isDeferred([])).toBe(false);
+        expect(Q.isDeferred(/a/g)).toBe(false);
+        expect(Q.isDeferred(Q(42))).toBe(false);
+    });
+});
+
 describe("isThenable", function () {
     it("returns true if passed a promise like object", function () {
         expect(Q.isThenable(Q(10))).toBe(true);
