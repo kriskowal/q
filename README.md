@@ -804,7 +804,7 @@ to many users, you should probably keep it off. But in development, go for it!
 
 You can view the results of the Q test suite [in your browser][tests]!
 
-[tests]: https://rawgithub.com/kriskowal/q/master/spec/q-spec.html
+[tests]: https://rawgithub.com/kriskowal/q/v1/spec/q-spec.html
 
 ## License
 
