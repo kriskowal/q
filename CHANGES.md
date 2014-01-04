@@ -1,29 +1,9 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=70 -->
 
-## 1.0.0
+## 2.0 :warning: BACKWARD INCOMPATIBILITY
 
-:cake: This is all but a re-release of version 0.9, which has settled
-into a gentle maintenance mode and rightly deserves an official 1.0.
-An ambitious 2.0 release is already around the corner, but 0.9/1.0
-have been distributed far and wide and demand long term support.
-
- - Q will now attempt to post a debug message in browsers regardless
-   of whether window.Touch is defined. Chrome at least now has this
-   property regardless of whether touch is supported by the underlying
-   hardware.
- - Remove deprecation warning from `promise.valueOf`. The function is
-   called by the browser in various ways so there is no way to
-   distinguish usage that should be migrated from usage that cannot be
-   altered.
-
-## 1.0.0 :warning: BACKWARD INCOMPATIBILITY
-
- - 1.0! :cake:
-
-## 0.10.0 :warning: BACKWARD INCOMPATIBILITY
-
-This is an intermediate release for projects transitioning to 1.0.
-This release is version 1.0 but includes many deprecation warnings to
+This is an intermediate release for projects transitioning from 0.9 or 1.0 to
+3.0.  This release is version 3.0 but includes many deprecation warnings to
 assist in migration to the new interface.
 
  - :warning: As of `1.0`, Q will require ECMAScript 5. Using `es5-shim`,
@@ -122,6 +102,22 @@ in `q/node`:
 -   `nsend` for `ninvoke`
 -   `nmcall` for `ninvoke`
 -   `nmapply` for `npost`
+
+## 1.0.0
+
+:cake: This is all but a re-release of version 0.9, which has settled
+into a gentle maintenance mode and rightly deserves an official 1.0.
+An ambitious 2.0 release is already around the corner, but 0.9/1.0
+have been distributed far and wide and demand long term support.
+
+ - Q will now attempt to post a debug message in browsers regardless
+   of whether window.Touch is defined. Chrome at least now has this
+   property regardless of whether touch is supported by the underlying
+   hardware.
+ - Remove deprecation warning from `promise.valueOf`. The function is
+   called by the browser in various ways so there is no way to
+   distinguish usage that should be migrated from usage that cannot be
+   altered.
 
 ## 0.9.7
 
