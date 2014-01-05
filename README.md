@@ -153,7 +153,7 @@ captures the issue and Isaac Schlueter’s more recent treatise,
 [Designing APIs for Asynchrony][Isaac], reframed the edict as “Do Not
 Release Zalgo”.
 
-[Steele]: http://osteele.com/posts/2008/04/minimizing-code-paths-in-asychronous-code
+[Steele]: http://blog.osteele.com/posts/2008/04/minimizing-code-paths-in-asychronous-code
 [Isaac]: http://blog.izs.me/post/59142742143/designing-apis-for-asynchrony
 
 If you are using Q, you can cast any promise, even a [jQuery
