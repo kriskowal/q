@@ -194,7 +194,12 @@ var nextTick =(function () {
             setTimeout(flush, 0);
             requestPortTick();
         };
-
+    } else if (typeof __jvertx !== "undefined") {
+        // vert.x
+        var vertx = require("vertx");
+        requestTick = function () {
+            vertx.runOnContext(flush);
+        };
     } else {
         // old browsers
         requestTick = function () {
