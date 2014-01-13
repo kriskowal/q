@@ -944,13 +944,15 @@ Promise.prototype.nodeify = function (nodeback) {
 
 // Thus begins the portion dedicated to the deferred
 
+var promises = new WeakMap();
+
 function Deferred(promise) {
     this.promise = promise;
     // A deferred has an intrinsic promise, denoted by its hidden handler
     // property.  The promise property of the deferred may be assigned to a
     // different promise (as it is in a Queue), but the intrinsic promise does
     // not change.
-    handlers.set(this, inspect(promise));
+    promises.set(this, promise);
     this.resolve = this.resolve.bind(this);
     this.reject = this.reject.bind(this);
     this.notify = this.notify.bind(this);
@@ -960,7 +962,7 @@ function Deferred(promise) {
  * TODO
  */
 Deferred.prototype.resolve = function (value) {
-    var handler = inspect(this);
+    var handler = inspect(promises.get(this));
     if (!handler.messages) {
         return;
     }
@@ -971,7 +973,7 @@ Deferred.prototype.resolve = function (value) {
  * TODO
  */
 Deferred.prototype.reject = function (reason) {
-    var handler = inspect(this);
+    var handler = inspect(promises.get(this));
     if (!handler.messages) {
         return;
     }
@@ -982,7 +984,7 @@ Deferred.prototype.reject = function (reason) {
  * TODO
  */
 Deferred.prototype.notify = function (progress) {
-    var handler = inspect(this);
+    var handler = inspect(promises.get(this));
     if (!handler.messages) {
         return;
     }
