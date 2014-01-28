@@ -20,7 +20,7 @@ var oneOneSecondLater = function (callback) {
 };
 
 /*
-This is a very simple solution to a trival problem, but there is a lot of room
+This is a very simple solution to a trivial problem, but there is a lot of room
 for improvement.
 
 A more general solution would provide analogous tools for both return values
@@ -54,10 +54,10 @@ Promises
 
 Consider a more general approach, where instead of returning values or
 throwing exceptions, functions return an object that represents the eventual
-result of the function, either sucessful or failed.  This object is a promise,
+result of the function, either successful or failed.  This object is a promise,
 both figuratively and by name, to eventually resolve.  We can call a function
 on the promise to observe either its fulfillment or rejection.  If the promise
-is rejected and the rejection is not explicitly observed, any derrived
+is rejected and the rejection is not explicitly observed, any derived
 promises will be implicitly rejected for the same reason.
 
 In this particular iteration of the design, we'll model a promise as an object
@@ -549,7 +549,7 @@ var defer = function () {
 /*
 There is, however, a subtle problem with this version of "defer".  It mandates
 that an errback must be provided on all "then" calls, or an exception will be
-thrown when trying to call a non-existant function.  The simplest solution to
+thrown when trying to call a non-existent function.  The simplest solution to
 this problem is to provide a default errback that forwards the rejection.  It
 is also reasonable for the callback to be omitted if you're only interested in
 observing rejections, so we provide a default callback that forwards the
@@ -643,7 +643,7 @@ This function will either throw an exception or return a promise that will
 quickly be fulfilled with the value of 10.  It depends on whether foob()
 resolves in the same turn of the event loop (issuing its callback on the same
 stack immediately) or in a future turn.  If the callback is delayed to a
-future turn, it will allways succeed.
+future turn, it will always succeed.
 (see design/q7.js)
 */
 
@@ -727,7 +727,7 @@ var reject = function (reason) {
 };
 
 /*
-There remains one safty issue, though.  Given that any object that implements
+There remains one safety issue, though.  Given that any object that implements
 "then" is treated as a promise, anyone who calls "then" directly is at risk
 of surprise.
 
@@ -807,7 +807,7 @@ promise that is in another process or worker or another computer on a network.
 
 If we have to wait for a message to make a full round-trip across a network to
 get a value, the round-trips can add up a lot and much time will be wasted.
-This ammounts to "chatty" network protocol problems, which are the downfall
+This amounts to "chatty" network protocol problems, which are the downfall
 of SOAP and RPC in general.
 
 However, if we can send a message to a distant promise before it resolves, the
@@ -998,7 +998,7 @@ get({"a": 10}, "a").then(function (ten) {
 
 /*
 
-The last improvment to get promises up to the state-of-the-art is to rename
+The last improvement to get promises up to the state-of-the-art is to rename
 all of the callbacks to "win" and all of the errbacks to "fail".  I've left
 this as an exercise.
 
@@ -1009,7 +1009,7 @@ Future
 
 Andrew Sutherland did a great exercise in creating a variation of the Q
 library that supported annotations so that waterfalls of promise creation,
-resolution, and dependencies could be graphically depicited.  Optional
+resolution, and dependencies could be graphically depicted.  Optional
 annotations and a debug variation of the Q library would be a logical
 next-step.
 
