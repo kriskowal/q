@@ -1181,7 +1181,7 @@ function displayUnhandledReasons() {
     ) {
         console.warn(
             "[Q] Unhandled rejection reasons (should be empty):",
-            unhandledReasons
+            Q.getUnhandledReasons()
         );
     }
 
