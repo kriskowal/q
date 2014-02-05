@@ -1737,6 +1737,21 @@ describe("thenReject", function () {
 
 describe("thenables", function () {
 
+    it("can be inspected", function () {
+        var promise = Q({then: function (resolved) {
+            resolved(10);
+        }});
+        expect(promise.inspect()).toEqual({state: "thenable"});
+        var newPromise = promise.then(function (n) {
+            return n * 2;
+        });
+        expect(promise.inspect()).toEqual({state: "pending"});
+        return newPromise.then(function (n) {
+            expect(newPromise.inspect()).toEqual({state: "fulfilled", value: 20});
+            expect(n).toBe(20);
+        });
+    });
+
     it("assimilates a thenable with fulfillment with resolve", function () {
         return Q({
             then: function (resolved) {
