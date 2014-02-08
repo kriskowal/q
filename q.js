@@ -617,7 +617,7 @@ Promise.race = race;
 Promise.resolve = resolve;
 function resolve(value) {
     return Q(value);
-};
+}
 
 /**
  * Returns a promise that has been rejected with a reason, which should be an
@@ -1400,7 +1400,7 @@ Promise.prototype["delete"] = function () {
 Deferred.prototype.notify = deprecate(function () {
 }, "notify", "no longer supported");
 
-Promise.prototype.progress = deprecate(function (progressed) {
+Promise.prototype.progress = deprecate(function () {
     return this;
 }, "progress", "no longer supported");
 
