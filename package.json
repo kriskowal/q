@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "asap": "~1.0.0",
-    "weak-map": "~1.0.0"
+    "weak-map": "~1.0.3"
   },
   "devDependencies": {
     "jshint": "~2.3.0",
