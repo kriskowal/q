@@ -605,18 +605,6 @@ Promise.all = all;
 Promise.race = race;
 
 /**
- * Returns a promise for the value. If the value is a promise, this will return
- * a new promise for the same eventual result. Otherwise, this will behave in
- * the same fashion as `cast`.
- * @param value promise, object with a then method, or a fulfillment value
- * @returns {Promise} the resolution
- */
-Promise.resolve = resolve;
-function resolve(value) {
-    return Q(value);
-};
-
-/**
  * Coerces a value to a promise. If the value is a promise, pass it through
  * unaltered. If the value has a `then` method, it is presumed to be a promise
  * but not one of our own, so it is treated as a “thenable” promise and this
@@ -625,6 +613,17 @@ function resolve(value) {
  * @param value promise, object with a then method, or a fulfillment value
  * @returns {Promise} the same promise as given, or a promise for the given
  * value
+ */
+Promise.resolve = resolve;
+function resolve(value) {
+    return Q(value);
+};
+
+/**
+ * Returns a promise that has been rejected with a reason, which should be an
+ * instance of `Error`.
+ * @param reason value describing the failure
+ * @returns {Promise} rejection
  */
 Promise.reject = reject;
 
