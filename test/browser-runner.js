@@ -4,6 +4,7 @@ var Reporter = require("./browser-reporter");
 
 var suite = describe("Q", function () {
     require("./q");
+    require("./eta");
     require("./traces");
     require("./never-again");
     require("./node");
