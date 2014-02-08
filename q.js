@@ -195,9 +195,14 @@ var theViciousCycleHandler = inspect(theViciousCycleRejection);
 var thenables = new WeakMap();
 
 /**
- * Constructs a promise for an immediate reference, passes promises through, or
- * coerces promises from different systems.
- * @param value immediate reference or promise
+ * Coerces a value to a promise. If the value is a promise, pass it through
+ * unaltered. If the value has a `then` method, it is presumed to be a promise
+ * but not one of our own, so it is treated as a “thenable” promise and this
+ * returns a promise that stands for it. Otherwise, this returns a promise that
+ * has already been fulfilled with the value.
+ * @param value promise, object with a then method, or a fulfillment value
+ * @returns {Promise} the same promise as given, or a promise for the given
+ * value
  */
 module.exports = Q;
 function Q(value) {
@@ -218,16 +223,19 @@ function Q(value) {
 
 /**
  * Controls whether or not long stack traces will be on
+ * @type {boolean}
  */
 Q.longStackSupport = false;
 
 /**
- * Constructs a rejected promise.
- * @param reason value describing the failure
+ * Returns a promise that has been rejected with a reason, which should be an
+ * instance of `Error`.
+ * @param {Error} error reason for the failure.
+ * @returns {Promise} rejection
  */
 Q.reject = reject;
-function reject(reason) {
-    return new Promise(new RejectedHandler(reason));
+function reject(error) {
+    return new Promise(new RejectedHandler(error));
 }
 
 /**
@@ -239,6 +247,8 @@ function reject(reason) {
  * thenable, or invoke `reject` with the reason directly. To resolve the
  * promise to another thenable, thus putting it in the same state, invoke
  * `resolve` with that other thenable.
+ *
+ * @returns {{promise, resolve, reject}} a deferred
  */
 Q.defer = defer;
 function defer() {
@@ -265,11 +275,11 @@ function defer() {
 }
 
 /**
- * Turns an array of promises into a promise for an array.  If any of
- * the promises gets rejected, the whole array is rejected immediately.
- * @param {Array*} an array (or promise for an array) of values (or
+ * Turns an array of promises into a promise for an array.  If any of the
+ * promises gets rejected, the whole array is rejected immediately.
+ * @param {Array.<Promise>} an array (or promise for an array) of values (or
  * promises for values)
- * @returns a promise for an array of the corresponding values
+ * @returns {Promise.<Array>} a promise for an array of the corresponding values
  */
 // By Mark Miller
 // http://wiki.ecmascript.org/doku.php?id=strawman:concurrency&rev=1308776521#allfulfilled
@@ -304,10 +314,7 @@ function all(questions) {
                         deferred.resolve(answers);
                     }
                 },
-                deferred.reject,
-                function (progress) {
-                    deferred.notify({ index: index, value: progress });
-                }
+                deferred.reject
             );
         }
     });
@@ -408,8 +415,8 @@ Q.join = function (x, y) {
 
 /**
  * Returns a promise for the first of an array of promises to become fulfilled.
- * @param answers {Array[Any*]} promises to race
- * @returns {Any*} the first promise to be fulfilled
+ * @param answers {Array} promises to race
+ * @returns {Promise} the first promise to be fulfilled
  */
 Q.race = race;
 function race(answerPs) {
@@ -574,23 +581,55 @@ function Promise(handler) {
         handler = inspect(deferred.promise);
         try {
             setup(deferred);
-        } catch (reason) {
-            deferred.reject(reason);
+        } catch (error) {
+            deferred.reject(error);
         }
     }
     handlers.set(this, handler);
 }
 
 /**
- * TODO
+ * Turns an array of promises into a promise for an array.  If any of the
+ * promises gets rejected, the whole array is rejected immediately.
+ * @param {Array.<Promise>} an array (or promise for an array) of values (or
+ * promises for values)
+ * @returns {Promise.<Array>} a promise for an array of the corresponding values
  */
-Promise.cast = function (value) {
+Promise.all = all;
+
+/**
+ * Returns a promise for the first of an array of promises to become fulfilled.
+ * @param answers {Array} promises to race
+ * @returns {Promise} the first promise to be fulfilled
+ */
+Promise.race = race;
+
+/**
+ * Returns a promise for the value. If the value is a promise, this will return
+ * a new promise for the same eventual result. Otherwise, this will behave in
+ * the same fashion as `cast`.
+ * @param value promise, object with a then method, or a fulfillment value
+ * @returns {Promise} the resolution
+ */
+Promise.resolve = resolve;
+function resolve(value) {
     return Q(value);
 };
 
 /**
- * @returns whether the given object is a promise.
- * Otherwise it is a fulfilled value.
+ * Coerces a value to a promise. If the value is a promise, pass it through
+ * unaltered. If the value has a `then` method, it is presumed to be a promise
+ * but not one of our own, so it is treated as a “thenable” promise and this
+ * returns a promise that stands for it. Otherwise, this returns a promise that
+ * has already been fulfilled with the value.
+ * @param value promise, object with a then method, or a fulfillment value
+ * @returns {Promise} the same promise as given, or a promise for the given
+ * value
+ */
+Promise.reject = reject;
+
+/**
+ * @returns {boolean} whether the given value is a promise.
  */
 Q.isPromise = isPromise;
 function isPromise(object) {
@@ -598,7 +637,7 @@ function isPromise(object) {
 }
 
 /**
- * TODO
+ * @returns {boolean} whether the given value is an object with a then method.
  */
 Q.isThenable = isThenable;
 function isThenable(object) {
@@ -606,7 +645,16 @@ function isThenable(object) {
 }
 
 /**
- * TODO
+ * Synchronously produces a snapshot of the internal state of the promise.  The
+ * object will have a `state` property. If the `state` is `"pending"`, there
+ * will be no further information. If the `state` is `"fulfilled"`, there will
+ * be a `value` property. If the state is `"rejected"` there will be a `reason`
+ * property.  If the promise was constructed from a “thenable” and `then` nor
+ * any other method has been dispatched on the promise has been called, the
+ * state will be `"pending"`. The state object will not be updated if the
+ * state changes and changing it will have no effect on the promise. Every
+ * call to `inspect` produces a unique object.
+ * @returns {{state: string, value?, reason?}}
  */
 Promise.prototype.inspect = function () {
     // the second layer captures only the relevant "state" properties of the
@@ -616,37 +664,47 @@ Promise.prototype.inspect = function () {
 };
 
 /**
- * TODO
+ * @returns {boolean} whether the promise is waiting for a result.
  */
 Promise.prototype.isPending = function isPending() {
     return inspect(this).state === "pending";
 };
 
 /**
- * TODO
+ * @returns {boolean} whether the promise has ended in a result and has a
+ * fulfillment value.
  */
 Promise.prototype.isFulfilled = function isFulfilled() {
     return inspect(this).state === "fulfilled";
 };
 
 /**
- * TODO
+ * @returns {boolean} whether the promise has ended poorly and has a reason for
+ * its rejection.
  */
 Promise.prototype.isRejected = function isRejected() {
     return inspect(this).state === "rejected";
 };
 
 /**
- * TODO
+ * @returns {string} merely `"[object Promise]"`
  */
 Promise.prototype.toString = function () {
     return "[object Promise]";
 };
 
 /**
- * TODO
+ * Creates a new promise, waits for this promise to be resolved, and informs
+ * either the fullfilled or rejected handler of the result. Whatever result
+ * comes of the fulfilled or rejected handler, a value returned, a promise
+ * returned, or an error thrown, becomes the resolution for the promise
+ * returned by `then`.
+ *
+ * @param fulfilled
+ * @param rejected
+ * @returns {Promise} for the result of `fulfilled` or `rejected`.
  */
-Promise.prototype.then = function then(fulfilled, rejected, progressed) {
+Promise.prototype.then = function then(fulfilled, rejected) {
     var self = this;
     var deferred = defer();
     var done = false;   // ensure the untrusted promise makes at most a
@@ -672,10 +730,6 @@ Promise.prototype.then = function then(fulfilled, rejected, progressed) {
         return reject(exception);
     }
 
-    function _progressed(value) {
-        return typeof progressed === "function" ? progressed(value) : value;
-    }
-
     asap(function () {
         inspect(self).dispatch(function (value) {
             if (done) {
@@ -693,26 +747,6 @@ Promise.prototype.then = function then(fulfilled, rejected, progressed) {
             deferred.resolve(_rejected(exception));
         }]);
     });
-
-    // Progress propagator need to be attached in the current tick.
-    inspect(this).dispatch(void 0, "then", [void 0, function (value) {
-        var newValue;
-        var threw = false;
-        try {
-            newValue = _progressed(value);
-        } catch (e) {
-            threw = true;
-            if (Q.onerror) {
-                Q.onerror(e);
-            } else {
-                throw e;
-            }
-        }
-
-        if (!threw) {
-            deferred.notify(newValue);
-        }
-    }]);
 
     return deferred.promise;
 };
@@ -759,13 +793,6 @@ Promise.prototype["catch"] = function (rejected) {
 /**
  * TODO
  */
-Promise.prototype.progress = function (progressed) {
-    return this.then(void 0, void 0, progressed);
-};
-
-/**
- * TODO
- */
 Promise.prototype["finally"] = function (callback) {
     callback = Q(callback);
     return this.then(function (value) {
@@ -783,11 +810,10 @@ Promise.prototype["finally"] = function (callback) {
 /**
  * Terminates a chain of promises, forcing rejections to be
  * thrown as exceptions.
- * @param onfulfilled
- * @param onrejected
- * @param onprogress
+ * @param fulfilled
+ * @param rejected
  */
-Promise.prototype.done = function done(fulfilled, rejected, progress) {
+Promise.prototype.done = function done(fulfilled, rejected) {
     var onUnhandledError = function (error) {
         // forward to a future turn so that ``when``
         // does not catch it and turn it into a rejection.
@@ -802,8 +828,8 @@ Promise.prototype.done = function done(fulfilled, rejected, progress) {
     };
 
     // Avoid unnecessary `asap` calls due to an unnecessary `then`.
-    var promise = fulfilled || rejected || progress ?
-        this.then(fulfilled, rejected, progress) :
+    var promise = fulfilled || rejected ?
+        this.then(fulfilled, rejected) :
         this;
 
     // Bind the error handler to the current Node.js domain
@@ -871,10 +897,10 @@ Promise.prototype.keys = function () {
 /**
  * TODO
  */
-Promise.prototype.spread = function (fulfilled, rejected, progressed) {
+Promise.prototype.spread = function (fulfilled, rejected) {
     return this.all().then(function (array) {
         return fulfilled.apply(void 0, array);
-    }, rejected, progressed);
+    }, rejected);
 };
 
 /**
@@ -897,7 +923,7 @@ Promise.prototype.timeout = function (ms, message) {
     }, function (exception) {
         clearTimeout(timeoutId);
         deferred.reject(exception);
-    }, deferred.notify);
+    });
 
     return deferred.promise;
 };
@@ -955,7 +981,6 @@ function Deferred(promise) {
     promises.set(this, promise);
     this.resolve = this.resolve.bind(this);
     this.reject = this.reject.bind(this);
-    this.notify = this.notify.bind(this);
 }
 
 /**
@@ -979,18 +1004,6 @@ Deferred.prototype.reject = function (reason) {
     }
     handler.become(reject(reason));
 };
-
-/**
- * TODO
- */
-Deferred.prototype.notify = function (progress) {
-    var handler = inspect(promises.get(this));
-    if (!handler.messages) {
-        return;
-    }
-    handler.notify(progress);
-};
-
 
 // Thus ends the public interface
 
@@ -1088,7 +1101,6 @@ function DeferredHandler() {
     // promise using the `resolve` function because it handles both fully
     // non-thenable values and other thenables gracefully.
     this.messages = [];
-    this.progressListeners = [];
 }
 
 DeferredHandler.prototype.state = "pending";
@@ -1099,9 +1111,6 @@ DeferredHandler.prototype.inspect = function () {
 
 DeferredHandler.prototype.dispatch = function (resolve, op, operands) {
     this.messages.push([resolve, op, operands]);
-    if (op === "then" && operands[1]) { // progress operand
-        this.progressListeners.push(operands[1]);
-    }
 };
 
 DeferredHandler.prototype.become = function (promise) {
@@ -1113,8 +1122,8 @@ DeferredHandler.prototype.become = function (promise) {
     this.promise = void 0;
 
     this.messages.forEach(function (message) {
-        // TODO figure out whether this asap is necessary.  makeQ does not
-        // have it.
+        // makeQ does not have this asap call, so it must be queueing events
+        // downstream. TODO look at makeQ to ascertain
         asap(function () {
             var handler = inspect(promise);
             handler.dispatch.apply(handler, message);
@@ -1122,22 +1131,20 @@ DeferredHandler.prototype.become = function (promise) {
     });
 
     this.messages = void 0;
-    this.progressListeners = void 0;
+    this.observers = void 0;
 };
-
-DeferredHandler.prototype.notify = function (progress) {
-    this.progressListeners.forEach(function (progressListener) {
-        asap(function () {
-            progressListener(progress);
-        });
-    });
-};
-
 
 function ThenableHandler(thenable) {
     this.thenable = thenable;
     this.became = null;
+    this.estimate = Infinity;
 }
+
+ThenableHandler.prototype.state = "thenable";
+
+ThenableHandler.prototype.inspect = function () {
+    return {state: "pending"};
+};
 
 ThenableHandler.prototype.cast = function () {
     if (!this.became) {
@@ -1145,11 +1152,7 @@ ThenableHandler.prototype.cast = function () {
         var thenable = this.thenable;
         asap(function () {
             try {
-                thenable.then(
-                    deferred.resolve,
-                    deferred.reject,
-                    deferred.notify
-                );
+                thenable.then(deferred.resolve, deferred.reject);
             } catch (exception) {
                 deferred.reject(exception);
             }
@@ -1278,8 +1281,8 @@ Q.fulfill = deprecate(Q, "fulfill", "Q");
 
 Q.isPromiseAlike = deprecate(isThenable, "isPromiseAlike", "isThenable");
 
-Q.when = deprecate(function (value, fulfilled, rejected, progressed) {
-    return Q(value).then(fulfilled, rejected, progressed);
+Q.when = deprecate(function (value, fulfilled, rejected) {
+    return Q(value).then(fulfilled, rejected);
 }, "when", "Q(value).then");
 
 Q.fail = deprecate(function (value, rejected) {
@@ -1290,9 +1293,9 @@ Q.fin = deprecate(function (value, regardless) {
     return Q(value)["finally"](regardless);
 }, "Q.fin", "Q(value).finally");
 
-Q.progress = deprecate(function (value, rejected) {
-    return Q(value).progress(rejected);
-}, "Q.progress", "Q(value).progress");
+Q.progress = deprecate(function (value) {
+    return value;
+}, "Q.progress", "no longer supported");
 
 Q.thenResolve = deprecate(function (promise, value) {
     return Q(promise).thenResolve(value);
@@ -1377,6 +1380,13 @@ Promise.prototype.set = function () {
 Promise.prototype["delete"] = function () {
     throw new Error("Promise delete no longer supported");
 };
+
+Deferred.prototype.notify = deprecate(function () {
+}, "notify", "no longer supported");
+
+Promise.prototype.progress = deprecate(function (progressed) {
+    return this;
+}, "progress", "no longer supported");
 
 // alternative proposed by Redsandro, dropped in favor of post to streamline
 // the interface

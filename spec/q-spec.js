@@ -984,7 +984,7 @@ describe("propagation", function () {
     });
 
 
-    it("should stop progress propagation if an error is thrown", function () {
+    xit("should stop progress propagation if an error is thrown", function () {
         var def = Q.defer();
         var p2 = def.promise.progress(function () {
             throw new Error("boo!");
@@ -1071,7 +1071,7 @@ describe("all", function () {
         });
     });
 
-    it("sends { index, value } progress updates", function () {
+    xit("sends { index, value } progress updates", function () {
         var deferred1 = Q.defer();
         var deferred2 = Q.defer();
 
@@ -1496,7 +1496,7 @@ describe("done", function () {
         });
     });
 
-    it("should attach a progress listener", function () {
+    xit("should attach a progress listener", function () {
         var deferred = Q.defer();
 
         var spy = jasmine.createSpy();
@@ -1541,7 +1541,7 @@ describe("timeout", function () {
         );
     });
 
-    it("should pass through progress notifications", function () {
+    xit("should pass through progress notifications", function () {
         var deferred = Q.defer();
 
         var progressValsSeen = [];
@@ -1631,7 +1631,7 @@ describe("delay", function () {
     });
 
 
-    it("should pass through progress notifications from passed promises", function () {
+    xit("should pass through progress notifications from passed promises", function () {
         var deferred = Q.defer();
 
         var progressValsSeen = [];
@@ -1751,7 +1751,7 @@ describe("thenables", function () {
         });
     });
 
-    it("assimilates a thenable with progress and fulfillment (using resolve)", function () {
+    xit("assimilates a thenable with progress and fulfillment (using resolve)", function () {
         var progressValueArrays = [];
         return Q({
             then: function (fulfilled, rejected, progressed) {
@@ -1770,7 +1770,7 @@ describe("thenables", function () {
         });
     });
 
-    it("assimilates a thenable with progress and fulfillment (using when)", function () {
+    xit("assimilates a thenable with progress and fulfillment (using when)", function () {
         var progressValueArrays = [];
         return Q({
             then: function (fulfilled, rejected, progressed) {
