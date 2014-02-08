@@ -137,7 +137,7 @@ var readJsonWithNodebacks = function (path, nodeback) {
             return nodeback(error);
         }
         try {
-            result = JSON.parse(result);
+            result = JSON.parse(content);
         } catch (error) {
             return nodeback(error);
         }
