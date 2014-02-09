@@ -2,23 +2,20 @@
 var Q = require("../q");
 var Queue = require("../queue");
 
-global.Q = Q;
-require("./lib/jasmine-promise");
-
 describe("queue", function () {
 
     it("should enqueue then dequeue", function () {
         var queue = Queue();
         queue.put(1);
         return queue.get().then(function (value) {
-            expect(value).toBe(1);
+            expect(value).is(1);
         });
     });
 
     it("should dequeue then enqueue", function () {
         var queue = Queue();
         var promise = queue.get().then(function (value) {
-            expect(value).toBe(1);
+            expect(value).is(1);
         });
         queue.put(1);
         return promise;
@@ -47,19 +44,19 @@ describe("queue", function () {
         return Q.try(function () {
             return queue.get()
             .then(function (value) {
-                expect(value).toBe(1);
+                expect(value).is(1);
             });
         })
         .then(function () {
             return queue.get()
             .then(function (value) {
-                expect(value).toBe(2);
+                expect(value).is(2);
             });
         })
         .then(function () {
             return queue.get()
             .then(function (value) {
-                expect(value).toBe(3);
+                expect(value).is(3);
             });
         })
 
@@ -88,15 +85,15 @@ describe("queue", function () {
         return Q.all([
             queue.get()
             .then(function (value) {
-                expect(value).toBe(1);
+                expect(value).is(1);
             }),
             queue.get()
             .then(function (value) {
-                expect(value).toBe(2);
+                expect(value).is(2);
             }),
             queue.get()
             .then(function (value) {
-                expect(value).toBe(3);
+                expect(value).is(3);
             })
         ]);
     });

@@ -46,7 +46,6 @@
   },
   "devDependencies": {
     "jshint": "~2.3.0",
-    "cover": "*",
     "jasmine-node": "1.11.0",
     "opener": "*",
     "promises-aplus-tests": "1.x",
@@ -58,14 +57,17 @@
     "grunt-global-wrap": "~1.1.0",
     "grunt-amd-wrap": "~1.0.0",
     "grunt-s3": "~0.2.0-alpha.2",
-    "mr": "~0.13.3"
+    "mr": "~0.13.3",
+    "collections": "~0.2.2",
+    "colors": "~0.6.2",
+    "istanbul": "~0.2.4"
   },
   "scripts": {
-    "test": "jasmine-node spec && promises-aplus-tests spec/aplus-adapter",
-    "release": "grunt release",
-    "benchmark": "matcha",
     "lint": "jshint q.js",
-    "cover": "cover run node_modules/jasmine-node/bin/jasmine-node spec && cover report html && opener cover_html/index.html"
+    "test": "npm run lint && node test/node-runner.js && promises-aplus-tests test/aplus-adapter",
+    "cover": "istanbul cover test/index.js && istanbul report html && opener coverage/index.html",
+    "release": "grunt release",
+    "benchmark": "matcha"
   },
   "overlay": {
     "teleport": {
