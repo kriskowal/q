@@ -133,3 +133,19 @@ function nodeify(object, nodeback) {
     return Q(object).nodeify(nodeback);
 }
 
+/**
+ * Takes a promise-returning function and returns a function that takes a
+ * Node-style callback. This is useful if the user wants to nodeify a
+ * promise-returning function but does not know the value of the nodeback.
+ * @param thisArg The value of this provided for the call to fn
+ * @param fn The promise-returning function to be converted
+ * @returns The return value of fn
+ */
+NQ.nodeified = nodeified;
+function nodeified(thisArg, fn) {
+    return function () {
+        var args = Array.prototype.slice.call(arguments, 0, -1);
+        var nodeback = arguments[arguments.length - 1];
+        return fn.apply(thisArg, args).nodeify(nodeback);
+    };
+}
