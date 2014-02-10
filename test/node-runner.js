@@ -15,6 +15,9 @@ var report = new Reporter();
 suite.run(report)
 .then(function () {
     report.summarize(suite);
+    if (report.failed) {
+        process.exit(-1);
+    }
 })
 .done();
 
