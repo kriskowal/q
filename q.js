@@ -1062,8 +1062,6 @@ FulfilledHandler.prototype.keys = function () {
 
 function RejectedHandler(reason) {
     this.reason = reason;
-    // Note that the reason has not been handled.
-    trackRejection(this, reason);
 }
 
 RejectedHandler.prototype.state = "rejected";
@@ -1085,9 +1083,6 @@ RejectedHandler.prototype.dispatch = function (resolve, op, operands) {
 };
 
 RejectedHandler.prototype.then = function (resolve, rejected) {
-    if (rejected) {
-        untrackRejection(this);
-    }
     return rejected ? rejected(this.reason) : this;
 };
 
@@ -1165,106 +1160,6 @@ ThenableHandler.prototype.dispatch = function (resolve, op, args) {
     this.cast().dispatch(resolve, op, args);
 };
 
-
-//// BEGIN UNHANDLED REJECTION TRACKING
-
-// This promise library consumes exceptions thrown in handlers so they can be
-// handled by a subsequent promise.  The exceptions get added to this array when
-// they are created, and removed when they are handled.  Note that in ES6 or
-// shimmed environments, this would naturally be a `Set`.
-var unhandledReasons = [];
-var unhandledRejections = [];
-var unhandledReasonsDisplayed = false;
-var trackUnhandledRejections = true;
-function displayUnhandledReasons() {
-    if (
-        !unhandledReasonsDisplayed &&
-        typeof window !== "undefined" &&
-        typeof console !== "undefined" &&
-        typeof console.warn === "function"
-    ) {
-        console.warn(
-            "[Q] Unhandled rejection reasons (should be empty):",
-            unhandledReasons
-        );
-    }
-
-    unhandledReasonsDisplayed = true;
-}
-
-function logUnhandledReasons() {
-    for (var i = 0; i < unhandledReasons.length; i++) {
-        var reason = unhandledReasons[i];
-        if (
-            typeof console !== "undefined" &&
-            typeof console.warn === "function"
-        ) {
-            console.warn("Unhandled rejection reason:", reason);
-        }
-    }
-}
-
-function resetUnhandledRejections() {
-    unhandledReasons.length = 0;
-    unhandledRejections.length = 0;
-    unhandledReasonsDisplayed = false;
-
-    if (!trackUnhandledRejections) {
-        trackUnhandledRejections = true;
-
-        // Show unhandled rejection reasons if Node exits without handling an
-        // outstanding rejection.  (Note that Browserify presently produces a
-        // `process` global without the `EventEmitter` `on` method.)
-        if (typeof process !== "undefined" && process.on) {
-            process.on("exit", logUnhandledReasons);
-        }
-    }
-}
-
-function trackRejection(promise, reason) {
-    if (!trackUnhandledRejections) {
-        return;
-    }
-
-    unhandledRejections.push(promise);
-    if (reason && typeof reason.stack !== "undefined") {
-        unhandledReasons.push(reason.stack);
-    } else {
-        unhandledReasons.push("(no stack) " + reason);
-    }
-    displayUnhandledReasons();
-}
-
-function untrackRejection(promise) {
-    if (!trackUnhandledRejections) {
-        return;
-    }
-
-    var at = unhandledRejections.indexOf(promise);
-    if (at !== -1) {
-        unhandledRejections.splice(at, 1);
-        unhandledReasons.splice(at, 1);
-    }
-}
-
-Q.resetUnhandledRejections = resetUnhandledRejections;
-
-Q.getUnhandledReasons = function () {
-    // Make a copy so that consumers can't interfere with our internal state.
-    return unhandledReasons.slice();
-};
-
-Q.stopUnhandledRejectionTracking = function () {
-    resetUnhandledRejections();
-    if (typeof process !== "undefined" && process.on) {
-        process.removeListener("exit", logUnhandledReasons);
-    }
-    trackUnhandledRejections = false;
-};
-
-resetUnhandledRejections();
-
-//// END UNHANDLED REJECTION TRACKING
 
 // All code before this point will be filtered from stack traces.
 var qEndingLine = captureLine();
