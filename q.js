@@ -479,15 +479,15 @@ Q.passByCopy = function (object) {
 
 /**
  * The async function is a decorator for generator functions, turning
- * them into asynchronous generators.  Although generators are only part
- * of the newest ECMAScript 6 drafts, this code does not cause syntax
- * errors in older engines.  This code should continue to work and will
- * in fact improve over time as the language improves.
+ * them into asynchronous generators. Although generators are only
+ * part of the newest ECMAScript 6 drafts, this code does not cause
+ * syntax errors in older engines. This code should continue to work
+ * and will in fact improve over time as the language improves.
  *
  * ES6 generators are currently part of V8 version 3.19 with the
- * --harmony-generators runtime flag enabled.  SpiderMonkey has had them
- * for longer, but under an older Python-inspired form.  This function
- * works on both kinds of generators.
+ * `--harmony-generators` runtime flag enabled. This function does not
+ * support the former, Pythonic generators that were only implemented
+ * by SpiderMonkey.
  *
  * Decorates a generator function such that:
  *  - it may yield promises
