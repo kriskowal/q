@@ -298,6 +298,9 @@ function all(questions) {
     var countDown = 0;
     var deferred = defer();
     var answers = Array(questions.length);
+    var estimates = [];
+    var estimate = -Infinity;
+    var setEstimate;
     Array.prototype.forEach.call(questions, function (promise, index) {
         var handler;
         if (
@@ -307,7 +310,8 @@ function all(questions) {
             answers[index] = handler.value;
         } else {
             ++countDown;
-            Q(promise).then(
+            promise = Q(promise);
+            promise.then(
                 function (value) {
                     answers[index] = value;
                     if (--countDown === 0) {
@@ -316,11 +320,39 @@ function all(questions) {
                 },
                 deferred.reject
             );
+
+            promise.observeEstimate(function (newEstimate) {
+                var oldEstimate = estimates[index];
+                estimates[index] = newEstimate;
+                if (newEstimate > estimate) {
+                    estimate = newEstimate;
+                } else if (oldEstimate === estimate && newEstimate <= estimate) {
+                    // There is a 1/length chance that we will need to perform
+                    // this O(length) walk, so amortized O(1)
+                    computeEstimate();
+                }
+                if (estimates.length === questions.length && estimate !== setEstimate) {
+                    deferred.setEstimate(estimate);
+                    setEstimate = estimate;
+                }
+            });
+
         }
     });
+
+    function computeEstimate() {
+        estimate = -Infinity;
+        for (var index = 0; index < estimates.length; index++) {
+            if (estimates[index] > estimate) {
+                estimate = estimates[index];
+            }
+        }
+    }
+
     if (countDown === 0) {
         deferred.resolve(answers);
     }
+
     return deferred.promise;
 }
 
@@ -703,7 +735,7 @@ Promise.prototype.toString = function () {
  * @param rejected
  * @returns {Promise} for the result of `fulfilled` or `rejected`.
  */
-Promise.prototype.then = function then(fulfilled, rejected) {
+Promise.prototype.then = function then(fulfilled, rejected, ms) {
     var self = this;
     var deferred = defer();
     var done = false;   // ensure the untrusted promise makes at most a
@@ -747,6 +779,12 @@ Promise.prototype.then = function then(fulfilled, rejected) {
         }]);
     });
 
+    function updateEstimate() {
+        deferred.setEstimate(self.getEstimate() + ms);
+    }
+    this.observeEstimate(updateEstimate);
+    updateEstimate();
+
     return deferred.promise;
 };
 
@@ -754,14 +792,18 @@ Promise.prototype.then = function then(fulfilled, rejected) {
  * TODO
  */
 Promise.prototype.thenResolve = function thenResolve(value) {
-    return this.then(function () { return value; });
+    value = Q(value);
+    // Using all is necessary to aggregate the estimated time to completion.
+    return all([this, value]).then(function () {
+        return value;
+    }, null, 0);
 };
 
 /**
  * TODO
  */
 Promise.prototype.thenReject = function thenReject(reason) {
-    return this.then(function () { throw reason; });
+    return this.then(function () { throw reason; }, null, 0);
 };
 
 /**
@@ -792,7 +834,7 @@ Promise.prototype["catch"] = function (rejected) {
 /**
  * TODO
  */
-Promise.prototype["finally"] = function (callback) {
+Promise.prototype["finally"] = function (callback, ms) {
     callback = Q(callback);
     return this.then(function (value) {
         return callback.fcall().then(function () {
@@ -803,7 +845,7 @@ Promise.prototype["finally"] = function (callback) {
         return callback.fcall().then(function () {
             throw reason;
         });
-    });
+    }, ms);
 };
 
 /**
@@ -837,6 +879,15 @@ Promise.prototype.done = function done(fulfilled, rejected) {
     }
 
     promise.then(void 0, onUnhandledError);
+};
+
+Promise.prototype.observeEstimate = function (emit) {
+    this.dispatch("estimate", [emit]);
+    return this;
+};
+
+Promise.prototype.getEstimate = function () {
+    return inspect(this).estimate;
 };
 
 /**
@@ -896,10 +947,10 @@ Promise.prototype.keys = function () {
 /**
  * TODO
  */
-Promise.prototype.spread = function (fulfilled, rejected) {
+Promise.prototype.spread = function (fulfilled, rejected, ms) {
     return this.all().then(function (array) {
         return fulfilled.apply(void 0, array);
-    }, rejected);
+    }, rejected, ms);
 };
 
 /**
@@ -940,11 +991,12 @@ Promise.prototype.timeout = function (ms, message) {
 Promise.prototype.delay = function (ms) {
     return this.then(function (value) {
         var deferred = defer();
+        deferred.setEstimate(Date.now() + ms);
         setTimeout(function () {
             deferred.resolve(value);
         }, ms);
         return deferred.promise;
-    });
+    }, null, ms);
 };
 
 /**
@@ -1004,12 +1056,33 @@ Deferred.prototype.reject = function (reason) {
     handler.become(reject(reason));
 };
 
+/**
+ * TODO
+ */
+Deferred.prototype.setEstimate = function (estimate) {
+    estimate = +estimate;
+    if (estimate !== estimate) {
+        estimate = Infinity;
+    }
+    if (estimate < 1e12 && estimate !== -Infinity) {
+        throw new Error("Estimate values should be a number of miliseconds in the future");
+    }
+    var handler = inspect(promises.get(this));
+    // TODO There is a bit of capability leakage going on here. The Deferred
+    // should only be able to set the estimate for its original
+    // DeferredHandler, not for any handler that promise subsequently became.
+    if (handler.setEstimate) {
+        handler.setEstimate(estimate);
+    }
+};
+
 // Thus ends the public interface
 
 // Thus begins the portion dedicated to handlers
 
 function FulfilledHandler(value) {
     this.value = value;
+    this.estimate = Date.now();
 }
 
 FulfilledHandler.prototype.state = "fulfilled";
@@ -1026,6 +1099,8 @@ FulfilledHandler.prototype.dispatch = function (resolve, op, operands) {
         } catch (exception) {
             result = reject(exception);
         }
+    } else if (op === "estimate") {
+        operands[0].call(void 0, this.estimate);
     } else {
         var error = new Error(
             "Fulfilled promises do not support the " + op + " operator"
@@ -1062,6 +1137,7 @@ FulfilledHandler.prototype.keys = function () {
 
 function RejectedHandler(reason) {
     this.reason = reason;
+    this.estimate = Infinity;
     // Note that the reason has not been handled.
     trackRejection(this, reason);
 }
@@ -1100,6 +1176,8 @@ function DeferredHandler() {
     // promise using the `resolve` function because it handles both fully
     // non-thenable values and other thenables gracefully.
     this.messages = [];
+    this.observers = [];
+    this.estimate = Infinity;
 }
 
 DeferredHandler.prototype.state = "pending";
@@ -1110,6 +1188,13 @@ DeferredHandler.prototype.inspect = function () {
 
 DeferredHandler.prototype.dispatch = function (resolve, op, operands) {
     this.messages.push([resolve, op, operands]);
+    if (op === "estimate") {
+        this.observers.push(operands[0]);
+        var self = this;
+        asap(function () {
+            operands[0].call(void 0, self.estimate);
+        });
+    }
 };
 
 DeferredHandler.prototype.become = function (promise) {
@@ -1131,6 +1216,18 @@ DeferredHandler.prototype.become = function (promise) {
 
     this.messages = void 0;
     this.observers = void 0;
+};
+
+DeferredHandler.prototype.setEstimate = function (estimate) {
+    if (this.observers) {
+        var self = this;
+        self.estimate = estimate;
+        this.observers.forEach(function (observer) {
+            asap(function () {
+                observer.call(void 0, estimate);
+            });
+        });
+    }
 };
 
 function ThenableHandler(thenable) {
