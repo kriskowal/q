@@ -3,16 +3,13 @@ npm-debug.log
 CHANGES.html
 README.html
 
-.coverage_data/
-.coverage_debug/
+coverage
 .tmp
-cover_html/
 
 design
 examples
 release
 spec
-.coverignore
 .jshintrc
 .mailmap
 .npmignore
