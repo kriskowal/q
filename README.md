@@ -287,7 +287,7 @@ If you have a promise for an array, you can use ``spread`` as a
 replacement for ``then``.  The ``spread`` function “spreads” the
 values over the arguments of the fulfillment handler.  The rejection handler
 will get called at the first sign of failure.  That is, whichever of
-the recived promises fails first gets handled by the rejection handler.
+the received promises fails first gets handled by the rejection handler.
 
 ```javascript
 function eventualAdd(a, b) {
@@ -359,7 +359,7 @@ return funcs.reduce(function (soFar, f) {
 }, Q(initialVal));
 ```
 
-Or, you could use th ultra-compact version:
+Or, you could use the ultra-compact version:
 
 ```javascript
 return funcs.reduce(Q.when, Q());
@@ -367,7 +367,7 @@ return funcs.reduce(Q.when, Q());
 
 ### Handling Errors
 
-One sometimes-unintuive aspect of promises is that if you throw an
+One sometimes-unintuitive aspect of promises is that if you throw an
 exception in the fulfillment handler, it will not be be caught by the error
 handler.
 
@@ -791,7 +791,7 @@ From previous event:
     at Object.<anonymous> (/path/to/test.js:7:1)
 ```
 
-Note how you can see the the function that triggered the async operation in the
+Note how you can see the function that triggered the async operation in the
 stack trace! This is very helpful for debugging, as otherwise you end up getting
 only the first line, plus a bunch of Q internals, with no sign of where the
 operation started.
