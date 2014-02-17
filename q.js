@@ -324,22 +324,6 @@ if (typeof ReturnValue !== "undefined") {
     };
 }
 
-// Until V8 3.19 / Chromium 29 is released, SpiderMonkey is the only
-// engine that has a deployed base of browsers that support generators.
-// However, SM's generators use the Python-inspired semantics of
-// outdated ES6 drafts.  We would like to support ES6, but we'd also
-// like to make it possible to use generators in deployed browsers, so
-// we also support Python-style generators.  At some point we can remove
-// this block.
-var hasES6Generators;
-try {
-    /* jshint evil: true, nonew: false */
-    new Function("(function* (){ yield 1; })");
-    hasES6Generators = true;
-} catch (e) {
-    hasES6Generators = false;
-}
-
 // long stack traces
 
 var STACK_JUMP_SEPARATOR = "From previous event:";
@@ -1218,7 +1202,17 @@ function async(makeGenerator) {
         // when verb is "throw", arg is an exception
         function continuer(verb, arg) {
             var result;
-            if (hasES6Generators) {
+
+            // Until V8 3.19 / Chromium 29 is released, SpiderMonkey is the only
+            // engine that has a deployed base of browsers that support generators.
+            // However, SM's generators use the Python-inspired semantics of
+            // outdated ES6 drafts.  We would like to support ES6, but we'd also
+            // like to make it possible to use generators in deployed browsers, so
+            // we also support Python-style generators.  At some point we can remove
+            // this block.
+
+            if (typeof StopIteration === "undefined") {
+                // ES6 Generators
                 try {
                     result = generator[verb](arg);
                 } catch (exception) {
@@ -1230,6 +1224,7 @@ function async(makeGenerator) {
                     return when(result.value, callback, errback);
                 }
             } else {
+                // SpiderMonkey Generators
                 // FIXME: Remove this case when SM does ES6 generators.
                 try {
                     result = generator[verb](arg);
