@@ -312,7 +312,7 @@ function all(questions) {
         var handler;
         if (
             isPromise(promise) &&
-            (handler = inspect(promise).isFulfilled
+            (handler = inspect(promise)).state === "fulfilled"
         ) {
             answers[index] = handler.value;
         } else {
@@ -1093,7 +1093,6 @@ function FulfilledHandler(value) {
 }
 
 FulfilledHandler.prototype.state = "fulfilled";
-FulfilledHandler.prototype.isFulfilled = true;
 
 FulfilledHandler.prototype.inspect = function () {
     return {state: "fulfilled", value: this.value};
@@ -1149,7 +1148,6 @@ function RejectedHandler(reason) {
 }
 
 RejectedHandler.prototype.state = "rejected";
-RejectedHandler.prototype.isRejected = true;
 
 RejectedHandler.prototype.inspect = function () {
     return {state: "rejected", reason: this.reason};
@@ -1185,7 +1183,6 @@ function DeferredHandler() {
 }
 
 DeferredHandler.prototype.state = "pending";
-DeferredHandler.prototype.isPending = true;
 
 DeferredHandler.prototype.inspect = function () {
     return {state: "pending"};
