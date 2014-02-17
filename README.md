@@ -5,12 +5,14 @@
          align="right" alt="Promises/A+ logo" />
 </a>
 
-:warning: *Q in `master` is not ready for release.  Please see the
-[v1][] branch to download versions of `q.js` or `q.min.js` that work
-stand-alone in a browser.  The version of `q.js` that is checked into
-the `master` branch is a CommonJS module and has dependencies in NPM.
-Stand-alone builds for the next major version of Q are available for
-[download][] on Amazon’s S3*.
+*:warning: This is Q version 2 and is experimental at this time. If you install
+the latest Q from `npm`, you will get the latest from the [version 1][v1]
+release train. You will get the lastet of version 2 if you use `npm install
+q@~2`.*
+
+*Among the significant differences in version 2, the source is CommonJS only and
+versions suitable for use with AMD and plain `<script>` tags are built and
+published for [download][] with each release.*
 
 [v1]: https://github.com/kriskowal/q/tree/v1
 [download]: http://q-releases.s3-website-us-west-1.amazonaws.com/
