@@ -274,6 +274,13 @@ function defer() {
     return deferred;
 }
 
+// TODO
+/**
+ */
+Q.when = function (value, fulfilled, rejected, ms) {
+    return Q(value).then(fulfilled, rejected, ms);
+};
+
 /**
  * Turns an array of promises into a promise for an array.  If any of the
  * promises gets rejected, the whole array is rejected immediately.
@@ -305,7 +312,7 @@ function all(questions) {
         var handler;
         if (
             isPromise(promise) &&
-            (handler = promise.inspect()).state === "fulfilled"
+            (handler = inspect(promise).isFulfilled
         ) {
             answers[index] = handler.value;
         } else {
@@ -612,7 +619,7 @@ function Promise(handler) {
         var deferred = defer();
         handler = inspect(deferred.promise);
         try {
-            setup(deferred);
+            setup(deferred.resolve, deferred.reject, deferred.setEstimate);
         } catch (error) {
             deferred.reject(error);
         }
@@ -1086,6 +1093,7 @@ function FulfilledHandler(value) {
 }
 
 FulfilledHandler.prototype.state = "fulfilled";
+FulfilledHandler.prototype.isFulfilled = true;
 
 FulfilledHandler.prototype.inspect = function () {
     return {state: "fulfilled", value: this.value};
@@ -1141,6 +1149,7 @@ function RejectedHandler(reason) {
 }
 
 RejectedHandler.prototype.state = "rejected";
+RejectedHandler.prototype.isRejected = true;
 
 RejectedHandler.prototype.inspect = function () {
     return {state: "rejected", reason: this.reason};
@@ -1176,6 +1185,7 @@ function DeferredHandler() {
 }
 
 DeferredHandler.prototype.state = "pending";
+DeferredHandler.prototype.isPending = true;
 
 DeferredHandler.prototype.inspect = function () {
     return {state: "pending"};
@@ -1257,10 +1267,38 @@ ThenableHandler.prototype.dispatch = function (resolve, op, args) {
     this.cast().dispatch(resolve, op, args);
 };
 
+// Node.js bridge
 
-// All code before this point will be filtered from stack traces.
-var qEndingLine = captureLine();
+var NQ = require("./node");
+(function () {
+    for (var name in NQ) {
+        Q[name] = NQ[name];
+    }
+})();
 
+Deferred.prototype.makeNodeResolver = function () {
+    return NQ.makeNodeResolver(this.resolve);
+};
+
+Promise.prototype.nfapply = function (args) {
+    return NQ.nfapply(this, args);
+};
+
+Promise.prototype.nfcall = function () {
+    return NQ.nfapply(this, Array.prototype.slice.call(arguments));
+};
+
+Promise.prototype.nfbind = function () {
+    return NQ.nfbind(this, Array.prototype.slice.call(arguments));
+};
+
+Promise.prototype.npost = function (name, args) {
+    return NQ.npost(this, name, args);
+};
+
+Promise.prototype.ninvoke = function (name) {
+    return NQ.npost(this, name, Array.prototype.slice.call(arguments, 1));
+};
 
 // DEPRECATED
 
@@ -1271,10 +1309,6 @@ Q.resolve = deprecate(Q, "resolve", "Q");
 Q.fulfill = deprecate(Q, "fulfill", "Q");
 
 Q.isPromiseAlike = deprecate(isThenable, "isPromiseAlike", "isThenable");
-
-Q.when = deprecate(function (value, fulfilled, rejected) {
-    return Q(value).then(fulfilled, rejected);
-}, "when", "Q(value).then");
 
 Q.fail = deprecate(function (value, rejected) {
     return Q(value)["catch"](rejected);
@@ -1405,48 +1439,18 @@ Promise.prototype.passByCopy = deprecate(function (value) {
 
 Q.promise = deprecate(Promise, "promise", "Promise");
 
-// Deprecated Node.js shorthands
-
-var NQ = require("./node");
-(function () {
-    for (var name in NQ) {
-        Q[name] = NQ[name];
-    }
-})();
-
-Deferred.prototype.makeNodeResolver = deprecate(function () {
-    return NQ.makeNodeResolver(this.resolve);
-}, "makeNodeResolver", "q/node makeNodeResolver");
-
-Promise.prototype.nfapply = deprecate(function (args) {
-    return NQ.nfapply(this, args);
-}, "nfapply", "q/node nfapply");
-
-Promise.prototype.nfcall = deprecate(function () {
-    return NQ.nfapply(this, Array.prototype.slice.call(arguments));
-}, "nfcall", "q/node nfcall");
-
-Promise.prototype.nfbind = deprecate(function () {
-    return NQ.nfbind(this, Array.prototype.slice.call(arguments));
-}, "nfbind", "q/node nfbind");
+// Deprecated Node.js bridge aliases
 
 Q.nmapply = deprecate(NQ.nmapply, "nmapply", "q/node nmapply");
 
-var npost = function (name, args) {
-    return NQ.npost(this, name, args);
-};
-
-Promise.prototype.nmapply = deprecate(npost, "nmapply", "q/node nmapply");
-Promise.prototype.npost = deprecate(npost, "npost", "q/node npost");
+Promise.prototype.nmapply = deprecate(Promise.prototype.npost, "nmapply", "q/node nmapply");
 
 Q.nsend = deprecate(NQ.ninvoke, "nsend", "q/node ninvoke");
 Q.nmcall = deprecate(NQ.ninvoke, "nmcall", "q/node ninvoke");
 
-var ninvoke = function (name) {
-    return NQ.npost(this, name, Array.prototype.slice.call(arguments, 1));
-};
+Promise.prototype.nsend = deprecate(Promise.prototype.ninvoke, "nsend", "q/node ninvoke");
+Promise.prototype.nmcall = deprecate(Promise.prototype.ninvoke, "nmcall", "q/node ninvoke");
 
-Promise.prototype.nsend = deprecate(ninvoke, "nsend", "q/node ninvoke");
-Promise.prototype.nmcall = deprecate(ninvoke, "nmcall", "q/node ninvoke");
-Promise.prototype.ninvoke = deprecate(ninvoke, "ninvoke", "q/node ninvoke");
+// All code before this point will be filtered from stack traces.
+var qEndingLine = captureLine();
 

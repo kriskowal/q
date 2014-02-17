@@ -8,7 +8,7 @@
 *:warning: This is Q version 2 and is experimental at this time. If you install
 the latest Q from `npm`, you will get the latest from the [version 1][v1]
 release train. You will get the lastet of version 2 if you use `npm install
-q@~2`.*
+q@~2`. Consult [CHANGES.md][] for details on what has changed*
 
 *Among the significant differences in version 2, the source is CommonJS only and
 versions suitable for use with AMD and plain `<script>` tags are built and
@@ -16,6 +16,7 @@ published for [download][] with each release.*
 
 [v1]: https://github.com/kriskowal/q/tree/v1
 [download]: http://q-releases.s3-website-us-west-1.amazonaws.com/
+[CHANGES.md]: https://github.com/kriskowal/q/blob/v2/CHANGES.md
 
 If a function cannot return a value or throw an exception without
 blocking, it can return a promise instead.  A promise is an object
