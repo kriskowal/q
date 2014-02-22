@@ -40,8 +40,8 @@ deprecation warnings. Deprecated features will be removed outright in version 3.
    argument for support of "fbind". The "when" message is now called
    simply "then".  As such, this version of Q is not compatible with
    Q-Connection `v0.5`.
- - :warning: The old progress notification system has been removed. The methods
-   remain but have no effect. Try the new estimated time to completion feature.
+ - :warning: The old progress notification system has been removed.
+   Try the new estimated time to completion feature.
  - Promises now support vicious cycle detection.  If a deferred promise
    ultimately depends upon its own resolution, it will be rejected with
    the singleton vicious cycle error.
