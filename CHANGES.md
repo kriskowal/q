@@ -24,9 +24,25 @@ deprecation warnings. Deprecated features will be removed outright in version 3.
    https://github.com/kriskowal/asap and
    https://github.com/drses/weak-map.  If you are using Q as a
    `<script>`, this has been embedded in the release.  If you are using
-   Q in Node.js, the dependency is taken care of by NPM.
+   Q in Node.js, the dependency is taken care of by `npm`.
  - :warning: Withdrew support for SpiderMonkey style generators.  Only
    ES6 generators are supported.
+ - :warning: `fapply`, `fcall`, and `fbind` have been deprecated in
+   both the `Q` and `promise` forms. These methods have been replaced
+   by `apply`, `call`, and `bind` on the `Promise` prototype, making a
+   promise for a function partially “isomorphic” with the function
+   itself. The `Q.fbind` with no arguments case has been replaced by
+   `Q.method`, which is better suited for decorating methods and
+   functions to ensure that they return promises and capture errors.
+   The `Q.fcall` with no additional arguments case has been replaced
+   by `Q.try`.
+ - :warning: `Q.try` is no longer an alias for `fcall`. `Q.try` does
+   not accept additional arguments. To call a promise for a function
+   with arguments, use `Q(function).call(thisp, ...args)` or `apply`.
+ - :warning: `post` has been deprecated. As this is an uncommon case
+   with an inadequate name, if you need to spread arguments into
+   `invoke`, you can take the long road, either calling `invoke.apply`
+   or using `promise.dispatch("invoke", [name, args])` directly.
  - :warning: `Q.all` no longer reuses the input array for the output
    array.
  - :warning: `Q.all` and `Q.allSettled` no longer accept a promise.  Use

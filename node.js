@@ -32,7 +32,7 @@ NQ.nfapply = function (callback, args) {
     var deferred = Q.defer();
     var nodeArgs = Array.prototype.slice.call(args);
     nodeArgs.push(NQ.makeNodeResolver(deferred.resolve));
-    Q(callback).fapply(nodeArgs).catch(deferred.reject);
+    Q(callback).apply(this, nodeArgs).catch(deferred.reject);
     return deferred.promise;
 };
 
@@ -65,7 +65,7 @@ NQ.denodeify = function (callback /*...args*/) {
         var nodeArgs = baseArgs.concat(Array.prototype.slice.call(arguments));
         var deferred = Q.defer();
         nodeArgs.push(NQ.makeNodeResolver(deferred.resolve));
-        Q(callback).fapply(nodeArgs).catch(deferred.reject);
+        Q(callback).apply(this, nodeArgs).catch(deferred.reject);
         return deferred.promise;
     };
 };
@@ -79,7 +79,7 @@ NQ.nbind = function (callback, thisp /*...args*/) {
         function bound() {
             return callback.apply(thisp, arguments);
         }
-        Q(bound).fapply(nodeArgs).catch(deferred.reject);
+        Q(bound).apply(this, nodeArgs).catch(deferred.reject);
         return deferred.promise;
     };
 };
@@ -96,7 +96,7 @@ NQ.nbind = function (callback, thisp /*...args*/) {
 NQ.npost = function (object, name, nodeArgs) {
     var deferred = Q.defer();
     nodeArgs.push(NQ.makeNodeResolver(deferred.resolve));
-    Q(object).dispatch("post", [name, nodeArgs]).catch(deferred.reject);
+    Q(object).dispatch("invoke", [name, nodeArgs]).catch(deferred.reject);
     return deferred.promise;
 };
 
@@ -114,7 +114,7 @@ NQ.ninvoke = function (object, name /*...args*/) {
     var nodeArgs = Array.prototype.slice.call(arguments, 2);
     var deferred = Q.defer();
     nodeArgs.push(NQ.makeNodeResolver(deferred.resolve));
-    Q(object).dispatch("post", [name, nodeArgs]).catch(deferred.reject);
+    Q(object).dispatch("invoke", [name, nodeArgs]).catch(deferred.reject);
     return deferred.promise;
 };
 
