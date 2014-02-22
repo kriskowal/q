@@ -471,7 +471,7 @@ function race(answerPs) {
  * @param object    promise or immediate reference for target function
  * @param ...args   array of application arguments
  */
-Q["try"] = function (callback) {
+Q.try = function (callback) {
     return Q(callback).dispatch("call", [[]]);
 };
 
@@ -888,14 +888,14 @@ Promise.prototype.allSettled = function () {
 /**
  * TODO
  */
-Promise.prototype["catch"] = function (rejected) {
+Promise.prototype.catch = function (rejected) {
     return this.then(void 0, rejected);
 };
 
 /**
  * TODO
  */
-Promise.prototype["finally"] = function (callback, ms) {
+Promise.prototype.finally = function (callback, ms) {
     callback = Q(callback);
     return this.then(function (value) {
         return callback.call().then(function () {
@@ -1363,11 +1363,11 @@ Q.fulfill = deprecate(Q, "fulfill", "Q");
 Q.isPromiseAlike = deprecate(isThenable, "isPromiseAlike", "(not supported)");
 
 Q.fail = deprecate(function (value, rejected) {
-    return Q(value)["catch"](rejected);
+    return Q(value).catch(rejected);
 }, "Q.fail", "Q(value).catch");
 
 Q.fin = deprecate(function (value, regardless) {
-    return Q(value)["finally"](regardless);
+    return Q(value).finally(regardless);
 }, "Q.fin", "Q(value).finally");
 
 Q.progress = deprecate(function (value) {
@@ -1430,7 +1430,7 @@ Q.set = function () {
     throw new Error("Q.set no longer supported");
 };
 
-Q["delete"] = function () {
+Q.delete = function () {
     throw new Error("Q.delete no longer supported");
 };
 
@@ -1472,18 +1472,18 @@ Promise.prototype.fcall = deprecate(function (/*...args*/) {
 }, "fcall", "try or call with thisp");
 
 Promise.prototype.fail = deprecate(function (rejected) {
-    return this["catch"](rejected);
+    return this.catch(rejected);
 }, "fail", "catch");
 
 Promise.prototype.fin = deprecate(function (regardless) {
-    return this["finally"](regardless);
+    return this.finally(regardless);
 }, "fin", "finally");
 
 Promise.prototype.set = function () {
     throw new Error("Promise set no longer supported");
 };
 
-Promise.prototype["delete"] = function () {
+Promise.prototype.delete = function () {
     throw new Error("Promise delete no longer supported");
 };
 

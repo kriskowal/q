@@ -4,7 +4,6 @@
 
     "curly": true,
     "eqeqeq": true,
-    "es3": true,
     "newcap": false,
     "noarg": true,
     "nonew": true,
