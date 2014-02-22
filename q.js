@@ -745,52 +745,42 @@ Promise.prototype.toString = function () {
 Promise.prototype.then = function then(fulfilled, rejected, ms) {
     var self = this;
     var deferred = defer();
-    var done = false;   // ensure the untrusted promise makes at most a
-                        // single call to one of the callbacks
 
-    function _fulfilled(value) {
-        try {
-            return typeof fulfilled === "function" ? fulfilled(value) : value;
-        } catch (exception) {
-            return reject(exception);
-        }
-    }
-
-    function _rejected(exception) {
-        if (typeof rejected === "function") {
-            makeStackTraceLong(exception, self);
+    var _fulfilled;
+    if (typeof fulfilled === "function") {
+        _fulfilled = function (value) {
             try {
-                return rejected(exception);
-            } catch (newException) {
-                return reject(newException);
+                deferred.resolve(fulfilled.call(void 0, value));
+            } catch (error) {
+                deferred.reject(error);
             }
-        }
-        return reject(exception);
+        };
+    } else {
+        _fulfilled = deferred.resolve;
     }
 
-    asap(function () {
-        inspect(self).dispatch(function (value) {
-            if (done) {
-                return;
+    var _rejected;
+    if (typeof rejected === "function") {
+        _rejected = function (error) {
+            try {
+                deferred.resolve(rejected.call(void 0, error));
+            } catch (newError) {
+                deferred.reject(newError);
             }
-            done = true;
-
-            deferred.resolve(_fulfilled(value));
-        }, "then", [function (exception) {
-            if (done) {
-                return;
-            }
-            done = true;
-
-            deferred.resolve(_rejected(exception));
-        }]);
-    });
-
-    function updateEstimate() {
-        deferred.setEstimate(self.getEstimate() + ms);
+        };
+    } else {
+        _rejected = deferred.reject;
     }
-    this.observeEstimate(updateEstimate);
-    updateEstimate();
+
+    this.done(_fulfilled, _rejected);
+
+    if (ms !== void 0) {
+        var updateEstimate = function () {
+            deferred.setEstimate(self.getEstimate() + ms);
+        };
+        this.observeEstimate(updateEstimate);
+        updateEstimate();
+    }
 
     return deferred.promise;
 };
@@ -861,32 +851,78 @@ Promise.prototype["finally"] = function (callback, ms) {
  * @param fulfilled
  * @param rejected
  */
-Promise.prototype.done = function done(fulfilled, rejected) {
-    var onUnhandledError = function (error) {
-        // forward to a future turn so that ``when``
-        // does not catch it and turn it into a rejection.
-        asap(function () {
-            makeStackTraceLong(error, promise);
+Promise.prototype.done = function Promise$done(fulfilled, rejected) {
+    var self = this;
+    var done = false;   // ensure the untrusted promise makes at most a
+                        // single call to one of the callbacks
+    asap(function () {
+
+        var _fulfilled;
+        if (typeof fulfilled === "function") {
             if (Q.onerror) {
-                Q.onerror(error);
+                _fulfilled = function (value) {
+                    if (done) {
+                        return;
+                    }
+                    done = true;
+                    try {
+                        fulfilled.call(void 0, value);
+                    } catch (error) {
+                        // fallback to rethrow is still necessary because
+                        // _fulfilled is not called in the same event as the
+                        // above guard.
+                        (Q.onerror || rethrow)(error);
+                    }
+                };
             } else {
-                throw error;
+                _fulfilled = function (value) {
+                    if (done) {
+                        return;
+                    }
+                    done = true;
+                    fulfilled.call(void 0, value);
+                };
             }
-        });
-    };
+        }
 
-    // Avoid unnecessary `asap` calls due to an unnecessary `then`.
-    var promise = fulfilled || rejected ?
-        this.then(fulfilled, rejected) :
-        this;
+        var _rejected;
+        if (typeof rejected === "function" && Q.onerror) {
+            _rejected = function (error) {
+                if (done) {
+                    return;
+                }
+                done = true;
+                makeStackTraceLong(error, self);
+                try {
+                    rejected.call(void 0, error);
+                } catch (newError) {
+                    (Q.onerror || rethrow)(newError);
+                }
+            };
+        } else if (typeof rejected === "function") {
+            _rejected = function (error) {
+                if (done) {
+                    return;
+                }
+                done = true;
+                makeStackTraceLong(error, self);
+                rejected.call(void 0, error);
+            };
+        } else {
+            _rejected = Q.onerror || rethrow;
+        }
 
-    // Bind the error handler to the current Node.js domain
-    if (typeof process === "object" && process && process.domain) {
-        onUnhandledError = process.domain.bind(onUnhandledError);
-    }
+        if (typeof process === "object" && process.domain) {
+            _rejected = process.domain.bind(_rejected);
+        }
 
-    promise.then(void 0, onUnhandledError);
+        inspect(self).dispatch(_fulfilled, "then", [_rejected]);
+    });
 };
+
+function rethrow(error) {
+    throw error;
+}
 
 Promise.prototype.observeEstimate = function (emit) {
     this.dispatch("estimate", [emit]);

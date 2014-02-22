@@ -999,6 +999,13 @@ describe("done", function () {
         describe("and the callback throws", function () {
 
             it("should rethrow that error in the next turn and return nothing", function (done) {
+                Q.onerror = function (error) {
+                    expect(turn).is(1);
+                    expect(error).is("foo");
+                    expect(returnValue).is(undefined);
+                    deferred.resolve();
+                };
+
                 var turn = 0;
                 asap(function () {
                     ++turn;
@@ -1011,12 +1018,6 @@ describe("done", function () {
                 );
 
                 var deferred = Q.defer();
-                Q.onerror = function (error) {
-                    expect(turn).is(1);
-                    expect(error).is("foo");
-                    expect(returnValue).is(undefined);
-                    deferred.resolve();
-                };
                 Q.delay(100).then(deferred.reject);
 
                 return deferred.promise.done(done, done);
@@ -1057,6 +1058,13 @@ describe("done", function () {
         describe("and the errback throws", function () {
 
             it("should rethrow that error in the next turn and return nothing", function (done) {
+                Q.onerror = function (error) {
+                    expect(turn).is(1);
+                    expect(error).is("foo");
+                    expect(returnValue).is(undefined);
+                    deferred.resolve();
+                };
+
                 var turn = 0;
                 asap(function () {
                     ++turn;
@@ -1070,12 +1078,6 @@ describe("done", function () {
                 );
 
                 var deferred = Q.defer();
-                Q.onerror = function (error) {
-                    expect(turn).is(1);
-                    expect(error).is("foo");
-                    expect(returnValue).is(undefined);
-                    deferred.resolve();
-                };
                 Q.delay(100).then(deferred.reject);
 
                 deferred.promise.done(done, done);
@@ -1085,6 +1087,13 @@ describe("done", function () {
         describe("and there is no errback", function () {
 
             it("should throw the original error in the next turn", function (done) {
+                Q.onerror = function (error) {
+                    expect(turn).is(1);
+                    expect(error).is("bar");
+                    expect(returnValue).is(undefined);
+                    deferred.resolve();
+                };
+
                 var turn = 0;
                 asap(function () {
                     ++turn;
@@ -1093,12 +1102,6 @@ describe("done", function () {
                 var returnValue = Q.reject("bar").done();
 
                 var deferred = Q.defer();
-                Q.onerror = function (error) {
-                    expect(turn).is(1);
-                    expect(error).is("bar");
-                    expect(returnValue).is(undefined);
-                    deferred.resolve();
-                };
                 Q.delay(10).then(deferred.reject);
 
                 deferred.promise.done(done, done);
