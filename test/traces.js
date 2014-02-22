@@ -8,15 +8,16 @@ describe("stack trace formatting", function () {
         if (!new Error("").stack) {
             return done();
         }
+
+        Q.onerror = function (err) {
+            captured.put(err.stack);
+        };
+
         var d1 = Q.defer();
         var d2 = Q.defer();
         var captured = new Queue();
         d1.promise.done();
         d2.promise.done();
-
-        Q.onerror = function (err) {
-            captured.put(err.stack);
-        };
 
         var error = new Error("boom!");
         d1.reject(error);

@@ -23,14 +23,15 @@ describe("gh-22", function () {
 
 describe("gh-73", function () {
     it("does not choke on non-error rejection reasons", function (done) {
-        Q.reject(REASON).done();
-
-        var deferred = Q.defer();
-
         Q.onerror = function (error) {
             expect(error).is(REASON);
             deferred.resolve();
         };
+
+        Q.reject(REASON).done();
+
+        var deferred = Q.defer();
+
         Q.delay(10).then(deferred.reject);
 
         deferred.promise.done(done, done);
@@ -39,16 +40,17 @@ describe("gh-73", function () {
 
 describe("gh-90", function () {
     it("does not choke on rejection reasons with an undefined `stack`", function (done) {
+        Q.onerror = function (theError) {
+            expect(theError).is(error);
+            deferred.resolve();
+        };
+
         var error = new RangeError(REASON);
         error.stack = undefined;
         Q.reject(error).done();
 
         var deferred = Q.defer();
 
-        Q.onerror = function (theError) {
-            expect(theError).is(error);
-            deferred.resolve();
-        };
         Q.delay(10).then(deferred.reject);
 
         deferred.promise.done(done, done);
