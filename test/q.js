@@ -434,7 +434,7 @@ describe("promises for functions", function () {
             var object = {
                 a: 10,
                 b: 20,
-                add: Q.method(function (c, d) {
+                add: Q.function(function (c, d) {
                     return this.a + this.b + c + d;
                 })
             };
