@@ -32,7 +32,7 @@ deprecation warnings. Deprecated features will be removed outright in version 3.
    by `apply`, `call`, and `bind` on the `Promise` prototype, making a
    promise for a function partially “isomorphic” with the function
    itself. The `Q.fbind` with no arguments case has been replaced by
-   `Q.method`, which is better suited for decorating methods and
+   `Q.function`, which is better suited for decorating methods and
    functions to ensure that they return promises and capture errors.
    The `Q.fcall` with no additional arguments case has been replaced
    by `Q.try`.
