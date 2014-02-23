@@ -1,6 +1,5 @@
 
 var Q = require("../q");
-var NQ = require("../node");
 
 describe("node support", function () {
 
@@ -24,7 +23,7 @@ describe("node support", function () {
     describe("nfapply", function () {
 
         it("fulfills with callback result", function (done) {
-            NQ.nfapply(function (a, b, c, callback) {
+            Q.nfapply(function (a, b, c, callback) {
                 callback(null, a + b + c);
             }, [1, 2, 3])
             .then(function (sum) {
@@ -35,7 +34,7 @@ describe("node support", function () {
 
         it("rejects with callback error", function (done) {
             var exception = new Error("That is not your favorite color.");
-            NQ.nfapply(function (a, b, c, callback) {
+            Q.nfapply(function (a, b, c, callback) {
                 callback(exception);
             }, [1, 2, 3])
             .then(function () {
@@ -51,7 +50,7 @@ describe("node support", function () {
     describe("nfcall", function () {
 
         it("fulfills with callback result", function (done) {
-            NQ.nfcall(function (a, b, c, callback) {
+            Q.nfcall(function (a, b, c, callback) {
                 callback(null, a + b + c);
             }, 1, 2, 3)
             .then(function (sum) {
@@ -62,7 +61,7 @@ describe("node support", function () {
 
         it("rejects with callback error", function (done) {
             var exception = new Error("That is not your favorite color.");
-            NQ.nfcall(function (a, b, c, callback) {
+            Q.nfcall(function (a, b, c, callback) {
                 callback(exception);
             }, 1, 2, 3)
             .then(function () {
@@ -78,7 +77,7 @@ describe("node support", function () {
     describe("nfbind", function () {
 
         it("mixes partial application with complete application", function (done) {
-            NQ.nfbind(function (a, b, c, d, callback) {
+            Q.nfbind(function (a, b, c, d, callback) {
                 callback(null, a + b + c + d);
             }, 1, 2).call({}, 3, 4)
             .then(function (ten) {
@@ -92,7 +91,7 @@ describe("node support", function () {
     describe("nbind", function () {
 
         it("binds this, and mixes partial application with complete application", function (done) {
-            return NQ.nbind(function (a, b, c, callback) {
+            return Q.nbind(function (a, b, c, callback) {
                 callback(null, this + a + b + c);
             }, 1, 2).call(3 /* effectively ignored as fn bound to 1 */, 4, 5)
             .then(function (twelve) {
@@ -103,7 +102,7 @@ describe("node support", function () {
 
         it("second arg binds this", function (done) {
             var expectedThis = { test: null };
-            NQ.nbind(function(callback) {
+            Q.nbind(function(callback) {
                 callback(null, this);
             }, expectedThis).call()
             .then(function(actualThis) {
@@ -117,7 +116,7 @@ describe("node support", function () {
     describe("npost", function () {
 
         it("fulfills with callback result", function (done) {
-            NQ.npost(obj, "method", [1, 2, 3])
+            Q.npost(obj, "method", [1, 2, 3])
             .then(function (sum) {
                 expect(sum).is(6);
             })
@@ -125,7 +124,7 @@ describe("node support", function () {
         });
 
         it("gets the correct thisp", function (done) {
-            return NQ.npost(obj, "thispChecker", [])
+            return Q.npost(obj, "thispChecker", [])
             .then(function (result) {
                 expect(result).is(true);
             })
@@ -133,7 +132,7 @@ describe("node support", function () {
         });
 
         it("rejects with callback error", function (done) {
-            return NQ.npost(obj, "errorCallbacker", [1, 2, 3])
+            return Q.npost(obj, "errorCallbacker", [1, 2, 3])
             .then(function () {
                 expect("blue").is("no, yellow!");
             }, function (_exception) {
@@ -143,7 +142,7 @@ describe("node support", function () {
         });
 
         it("rejects with thrown error", function (done) {
-            return NQ.npost(obj, "errorThrower", [1, 2, 3])
+            return Q.npost(obj, "errorThrower", [1, 2, 3])
             .then(function () {
                 expect(true).is(false);
             }, function (_exception) {
@@ -153,7 +152,7 @@ describe("node support", function () {
         });
 
         it("works on promises for objects with Node methods", function (done) {
-            return NQ.npost(obj, "method", [1, 2, 3])
+            return Q.npost(obj, "method", [1, 2, 3])
             .then(function (sum) {
                 expect(sum).is(6);
             })
@@ -165,7 +164,7 @@ describe("node support", function () {
     describe("ninvoke", function () {
 
         it("fulfills with callback result", function (done) {
-            NQ.ninvoke(obj, "method", 1, 2, 3)
+            Q.ninvoke(obj, "method", 1, 2, 3)
             .then(function (sum) {
                 expect(sum).is(6);
             })
@@ -173,7 +172,7 @@ describe("node support", function () {
         });
 
         it("gets the correct thisp", function (done) {
-            NQ.ninvoke(obj, "thispChecker")
+            Q.ninvoke(obj, "thispChecker")
             .then(function (result) {
                 expect(result).is(true);
             })
@@ -181,7 +180,7 @@ describe("node support", function () {
         });
 
         it("rejects with callback error", function (done) {
-            NQ.ninvoke(obj, "errorCallbacker", 1, 2, 3)
+            Q.ninvoke(obj, "errorCallbacker", 1, 2, 3)
             .then(function () {
                 expect("blue").is("no, yellow!");
             }, function (_exception) {
@@ -191,7 +190,7 @@ describe("node support", function () {
         });
 
         it("rejects with thrown error", function (done) {
-            NQ.ninvoke(obj, "errorThrower", 1, 2, 3)
+            Q.ninvoke(obj, "errorThrower", 1, 2, 3)
             .then(function () {
                 expect(true).is(false);
             }, function (_exception) {
@@ -201,7 +200,7 @@ describe("node support", function () {
         });
 
         it("works on promises for objects with Node methods", function (done) {
-            NQ.ninvoke(obj, "method", 1, 2, 3)
+            Q.ninvoke(obj, "method", 1, 2, 3)
             .then(function (sum) {
                 expect(sum).is(6);
             })
@@ -214,7 +213,7 @@ describe("node support", function () {
 
         it("fulfills a promise with a single callback argument", function (done) {
             var deferred = Q.defer();
-            var callback = NQ.makeNodeResolver(deferred.resolve);
+            var callback = Q.makeNodeResolver(deferred.resolve);
             callback(null, 10);
             deferred.promise.then(function (value) {
                 expect(value).is(10);
@@ -222,19 +221,9 @@ describe("node support", function () {
             .done(done, done);
         });
 
-        it("fulfills a promise with multiple callback arguments", function (done) {
-            var deferred = Q.defer();
-            var callback = NQ.makeNodeResolver(deferred.resolve);
-            callback(null, 10, 20);
-            deferred.promise.then(function (value) {
-                expect(value).equals([10, 20]);
-            })
-            .done(done, done);
-        });
-
         it("rejects a promise", function (done) {
             var deferred = Q.defer();
-            var callback = NQ.makeNodeResolver(deferred.resolve);
+            var callback = Q.makeNodeResolver(deferred.resolve);
             var exception = new Error("Holy Exception of Anitoch");
             callback(exception);
             deferred.promise.then(function () {

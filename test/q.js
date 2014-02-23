@@ -170,7 +170,7 @@ describe("promises for objects", function () {
 
         it("propagates a rejection", function (done) {
             var exception = new Error("boo!");
-            Q.fcall(function () {
+            Q.try(function () {
                 throw exception;
             })
             .get("a")
@@ -184,7 +184,7 @@ describe("promises for objects", function () {
 
     });
 
-    describe("post", function () {
+    describe("invoke", function () {
 
         it("fulfills a promise", function (done) {
             var subject = {
@@ -193,21 +193,10 @@ describe("promises for objects", function () {
                     return 1 + value;
                 }
             };
-            Q(subject).post("a", [1]).then(function (two) {
+            Q(subject).invoke("a", 1).then(function (two) {
                 expect(subject._a).is(1);
                 expect(two).is(2);
             }).done(done, done);
-        });
-
-        it("works as apply when given no name", function (done) {
-            Q(function (a, b, c) {
-                return a + b + c;
-            })
-            .post(undefined, [1, 2, 3])
-            .then(function (sum) {
-                expect(sum).is(6);
-            })
-            .done(done, done);
         });
 
     });
@@ -335,12 +324,12 @@ describe("inspect", function () {
 
 describe("promises for functions", function () {
 
-    describe("fapply", function () {
+    describe("apply", function () {
         it("fulfills a promise using arguments", function (done) {
             Q(function (a, b, c) {
                 return a + b + c;
             })
-            .fapply([1, 2, 3])
+            .apply(void 0, [1, 2, 3])
             .then(function (sum) {
                 expect(sum).is(6);
             })
@@ -348,12 +337,12 @@ describe("promises for functions", function () {
         });
     });
 
-    describe("fcall", function () {
+    describe("call", function () {
         it("fulfills a promise using arguments", function (done) {
             Q(function (a, b, c) {
                 return a + b + c;
             })
-            .fcall(1, 2, 3)
+            .call(void 0, 1, 2, 3)
             .then(function (sum) {
                 expect(sum).is(6);
             })
@@ -440,6 +429,91 @@ describe("promises for functions", function () {
 
     });
 
+    describe("method", function () {
+        it("passes this and args, returns promise", function () {
+            var object = {
+                a: 10,
+                b: 20,
+                add: Q.function(function (c, d) {
+                    return this.a + this.b + c + d;
+                })
+            };
+            return object.add(30, 40).then(function (sum) {
+                expect(sum).is(100);
+            });
+        });
+
+    });
+
+    describe("bind", function () {
+
+        it("accepts a promise for a function", function (done) {
+            Q(function (high, low) {
+                return high - low;
+            }).bind()
+            (2, 1)
+            .then(function (difference) {
+                expect(difference).is(1);
+            })
+            .done(done, done);
+        });
+
+        it("chains partial application on a promise for a function", function (done) {
+            Q(function (a, b) {
+                return a * b;
+            }).bind(null, 2)
+            (3)
+            .then(function (product) {
+                expect(product).is(6);
+            })
+            .done(done, done);
+        });
+
+        it("returns a fulfilled promise", function (done) {
+            var result = {};
+            var bound = Q(function () {
+                return result;
+            }).bind();
+            bound()
+            .then(function (_result) {
+                expect(_result).is(result);
+            })
+            .done(done, done);
+        });
+
+        it("returns a rejected promise from a thrown error", function (done) {
+            var exception = new Error("Boo!");
+            var bound = Q(function () {
+                throw exception;
+            }).bind();
+            bound()
+            .then(function () {
+                expect("flying pigs").is("swillin' pigs");
+            }, function (_exception) {
+                expect(_exception).is(exception);
+            })
+            .done(done, done);
+        });
+
+        it("passes arguments through", function (done) {
+            var x = {}, y = {};
+            var bound = Q(function (a, b) {
+                expect(a).is(x);
+                expect(b).is(y);
+            }).bind();
+            bound(x, y).done(done, done);
+        });
+
+        it("passes and also partially applies arguments", function (done) {
+            var x = {}, y = {};
+            var bound = Q(function (a, b) {
+                expect(a).is(x);
+                expect(b).is(y);
+            }).bind(null, x);
+            bound(y).done(done, done);
+        });
+
+    });
 });
 
 describe("promise states", function () {
@@ -703,7 +777,7 @@ describe("allSettled", function () {
         var fulfilled;
         var rejected;
 
-        Q.fcall(function () {
+        Q.try(function () {
             toReject.reject();
             rejected = true;
         })
@@ -999,6 +1073,13 @@ describe("done", function () {
         describe("and the callback throws", function () {
 
             it("should rethrow that error in the next turn and return nothing", function (done) {
+                Q.onerror = function (error) {
+                    expect(turn).is(1);
+                    expect(error).is("foo");
+                    expect(returnValue).is(undefined);
+                    deferred.resolve();
+                };
+
                 var turn = 0;
                 asap(function () {
                     ++turn;
@@ -1011,12 +1092,6 @@ describe("done", function () {
                 );
 
                 var deferred = Q.defer();
-                Q.onerror = function (error) {
-                    expect(turn).is(1);
-                    expect(error).is("foo");
-                    expect(returnValue).is(undefined);
-                    deferred.resolve();
-                };
                 Q.delay(100).then(deferred.reject);
 
                 return deferred.promise.done(done, done);
@@ -1057,6 +1132,13 @@ describe("done", function () {
         describe("and the errback throws", function () {
 
             it("should rethrow that error in the next turn and return nothing", function (done) {
+                Q.onerror = function (error) {
+                    expect(turn).is(1);
+                    expect(error).is("foo");
+                    expect(returnValue).is(undefined);
+                    deferred.resolve();
+                };
+
                 var turn = 0;
                 asap(function () {
                     ++turn;
@@ -1070,12 +1152,6 @@ describe("done", function () {
                 );
 
                 var deferred = Q.defer();
-                Q.onerror = function (error) {
-                    expect(turn).is(1);
-                    expect(error).is("foo");
-                    expect(returnValue).is(undefined);
-                    deferred.resolve();
-                };
                 Q.delay(100).then(deferred.reject);
 
                 deferred.promise.done(done, done);
@@ -1085,6 +1161,13 @@ describe("done", function () {
         describe("and there is no errback", function () {
 
             it("should throw the original error in the next turn", function (done) {
+                Q.onerror = function (error) {
+                    expect(turn).is(1);
+                    expect(error).is("bar");
+                    expect(returnValue).is(undefined);
+                    deferred.resolve();
+                };
+
                 var turn = 0;
                 asap(function () {
                     ++turn;
@@ -1093,12 +1176,6 @@ describe("done", function () {
                 var returnValue = Q.reject("bar").done();
 
                 var deferred = Q.defer();
-                Q.onerror = function (error) {
-                    expect(turn).is(1);
-                    expect(error).is("bar");
-                    expect(returnValue).is(undefined);
-                    deferred.resolve();
-                };
                 Q.delay(10).then(deferred.reject);
 
                 deferred.promise.done(done, done);
@@ -1405,7 +1482,7 @@ describe("isPromise", function () {
 
 });
 
-describe("isThenable", function () {
+xdescribe("isThenable", function () {
     it("returns true if passed a promise like object", function () {
         expect(Q.isThenable(Q(10))).is(true);
         expect(Q.isThenable({

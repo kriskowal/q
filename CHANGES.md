@@ -24,9 +24,25 @@ deprecation warnings. Deprecated features will be removed outright in version 3.
    https://github.com/kriskowal/asap and
    https://github.com/drses/weak-map.  If you are using Q as a
    `<script>`, this has been embedded in the release.  If you are using
-   Q in Node.js, the dependency is taken care of by NPM.
+   Q in Node.js, the dependency is taken care of by `npm`.
  - :warning: Withdrew support for SpiderMonkey style generators.  Only
    ES6 generators are supported.
+ - :warning: `fapply`, `fcall`, and `fbind` have been deprecated in
+   both the `Q` and `promise` forms. These methods have been replaced
+   by `apply`, `call`, and `bind` on the `Promise` prototype, making a
+   promise for a function partially “isomorphic” with the function
+   itself. The `Q.fbind` with no arguments case has been replaced by
+   `Q.function`, which is better suited for decorating methods and
+   functions to ensure that they return promises and capture errors.
+   The `Q.fcall` with no additional arguments case has been replaced
+   by `Q.try`.
+ - :warning: `Q.try` is no longer an alias for `fcall`. `Q.try` does
+   not accept additional arguments. To call a promise for a function
+   with arguments, use `Q(function).call(thisp, ...args)` or `apply`.
+ - :warning: `post` has been deprecated. As this is an uncommon case
+   with an inadequate name, if you need to spread arguments into
+   `invoke`, you can take the long road, either calling `invoke.apply`
+   or using `promise.dispatch("invoke", [name, args])` directly.
  - :warning: `Q.all` no longer reuses the input array for the output
    array.
  - :warning: `Q.all` and `Q.allSettled` no longer accept a promise.  Use
@@ -40,8 +56,14 @@ deprecation warnings. Deprecated features will be removed outright in version 3.
    argument for support of "fbind". The "when" message is now called
    simply "then".  As such, this version of Q is not compatible with
    Q-Connection `v0.5`.
- - :warning: The old progress notification system has been removed. The methods
-   remain but have no effect. Try the new estimated time to completion feature.
+ - :warning: The old progress notification system has been removed.
+   Try the new estimated time to completion feature.
+ - :warning: `denodeify` now only takes the function to decorate and does not
+   partially apply arguments. It now also takes a second argument
+   that determines whether the decorated function needs a variadic or named
+   argument nodeback.
+ - :warning: `makeNodeResolver` has been deprecated and no longer
+   implicitly captures variadic arguments in an array.
  - Promises now support vicious cycle detection.  If a deferred promise
    ultimately depends upon its own resolution, it will be rejected with
    the singleton vicious cycle error.
@@ -107,6 +129,29 @@ The old progress notification API, including `deferred.notify` and `then(f, r,
 progress) will not cause any errors but wont’t send any notifications either.
 The feature may be partially restored as a status notification system, but the
 behavior will probably change.
+
+### Node.js Bridge
+
+Q 1 supported a wide variety of `n*` methods for bridging to Node.js. In
+practice, few of these were used. This release scales back support for the
+Node.js bridge to the essential `promise.nodeify`, `Q.denodeify`, and
+`Q.ninvoke`.
+
+The beahvior of `denodeify` has been altered to match the behavior of
+[RSVP.js][]’s `denodeify`. The version of this method in Q v1 would infer that
+the method provided a variable number of arguments (variadic arguments) if the
+nodeback was called with more than one non-error argument. This leaves a glaring
+ambiguity. With the new interface, whether to collect variadic arguments into an
+array, capture arguments by name into an object, or just pass the sole value
+argument is decided by a second parameter to `denodeify`. Omitted, you get the
+usual Node.js style callback. With `true`, you get variadic arguments. With an
+array of names, the arguments will be captured on an object literal with their
+respective name.
+
+[RSVP.js]: https://github.com/tildeio/rsvp.js/
+
+The `makeNodeResolver` function has been deprecated and no longer supports the
+implicit variadic behavior.
 
 ### Deprecations
 
