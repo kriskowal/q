@@ -156,10 +156,17 @@ function deprecate(callback, name, alternative) {
             typeof console !== "undefined" &&
             typeof console.warn === "function"
         ) {
-            console.warn(
-                name + " is deprecated, use " + alternative + " instead.",
-                new Error("").stack
-            );
+            if (alternative) {
+                console.warn(
+                    name + " is deprecated, use " + alternative + " instead.",
+                    new Error("").stack
+                );
+            } else {
+                console.warn(
+                    name + " is deprecated.",
+                    new Error("").stack
+                );
+            }
         }
         return callback.apply(this, arguments);
     };
@@ -1307,50 +1314,108 @@ ThenableHandler.prototype.dispatch = function (resolve, op, args) {
     this.cast().dispatch(resolve, op, args);
 };
 
-// Node.js bridge
 
-var NQ = require("./node");
-(function () {
-    for (var name in NQ) {
-        Q[name] = NQ[name];
+// Thus begins the Q Node.js bridge
+
+/**
+ * Calls a method of a Node-style object that accepts a Node-style
+ * callback, forwarding the given variadic arguments, plus a provided
+ * callback argument.
+ * @param object an object that has the named method
+ * @param {String} name name of the method of object
+ * @param ...args arguments to pass to the method; the callback will
+ * be provided by Q and appended to these arguments.
+ * @returns a promise for the value or error
+ */
+Q.ninvoke = function (object, name /*...args*/) {
+    var args = new Array(Math.max(0, arguments.length - 1));
+    for (var index = 2; index < arguments.length; index++) {
+        args[index - 2] = arguments[index];
     }
-})();
-
-Deferred.prototype.makeNodeResolver = function () {
-    return NQ.makeNodeResolver(this.resolve);
+    var deferred = Q.defer();
+    args[index - 2] = makeNodebackResolver(deferred.resolve);
+    Q(object).dispatch("invoke", [name, args]).catch(deferred.reject);
+    return deferred.promise;
 };
 
-Promise.prototype.nfapply = function (args) {
-    return NQ.nfapply(this, args);
+/**
+ * Wraps a Node.js continuation passing function and returns an equivalent
+ * version that returns a promise.
+ * @example
+ * Q.denodeify(FS.readFile)(__filename, "utf-8")
+ * .then(console.log)
+ * .done()
+ */
+Q.denodeify = function (callback, pattern) {
+    return function () {
+        var args = new Array(arguments.length + 1);
+        var index = 0;
+        for (; index < arguments.length; index++) {
+            args[index] = arguments[index];
+        }
+        var deferred = Q.defer();
+        args[index] = makeNodebackResolver(deferred.resolve, pattern);
+        Q(callback).apply(this, args).catch(deferred.reject);
+        return deferred.promise;
+    };
 };
 
-Promise.prototype.nfcall = function () {
-    var args = new Array(arguments.length);
-    for (var index = 0; index < arguments.length; index++) {
-        args[index] = arguments[index];
+/**
+ * Creates a Node.js-style callback that will resolve or reject the deferred
+ * promise.
+ * TODO
+ * @returns a nodeback
+ * @private
+ */
+function makeNodebackResolver(resolve, names) {
+    if (names === true) {
+        return function variadicNodebackToResolver(error) {
+            if (error) {
+                resolve(Q.reject(error));
+            } else {
+                var value = new Array(Math.max(0, arguments.length - 1));
+                for (var index = 1; index < arguments.length; index++) {
+                    value[index - 1] = arguments[index];
+                }
+                resolve(value);
+            }
+        };
+    } else if (names) {
+        return function namedArgumentNodebackToResolver(error) {
+            if (error) {
+                resolve(Q.reject(error));
+            } else {
+                var value = {};
+                for (var index in names) {
+                    value[names[index]] = arguments[index + 1];
+                }
+                resolve(value);
+            }
+        };
+    } else {
+        return function nodebackToResolver(error, value) {
+            if (error) {
+                resolve(Q.reject(error));
+            } else {
+                resolve(value);
+            }
+        };
     }
-    return NQ.nfapply(this, args);
-};
+}
 
-Promise.prototype.nfbind = function () {
-    var args = new Array(arguments.length);
-    for (var index = 0; index < arguments.length; index++) {
-        args[index] = arguments[index];
+/**
+ * TODO
+ */
+Promise.prototype.nodeify = function (nodeback) {
+    if (nodeback) {
+        this.done(function (value) {
+            nodeback(null, value);
+        }, nodeback);
+    } else {
+        return this;
     }
-    return NQ.nfbind(this, args);
 };
 
-Promise.prototype.npost = function (name, args) {
-    return NQ.npost(this, name, args);
-};
-
-Promise.prototype.ninvoke = function (name) {
-    var args = new Array(arguments.length - 1);
-    for (var index = 1; index < arguments.length; index++) {
-        args[index - 1] = arguments[index];
-    }
-    return NQ.npost(this, name, args);
-};
 
 // DEPRECATED
 
@@ -1518,13 +1583,92 @@ Promise.prototype.passByCopy = deprecate(function (value) {
     return value;
 }, "passByCopy", "Q.passByCopy");
 
-// Deprecated Node.js bridge aliases
+// Deprecated Node.js bridge promise methods
 
-Q.nmapply = deprecate(NQ.nmapply, "nmapply", "q/node nmapply");
-Promise.prototype.nmapply = deprecate(Promise.prototype.npost, "nmapply", "q/node nmapply");
+Q.nfapply = deprecate(function (callback, args) {
+    var deferred = Q.defer();
+    var nodeArgs = Array.prototype.slice.call(args);
+    nodeArgs.push(makeNodebackResolver(deferred.resolve));
+    Q(callback).apply(this, nodeArgs).catch(deferred.reject);
+    return deferred.promise;
+}, "nfapply");
 
-Q.nsend = deprecate(NQ.ninvoke, "nsend", "q/node ninvoke");
-Q.nmcall = deprecate(NQ.ninvoke, "nmcall", "q/node ninvoke");
+Promise.prototype.nfapply = deprecate(function (args) {
+    return Q.nfapply(this, args);
+}, "nfapply");
+
+Q.nfcall = deprecate(function (callback /*...args*/) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    return Q.nfapply(callback, args);
+}, "nfcall");
+
+Promise.prototype.nfcall = deprecate(function () {
+    var args = new Array(arguments.length);
+    for (var index = 0; index < arguments.length; index++) {
+        args[index] = arguments[index];
+    }
+    return Q.nfapply(this, args);
+}, "nfcall");
+
+Q.nfbind = deprecate(function (callback /*...args*/) {
+    var baseArgs = Array.prototype.slice.call(arguments, 1);
+    return function () {
+        var nodeArgs = baseArgs.concat(Array.prototype.slice.call(arguments));
+        var deferred = Q.defer();
+        nodeArgs.push(makeNodebackResolver(deferred.resolve));
+        Q(callback).apply(this, nodeArgs).catch(deferred.reject);
+        return deferred.promise;
+    };
+}, "nfbind", "denodeify (with caveats)");
+
+Promise.prototype.nfbind = deprecate(function () {
+    var args = new Array(arguments.length);
+    for (var index = 0; index < arguments.length; index++) {
+        args[index] = arguments[index];
+    }
+    return Q.nfbind(this, args);
+}, "nfbind", "denodeify (with caveats)");
+
+Q.nbind = deprecate(function (callback, thisp /*...args*/) {
+    var baseArgs = Array.prototype.slice.call(arguments, 2);
+    return function () {
+        var nodeArgs = baseArgs.concat(Array.prototype.slice.call(arguments));
+        var deferred = Q.defer();
+        nodeArgs.push(makeNodebackResolver(deferred.resolve));
+        function bound() {
+            return callback.apply(thisp, arguments);
+        }
+        Q(bound).apply(this, nodeArgs).catch(deferred.reject);
+        return deferred.promise;
+    };
+}, "nbind", "denodeify (with caveats)");
+
+Q.npost = deprecate(function (object, name, nodeArgs) {
+    var deferred = Q.defer();
+    nodeArgs.push(makeNodebackResolver(deferred.resolve));
+    Q(object).dispatch("invoke", [name, nodeArgs]).catch(deferred.reject);
+    return deferred.promise;
+}, "npost", "ninvoke (with spread arguments)");
+
+Promise.prototype.npost = deprecate(function (name, args) {
+    return Q.npost(this, name, args);
+}, "npost", "Q.ninvoke (with caveats)");
+
+Q.makeNodeResolver = deprecate(makeNodebackResolver, "makeNodeResolver");
+
+Promise.prototype.ninvoke = deprecate(function (name) {
+    var args = new Array(arguments.length - 1);
+    for (var index = 1; index < arguments.length; index++) {
+        args[index - 1] = arguments[index];
+    }
+    return Q.npost(this, name, args);
+}, "ninvoke", "Q.ninvoke");
+
+Q.nmapply = deprecate(Q.nmapply, "nmapply", "q/node nmapply");
+Promise.prototype.nmapply = deprecate(Promise.prototype.npost, "nmapply", "Q.nmapply");
+
+Q.nsend = deprecate(Q.ninvoke, "nsend", "q/node ninvoke");
+Q.nmcall = deprecate(Q.ninvoke, "nmcall", "q/node ninvoke");
 Promise.prototype.nsend = deprecate(Promise.prototype.ninvoke, "nsend", "q/node ninvoke");
 Promise.prototype.nmcall = deprecate(Promise.prototype.ninvoke, "nmcall", "q/node ninvoke");
 
