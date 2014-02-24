@@ -27,7 +27,7 @@ describe("node support", function () {
                 callback(null, a + b + c);
             }, [1, 2, 3])
             .then(function (sum) {
-                expect(sum).is(6);
+                expect(sum).toBe(6);
             })
             .done(done, done);
         });
@@ -38,9 +38,9 @@ describe("node support", function () {
                 callback(exception);
             }, [1, 2, 3])
             .then(function () {
-                expect(true).is(false);
+                expect(true).toBe(false);
             }, function (_exception) {
-                expect(_exception).is(exception);
+                expect(_exception).toBe(exception);
             })
             .done(done, done);
         });
@@ -54,7 +54,7 @@ describe("node support", function () {
                 callback(null, a + b + c);
             }, 1, 2, 3)
             .then(function (sum) {
-                expect(sum).is(6);
+                expect(sum).toBe(6);
             })
             .done(done, done);
         });
@@ -65,9 +65,9 @@ describe("node support", function () {
                 callback(exception);
             }, 1, 2, 3)
             .then(function () {
-                expect(true).is(false);
+                expect(true).toBe(false);
             }, function (_exception) {
-                expect(_exception).is(exception);
+                expect(_exception).toBe(exception);
             })
             .done(done, done);
         });
@@ -81,7 +81,7 @@ describe("node support", function () {
                 callback(null, a + b + c + d);
             }, 1, 2).call({}, 3, 4)
             .then(function (ten) {
-                expect(ten).is(10);
+                expect(ten).toBe(10);
             })
             .done(done, done);
         });
@@ -95,7 +95,7 @@ describe("node support", function () {
                 callback(null, this + a + b + c);
             }, 1, 2).call(3 /* effectively ignored as fn bound to 1 */, 4, 5)
             .then(function (twelve) {
-                expect(twelve).is(12);
+                expect(twelve).toBe(12);
             })
             .done(done, done);
         });
@@ -106,7 +106,7 @@ describe("node support", function () {
                 callback(null, this);
             }, expectedThis).call()
             .then(function(actualThis) {
-                expect(actualThis).is(expectedThis);
+                expect(actualThis).toBe(expectedThis);
             })
             .done(done, done);
         });
@@ -118,7 +118,7 @@ describe("node support", function () {
         it("fulfills with callback result", function (done) {
             Q.npost(obj, "method", [1, 2, 3])
             .then(function (sum) {
-                expect(sum).is(6);
+                expect(sum).toBe(6);
             })
             .done(done, done);
         });
@@ -126,7 +126,7 @@ describe("node support", function () {
         it("gets the correct thisp", function (done) {
             return Q.npost(obj, "thispChecker", [])
             .then(function (result) {
-                expect(result).is(true);
+                expect(result).toBe(true);
             })
             .done(done, done);
         });
@@ -134,9 +134,9 @@ describe("node support", function () {
         it("rejects with callback error", function (done) {
             return Q.npost(obj, "errorCallbacker", [1, 2, 3])
             .then(function () {
-                expect("blue").is("no, yellow!");
+                expect("blue").toBe("no, yellow!");
             }, function (_exception) {
-                expect(_exception).is(exception);
+                expect(_exception).toBe(exception);
             })
             .done(done, done);
         });
@@ -144,9 +144,9 @@ describe("node support", function () {
         it("rejects with thrown error", function (done) {
             return Q.npost(obj, "errorThrower", [1, 2, 3])
             .then(function () {
-                expect(true).is(false);
+                expect(true).toBe(false);
             }, function (_exception) {
-                expect(_exception).is(exception);
+                expect(_exception).toBe(exception);
             })
             .done(done, done);
         });
@@ -154,7 +154,7 @@ describe("node support", function () {
         it("works on promises for objects with Node methods", function (done) {
             return Q.npost(obj, "method", [1, 2, 3])
             .then(function (sum) {
-                expect(sum).is(6);
+                expect(sum).toBe(6);
             })
             .done(done, done);
         });
@@ -166,7 +166,7 @@ describe("node support", function () {
         it("fulfills with callback result", function (done) {
             Q.ninvoke(obj, "method", 1, 2, 3)
             .then(function (sum) {
-                expect(sum).is(6);
+                expect(sum).toBe(6);
             })
             .done(done, done);
         });
@@ -174,7 +174,7 @@ describe("node support", function () {
         it("gets the correct thisp", function (done) {
             Q.ninvoke(obj, "thispChecker")
             .then(function (result) {
-                expect(result).is(true);
+                expect(result).toBe(true);
             })
             .done(done, done);
         });
@@ -182,9 +182,9 @@ describe("node support", function () {
         it("rejects with callback error", function (done) {
             Q.ninvoke(obj, "errorCallbacker", 1, 2, 3)
             .then(function () {
-                expect("blue").is("no, yellow!");
+                expect("blue").toBe("no, yellow!");
             }, function (_exception) {
-                expect(_exception).is(exception);
+                expect(_exception).toBe(exception);
             })
             .done(done, done);
         });
@@ -192,9 +192,9 @@ describe("node support", function () {
         it("rejects with thrown error", function (done) {
             Q.ninvoke(obj, "errorThrower", 1, 2, 3)
             .then(function () {
-                expect(true).is(false);
+                expect(true).toBe(false);
             }, function (_exception) {
-                expect(_exception).is(exception);
+                expect(_exception).toBe(exception);
             })
             .done(done, done);
         });
@@ -202,7 +202,7 @@ describe("node support", function () {
         it("works on promises for objects with Node methods", function (done) {
             Q.ninvoke(obj, "method", 1, 2, 3)
             .then(function (sum) {
-                expect(sum).is(6);
+                expect(sum).toBe(6);
             })
             .done(done, done);
         });
@@ -216,7 +216,7 @@ describe("node support", function () {
             var callback = Q.makeNodeResolver(deferred.resolve);
             callback(null, 10);
             deferred.promise.then(function (value) {
-                expect(value).is(10);
+                expect(value).toBe(10);
             })
             .done(done, done);
         });
@@ -227,9 +227,9 @@ describe("node support", function () {
             var exception = new Error("Holy Exception of Anitoch");
             callback(exception);
             deferred.promise.then(function () {
-                expect(5).is(3);
+                expect(5).toBe(3);
             }, function (_exception) {
-                expect(_exception).is(exception);
+                expect(_exception).toBe(exception);
             })
             .done(done, done);
         });
@@ -240,22 +240,22 @@ describe("node support", function () {
 
         it("calls back with a resolution", function (done) {
             Q(10).nodeify(function (error, value) {
-                expect(error).is(null);
-                expect(value).is(10);
+                expect(error).toBe(null);
+                expect(value).toBe(10);
                 done();
             });
         });
 
         it("calls back with an error", function (done) {
             Q.reject(10).nodeify(function (error, value) {
-                expect(error).is(10);
+                expect(error).toBe(10);
                 done();
             });
         });
 
         it("forwards a promise", function (done) {
             Q(10).nodeify().then(function (ten) {
-                expect(ten).is(10);
+                expect(ten).toBe(10);
             }).done(done, done);
         });
 

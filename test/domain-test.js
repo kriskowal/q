@@ -41,7 +41,7 @@ describe("node domain support", function () {
         }, 100);
 
         d.on("error", function (theError) {
-            expect(theError).is(error);
+            expect(theError).toBe(error);
             clearTimeout(errorTimeout);
             done();
         });
@@ -59,7 +59,7 @@ describe("node domain support", function () {
         }, 100);
 
         d.on("error", function (theError) {
-            expect(theError).is(error);
+            expect(theError).toBe(error);
             clearTimeout(errorTimeout);
             done();
         });
@@ -83,7 +83,7 @@ describe("node domain support", function () {
         }, 500);
 
         d.on("error", function (theError) {
-            expect(theError).is(error);
+            expect(theError).toBe(error);
             clearTimeout(errorTimeout);
             done();
         });

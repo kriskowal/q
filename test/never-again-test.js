@@ -4,10 +4,10 @@ var REASON = "this is not an error, but it might show up in the console";
 
 describe("gh-9", function () {
     it("treats falsy values as resolved values without error", function () {
-        expect(Q(null).isPending()).is(false);
-        expect(Q(void 0).isPending()).is(false);
-        expect(Q(false).isPending()).is(false);
-        expect(Q().isPending()).is(false);
+        expect(Q(null).isPending()).toBe(false);
+        expect(Q(void 0).isPending()).toBe(false);
+        expect(Q(false).isPending()).toBe(false);
+        expect(Q().isPending()).toBe(false);
     });
 });
 
@@ -17,14 +17,14 @@ describe("gh-22", function () {
         for (var key in []) {
             keys.push(key);
         }
-        expect(keys.length).is(0);
+        expect(keys.length).toBe(0);
     });
 });
 
 describe("gh-73", function () {
     it("does not choke on non-error rejection reasons", function (done) {
         Q.onerror = function (error) {
-            expect(error).is(REASON);
+            expect(error).toBe(REASON);
             deferred.resolve();
         };
 
@@ -41,7 +41,7 @@ describe("gh-73", function () {
 describe("gh-90", function () {
     it("does not choke on rejection reasons with an undefined `stack`", function (done) {
         Q.onerror = function (theError) {
-            expect(theError).is(error);
+            expect(theError).toBe(error);
             deferred.resolve();
         };
 
@@ -76,7 +76,7 @@ describe("gh-75", function () {
         }
 
         badPromise.then(onResolution, onResolution).then(function () {
-            expect(resolutions).is(1);
+            expect(resolutions).toBe(1);
         })
         .done(done, done);
     });

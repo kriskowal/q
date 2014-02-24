@@ -27,8 +27,8 @@ describe("stack trace formatting", function () {
         var b = captured.get();
 
         Q.spread([a, b], function (a, b) {
-            expect(a).not.is(undefined);
-            expect(a).is(b);
+            expect(a).not.toBe(undefined);
+            expect(a).toBe(b);
         })
         .done(done, done);
     });

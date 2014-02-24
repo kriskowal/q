@@ -7,9 +7,9 @@ describe("estimate", function () {
 
     it("a deferred assumes never fulfilled", function (done) {
         var deferred = Q.defer();
-        expect(deferred.promise.getEstimate()).is(Infinity);
+        expect(deferred.promise.getEstimate()).toBe(Infinity);
         deferred.promise.observeEstimate(function (estimate) {
-            expect(estimate).is(Infinity);
+            expect(estimate).toBe(Infinity);
             done();
         });
     });
@@ -18,14 +18,14 @@ describe("estimate", function () {
         var deferred = Q.defer();
         var now = Date.now();
         deferred.promise.observeEstimate(function (estimate) {
-            expect(estimate).is(now + 2000)
+            expect(estimate).toBe(now + 2000)
             done();
         });
-        expect(deferred.promise.getEstimate()).is(Infinity);
+        expect(deferred.promise.getEstimate()).toBe(Infinity);
         deferred.setEstimate(now + 1000);
-        expect(deferred.promise.getEstimate()).is(now + 1000);
+        expect(deferred.promise.getEstimate()).toBe(now + 1000);
         deferred.setEstimate(now + 2000);
-        expect(deferred.promise.getEstimate()).is(now + 2000);
+        expect(deferred.promise.getEstimate()).toBe(now + 2000);
     });
 
     it("a deferred's estimate becomes the estimate of the resolution", function () {
@@ -33,13 +33,13 @@ describe("estimate", function () {
         var d2 = Q.defer();
         var now = Date.now();
 
-        expect(d1.promise.getEstimate()).is(Infinity);
+        expect(d1.promise.getEstimate()).toBe(Infinity);
         d1.setEstimate(now + 1000);
-        expect(d1.promise.getEstimate()).is(now + 1000);
+        expect(d1.promise.getEstimate()).toBe(now + 1000);
 
-        expect(d2.promise.getEstimate()).is(Infinity);
+        expect(d2.promise.getEstimate()).toBe(Infinity);
         d2.resolve(d1.promise);
-        expect(d2.promise.getEstimate()).is(now + 1000);
+        expect(d2.promise.getEstimate()).toBe(now + 1000);
     });
 
     it("a deferred's new estimate is observable upon resolution", function (done) {
@@ -48,7 +48,7 @@ describe("estimate", function () {
         var now = Date.now();
 
         d2.promise.observeEstimate(function (estimate) {
-            expect(estimate).is(now + 1000);
+            expect(estimate).toBe(now + 1000);
             done();
         });
 
@@ -59,9 +59,9 @@ describe("estimate", function () {
     it("interprets invalid estimates as forever", function () {
         var deferred = Q.defer();
         deferred.setEstimate({});
-        expect(deferred.promise.getEstimate()).is(Infinity);
+        expect(deferred.promise.getEstimate()).toBe(Infinity);
         deferred.setEstimate(NaN);
-        expect(deferred.promise.getEstimate()).is(Infinity);
+        expect(deferred.promise.getEstimate()).toBe(Infinity);
     });
 
     describe("then", function () {
@@ -78,7 +78,7 @@ describe("estimate", function () {
             var thenPromise = thisDeferred.promise.then(null, null, 1000);
             // So the composite time to completion should be one second from
             // now.
-            expect(thenPromise.getEstimate()).is(now + 1000);
+            expect(thenPromise.getEstimate()).toBe(now + 1000);
             // But we don't go through the exercise of resolving thisPromise as
             // it is beyond the scope of this test. If we did, the time to
             // completion would be almost instantaneous since neither
@@ -107,13 +107,13 @@ describe("estimate", function () {
             // The composite ETA of thenPromise should be now + 100ms (this) +
             // 200ms (then).
             setTimeout(function () {
-                expect(thenPromise.getEstimate()).near(now + 300, 10);
+                expect(thenPromise.getEstimate()).toBeNear(now + 300, 10);
             }, 0);
 
             // But the actual time of completion will be now + 200ms (this
             // actual) + 300ms (fulfilled actual)
             setTimeout(function () {
-                expect(thenPromise.getEstimate()).near(now + 500, 10);
+                expect(thenPromise.getEstimate()).toBeNear(now + 500, 10);
                 done();
             }, 600);
         });
@@ -125,24 +125,24 @@ describe("estimate", function () {
         it("composes initial estimate for all fulfilled values", function () {
             var now = Date.now();
             var allPromise = Q.all([Q(), Q(), Q()]);
-            expect(allPromise.getEstimate()).near(now, 10);
+            expect(allPromise.getEstimate()).toBeNear(now, 10);
         });
 
         it("composes initial estimate for forever pending values", function () {
             var now = Date.now();
             var allPromise = Q.all([Q(), Q.defer().promise, Q()]);
-            expect(allPromise.getEstimate()).is(Infinity);
+            expect(allPromise.getEstimate()).toBe(Infinity);
         });
 
         it("composes estimate for forever pending value update", function (done) {
             var now = Date.now();
             var oneDeferred = Q.defer();
             var allPromise = Q.all([Q(), oneDeferred.promise, Q()]);
-            expect(allPromise.getEstimate()).is(Infinity);
+            expect(allPromise.getEstimate()).toBe(Infinity);
             var expected = [Infinity, now + 10];
             var updates = 0;
             allPromise.observeEstimate(function (estimate) {
-                expect(estimate).near(expected.shift(), 10);
+                expect(estimate).toBeNear(expected.shift(), 10);
                 if (++updates === 2) {
                     done();
                 }
@@ -165,10 +165,10 @@ describe("estimate", function () {
             d1.setEstimate(now);
             d2.setEstimate(now);
             d3.setEstimate(now);
-            expect(allPromise.getEstimate()).is(Infinity);
+            expect(allPromise.getEstimate()).toBe(Infinity);
             var updates = 0;
             allPromise.observeEstimate(function (estimate) {
-                expect(estimate).is(now);
+                expect(estimate).toBe(now);
                 // TODO ascertain why this observer is getting called redundantly,
                 // albeit idempotently
                 // Both updates provide the initial value.
@@ -179,7 +179,7 @@ describe("estimate", function () {
             .then(function () {
                 // The input promises are forever-pending. We should never get
                 // here.
-                expect(false).is(true);
+                expect(false).toBe(true);
             });
         });
 
@@ -197,7 +197,7 @@ describe("estimate", function () {
             d1.setEstimate(now);
             d2.setEstimate(now);
             d3.setEstimate(now);
-            expect(allPromise.getEstimate()).is(Infinity);
+            expect(allPromise.getEstimate()).toBe(Infinity);
             // TODO again, ascertain the reason for the duplicate dispatch
             var expected = [
                 now,
@@ -205,7 +205,7 @@ describe("estimate", function () {
                 now + 1000
             ];
             allPromise.observeEstimate(function (estimate) {
-                expect(estimate).is(expected.shift());
+                expect(estimate).toBe(expected.shift());
                 if (expected.length === 0) {
                     done();
                 }
@@ -231,7 +231,7 @@ describe("estimate", function () {
             d1.setEstimate(now + 1000);
             d2.setEstimate(now + 2000);
             d3.setEstimate(now + 500);
-            expect(allPromise.getEstimate()).is(Infinity);
+            expect(allPromise.getEstimate()).toBe(Infinity);
 
             // These are the estimates we expect to observe
             var expected = [
@@ -240,7 +240,7 @@ describe("estimate", function () {
                 now + 500 // When d2 drops from +2000 to +500
             ];
             allPromise.observeEstimate(function (estimate) {
-                expect(estimate).is(expected.shift());
+                expect(estimate).toBe(expected.shift());
                 if (expected.length === 0) {
                     done();
                 }
@@ -270,7 +270,7 @@ describe("estimate", function () {
             d1.setEstimate(now + 1000);
             d2.setEstimate(now + 2000);
             d3.setEstimate(now + 500);
-            expect(allPromise.getEstimate()).is(Infinity);
+            expect(allPromise.getEstimate()).toBe(Infinity);
 
             // These are the estimates we expect to observe
             var expected = [
@@ -280,7 +280,7 @@ describe("estimate", function () {
                 now + 400, // When d3 drops from +500 to +0
             ];
             allPromise.observeEstimate(function (estimate) {
-                expect(estimate).is(expected.shift());
+                expect(estimate).toBe(expected.shift());
                 if (expected.length === 0) {
                     done();
                 }
@@ -305,7 +305,7 @@ describe("estimate", function () {
             var delayedPromise = Q().delay(100);
             var updates = 0;
             delayedPromise.observeEstimate(function (estimate) {
-                expect(estimate).near(now + 100, 10);
+                expect(estimate).toBeNear(now + 100, 10);
                 if (++updates === 2) {
                     done();
                 }
@@ -319,7 +319,7 @@ describe("estimate", function () {
             var delayedPromise = deferred.promise.delay(1000);
             var expected = [now + 2000, now + 2000];
             delayedPromise.observeEstimate(function (estimate) {
-                expect(estimate).is(expected.shift());
+                expect(estimate).toBe(expected.shift());
                 if (expected.length === 0) {
                     done();
                 }
@@ -335,7 +335,7 @@ describe("estimate", function () {
             var thenResolvedPromise = Q().delay(200).thenResolve(Q().delay(200));
             var updates = 0;
             thenResolvedPromise.observeEstimate(function (estimate) {
-                expect(estimate).near(now + 200, 10);
+                expect(estimate).toBeNear(now + 200, 10);
                 if (++updates === 4) {
                     done();
                 }
