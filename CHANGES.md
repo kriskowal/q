@@ -1,5 +1,18 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=70 -->
 
+## 1.0.1
+
+ - Adds support for `Q.Promise`, which implements common usage of the
+   ES6 `Promise` constructor and its methods. `Promise` does not have
+   a valid promise constructor and a proper implementation awaits
+   version 2 of Q.
+ - Removes the console stopgap for a promise inspector. This no longer
+   works with any degree of reliability.
+ - Fixes support for content security policies that forbid eval. Now
+   using the `StopIteration` global to distinguish SpiderMonkey
+   generators from ES6 generators, assuming that they will never
+   coexist.
+
 ## 1.0.0
 
 :cake: This is all but a re-release of version 0.9, which has settled
