@@ -9,7 +9,7 @@
 the latest of both the version 1 and version 0.9 release trains. These releases
 are stable. There will be no further releases of 0.9 after 0.9.7 which is nearly
 equivalent to version 1.0.0. All further releases of `q@~1.0` will be backward
-compatible. The version 2 release train introduces significant but
+compatible. The version 2 release train introduces significant and
 backward-incompatible changes and is experimental at this time.*
 
 If a function cannot return a value or throw an exception without
