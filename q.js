@@ -570,16 +570,16 @@ function Q_async(makeGenerator) {
         // when verb is "send", arg is a value
         // when verb is "throw", arg is an exception
         function continuer(verb, arg) {
-            var result;
+            var iteration;
             try {
-                result = generator[verb](arg);
+                iteration = generator[verb](arg);
             } catch (exception) {
                 return Q_reject(exception);
             }
-            if (result.done) {
-                return result.value;
+            if (iteration.done) {
+                return Q(iteration.value);
             } else {
-                return Q(result.value).then(callback, errback);
+                return Q(iteration.value).then(callback, errback);
             }
         }
         var generator = makeGenerator.apply(this, arguments);
