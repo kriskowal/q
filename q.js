@@ -1193,7 +1193,7 @@ function async(makeGenerator) {
                     return reject(exception);
                 }
                 if (result.done) {
-                    return result.value;
+                    return Q(result.value);
                 } else {
                     return when(result.value, callback, errback);
                 }
@@ -1204,7 +1204,7 @@ function async(makeGenerator) {
                     result = generator[verb](arg);
                 } catch (exception) {
                     if (isStopIteration(exception)) {
-                        return exception.value;
+                        return Q(exception.value);
                     } else {
                         return reject(exception);
                     }
