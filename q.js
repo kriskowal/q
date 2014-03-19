@@ -75,6 +75,9 @@ function makeStackTraceLong(error, promise) {
 }
 
 function filterStackString(stackString) {
+    if (Q.isIntrospective) {
+        return stackString;
+    }
     var lines = stackString.split("\n");
     var desiredLines = [];
     for (var i = 0; i < lines.length; ++i) {
