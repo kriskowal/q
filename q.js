@@ -529,14 +529,21 @@ Q.promised = function Q_promised(callback) {
     };
 };
 
-// XXX experimental.  This method is a way to denote that a local value is
-// serializable and should be immediately dispatched to a remote upon request,
-// instead of passing a reference.
-Q.passByCopy = function Q_passByCopy(object) {
-    //freeze(object);
-    //passByCopies.set(object, true);
-    return object;
+/**
+ */
+Q.passByCopy = // TODO XXX experimental
+Q.push = function (value) {
+    if (Object(value) === value && !Q_isPromise(value)) {
+        passByCopies.set(value, true);
+    }
+    return value;
 };
+
+Q.isPortable = function (value) {
+    return Object(value) === value && passByCopies.has(value);
+};
+
+var passByCopies = new WeakMap();
 
 /**
  * The async function is a decorator for generator functions, turning
@@ -1082,6 +1089,9 @@ Promise.prototype.delay = function Promise_delay(ms) {
 /**
  * TODO
  */
+Promise.prototype.pull = function Promise_pull() {
+    return this.dispatch("pull", []);
+};
 
 
 // Thus begins the portion dedicated to the deferred
@@ -1172,7 +1182,9 @@ Fulfilled.prototype.dispatch = function Fulfilled_dispatch(
         op === "get" ||
         op === "call" ||
         op === "invoke" ||
-        op === "keys"
+        op === "keys" ||
+        op === "iterate" ||
+        op === "pull"
     ) {
         try {
             result = this[op].apply(this, operands);
@@ -1212,6 +1224,20 @@ Fulfilled.prototype.call = function Fulfilled_call(args, thisp) {
 
 Fulfilled.prototype.keys = function Fulfilled_keys() {
     return Object.keys(this.value);
+};
+
+
+Fulfilled.prototype.pull = function Fulfilled_pull() {
+    var result;
+    if (Object(this.value) === this.value) {
+        result = Array.isArray(this.value) ? [] : {};
+        for (var name in this.value) {
+            result[name] = this.value[name];
+        }
+    } else {
+        result = this.value;
+    }
+    return Q.push(result);
 };
 
 
