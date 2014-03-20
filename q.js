@@ -1095,8 +1095,15 @@ function Deferred(promise) {
     // different promise (as it is in a Queue), but the intrinsic promise does
     // not change.
     promises.set(this, promise);
-    this.resolve = this.resolve.bind(this);
-    this.reject = this.reject.bind(this);
+    var self = this;
+    var resolve = this.resolve;
+    this.resolve = function (value) {
+        resolve.call(self, value);
+    };
+    var reject = this.reject;
+    this.reject = function (error) {
+        reject.call(self, error);
+    };
 }
 
 /**
