@@ -95,7 +95,7 @@ describe("queue", function () {
             .then(function (value) {
                 expect(value).toBe(3);
             })
-        ]);
+        ]).thenResolve();
     });
 
 });

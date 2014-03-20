@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "jshint": "^2.4.4",
-    "jasminum": "^0.0.0",
+    "jasminum": "^0.0.2",
     "opener": "^1.3.0",
     "promises-aplus-tests": "^1.0.2",
     "mr": "^0.15.1",
