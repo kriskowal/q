@@ -1,6 +1,6 @@
 {
   "name": "q",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A library for promises (CommonJS/Promises/A,B,D)",
   "homepage": "https://github.com/kriskowal/q",
   "author": "Kris Kowal <kris@cixar.com> (https://github.com/kriskowal)",
@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "jshint": "^2.4.4",
-    "jasminum": "^2.0.0",
+    "jasminum": "^2.0.1",
     "opener": "^1.3.0",
     "promises-aplus-tests": "^1.0.2",
     "istanbul": "^0.2.4",
