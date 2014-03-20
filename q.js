@@ -912,6 +912,9 @@ Promise.prototype.catch = function Promise_catch(rejected) {
  * TODO
  */
 Promise.prototype.finally = function Promise_finally(callback, ms) {
+    if (!callback) {
+        return this;
+    }
     callback = Q(callback);
     return this.then(function (value) {
         return callback.call().then(function Promise_finally_fulfilled() {
