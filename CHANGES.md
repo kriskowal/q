@@ -1,6 +1,6 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=70 -->
 
-## 2.0 :warning: BACKWARD INCOMPATIBILITY
+## 2.0.0 :warning: BACKWARD INCOMPATIBILITY
 
 This is an experimental release train, based on a rewrite of Q. The full
 interface of version 1 is supported but portions of the interface issue
@@ -67,6 +67,11 @@ deprecation warnings. Deprecated features will be removed outright in version 3.
  - Promises now support vicious cycle detection.  If a deferred promise
    ultimately depends upon its own resolution, it will be rejected with
    the singleton vicious cycle error.
+ - The methods `Q.push` and `promise.pull` have been added, as well as
+   `Q.isPortable` for marking local and remote objects as portable across
+   Q Connection.
+ - The method `promise.iterate` has been added to request a promise for a remote
+   iterator.
 
 ### Promise Constructor
 
