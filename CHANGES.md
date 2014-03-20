@@ -107,7 +107,7 @@ var promise = new Q.Promise(function (resolve, reject, setEstimate) {
 var deferred = Q.defer();
 setTimeout(deferred.resolve, 1000);
 deferred.setEstimate(Date.now() + 1000);
-var promise = defferred.promise;
+var promise = deferred.promise;
 
 var estimate = promise.getEstimate(); // now + 1s
 promise.observeEstimate(function (estimate) {
