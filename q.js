@@ -951,11 +951,17 @@ Promise.prototype.getEstimate = function Promise_getEstimate() {
  */
 Promise.prototype.dispatch = function Promise_dispatch(op, args) {
     var deferred = defer();
+    this.rawDispatch(deferred.resolve, op, args);
+    return deferred.promise;
+};
+
+/**
+ */
+Promise.prototype.rawDispatch = function Promise_rawDispatch(resolve, op, args) {
     var self = this;
     asap(function Promise_dispatch_task() {
-        Q_inspect(self).dispatch(deferred.resolve, op, args);
+        Q_inspect(self).dispatch(resolve, op, args);
     });
-    return deferred.promise;
 };
 
 /**
