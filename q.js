@@ -40,8 +40,10 @@ try {
 var qStartingLine = captureLine();
 var qFileName;
 
+require("collections/shim");
+var WeakMap = require("collections/weak-map");
+var Iterator = require("collections/iterator");
 var asap = require("asap");
-var WeakMap = require("weak-map");
 
 function isObject(value) {
     return value === Object(value);
@@ -1035,6 +1037,13 @@ Promise.prototype.keys = function Promise_keys() {
 /**
  * TODO
  */
+Promise.prototype.iterate = function Promise_iterate() {
+    return this.dispatch("iterate", []);
+};
+
+/**
+ * TODO
+ */
 Promise.prototype.spread = function Promise_spread(fulfilled, rejected, ms) {
     return this.all().then(function Promise_spread_fulfilled(array) {
         return fulfilled.apply(void 0, array);
@@ -1226,6 +1235,9 @@ Fulfilled.prototype.keys = function Fulfilled_keys() {
     return Object.keys(this.value);
 };
 
+Fulfilled.prototype.iterate = function Fulfilled_iterate() {
+    return new Iterator(this.value);
+};
 
 Fulfilled.prototype.pull = function Fulfilled_pull() {
     var result;
