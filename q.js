@@ -732,6 +732,13 @@ Promise.prototype.isRejected = function Promise_isRejected() {
 };
 
 /**
+ * TODO
+ */
+Promise.prototype.toBePassed = function Promise_toBePassed() {
+    return Q_inspect(this).state === "passed";
+};
+
+/**
  * @returns {string} merely `"[object Promise]"`
  */
 Promise.prototype.toString = function Promise_toString() {
@@ -1102,6 +1109,17 @@ Promise.prototype.pull = function Promise_pull() {
     return this.dispatch("pull", []);
 };
 
+/**
+ * TODO
+ */
+Promise.prototype.pass = function Promise_pass() {
+    if (!this.toBePassed()) {
+        return new Promise(new Passed(this));
+    } else {
+        return this;
+    }
+};
+
 
 // Thus begins the portion dedicated to the deferred
 
@@ -1221,14 +1239,36 @@ Fulfilled.prototype.get = function Fulfilled_get(name) {
     return this.value[name];
 };
 
-Fulfilled.prototype.invoke = function Fulfilled_invoke(
-    name, args
-) {
-    return this.value[name].apply(this.value, args);
+Fulfilled.prototype.call = function Fulfilled_call(args, thisp) {
+    return this.callInvoke(this.value, args, thisp);
 };
 
-Fulfilled.prototype.call = function Fulfilled_call(args, thisp) {
-    return this.value.apply(thisp, args);
+Fulfilled.prototype.invoke = function Fulfilled_invoke(name, args) {
+    return this.callInvoke(this.value[name], args, this.value);
+};
+
+Fulfilled.prototype.callInvoke = function Fulfilled_invoke(callback, args, thisp) {
+    var waitToBePassed;
+    for (var index = 0; index < args.length; index++) {
+        if (Q_isPromise(args[index]) && args[index].toBePassed()) {
+            waitToBePassed = waitToBePassed || [];
+            waitToBePassed.push(args[index]);
+        }
+    }
+    if (waitToBePassed) {
+        var self = this;
+        return Q_all(waitToBePassed).then(function () {
+            return self.callInvoke(callback, args.map(function (arg) {
+                if (Q_isPromise(arg) && arg.toBePassed()) {
+                    return arg.inspect().value;
+                } else {
+                    return arg;
+                }
+            }), thisp);
+        });
+    } else {
+        return callback.apply(thisp, args);
+    }
 };
 
 Fulfilled.prototype.keys = function Fulfilled_keys() {
@@ -1377,6 +1417,21 @@ Thenable.prototype.cast = function Thenable_cast() {
 
 Thenable.prototype.dispatch = function Thenable_dispatch(resolve, op, args) {
     this.cast().dispatch(resolve, op, args);
+};
+
+
+function Passed(promise) {
+    this.promise = promise;
+}
+
+Passed.prototype.state = "passed";
+
+Passed.prototype.inspect = function Passed_inspect() {
+    return this.promise.inspect();
+};
+
+Passed.prototype.dispatch = function Passed_dispatch(resolve, op, args) {
+    return this.promise.rawDispatch(resolve, op, args);
 };
 
 
