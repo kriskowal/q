@@ -951,7 +951,7 @@ Promise.prototype.finally = function Promise_finally(callback, ms) {
  * TODO
  */
 Promise.prototype.observeEstimate = function Promise_observeEstimate(emit) {
-    this.dispatch("estimate", [emit]);
+    this.rawDispatch(null, "estimate", [emit]);
     return this;
 };
 
