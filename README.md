@@ -369,7 +369,7 @@ return funcs.reduce(function (soFar, f) {
 Or, you could use th ultra-compact version:
 
 ```javascript
-return funcs.reduce(Q.when, Q());
+return funcs.reduce(Q.when, Q(initialVal));
 ```
 
 ### Handling Errors
