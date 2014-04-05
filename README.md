@@ -168,8 +168,8 @@ will be responsible for resolving ``outputPromise``.
     “become” that promise.  Being able to become a new promise is useful
     for managing delays, combining results, or recovering from errors.
 
-If the ``getInputPromise()`` promise gets rejected and you omit the
-rejection handler, the **error** will go to ``outputPromise``:
+If the input promise gets fulfilled and you omit the fulfillment handler, the
+**value** will go to ``outputPromise``:
 
 ```javascript
 var outputPromise = getInputPromise()
@@ -177,8 +177,8 @@ var outputPromise = getInputPromise()
 });
 ```
 
-If the input promise gets fulfilled and you omit the fulfillment handler, the
-**value** will go to ``outputPromise``:
+If the ``getInputPromise()`` promise gets rejected and you omit the
+rejection handler, the **error** will go to ``outputPromise``:
 
 ```javascript
 var outputPromise = getInputPromise()
