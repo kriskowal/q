@@ -1634,10 +1634,26 @@ describe("timeout", function () {
             },
             function (error) {
                 expect(/custom/i.test(error.message)).toBe(true);
+                expect(error.code).toBe("ETIMEDOUT");
             }
         );
     });
 
+    it("should reject with a custom timeout error if the promise is too slow and Error object was provided", function () {
+        var customError = new Error("custom");
+        customError.isCustom = true;
+        return Q.delay(100)
+        .timeout(10, customError)
+        .then(
+            function () {
+                expect(true).toBe(false);
+            },
+            function (error) {
+                expect(/custom/i.test(error.message)).toBe(true);
+                expect(error.isCustom).toBe(true);
+            }
+        );
+    });
 
 });
 
