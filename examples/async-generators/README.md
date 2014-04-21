@@ -24,9 +24,9 @@ function* count() {
 }
 
 var counter = count();
-count.next().value === 0;
-count.next().value === 1;
-count.next().value === 2;
+counter.next().value === 0;
+counter.next().value === 1;
+counter.next().value === 2;
 ```
 
 `yield` can also return a value, if the `next` method of the generator is
