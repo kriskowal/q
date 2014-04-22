@@ -89,6 +89,9 @@ var nextTick =(function () {
     var flushing = false;
     var requestTick = void 0;
     var isNodeJS = false;
+	var MutationObserver;
+	var textNode;
+	var textNodeData = 1;
 
     function flush() {
         /* jshint loopfunc: true */
@@ -164,7 +167,13 @@ var nextTick =(function () {
             process.nextTick(flush);
         };
 
-    } else if (typeof setImmediate === "function") {
+    } else  if (typeof window !== "undefined" && (MutationObserver = window.MutationObserver || window.WebKitMutationObserver)) {
+		textNode = document.createTextNode('');
+		new MutationObserver(flush).observe(textNode, {characterData: true});
+		requestTick = function () {
+			textNode.data = (textNodeData = -textNodeData);
+		};
+	} else if (typeof setImmediate === "function") {
         // In IE10, Node.js 0.9+, or https://github.com/NobleJS/setImmediate
         if (typeof window !== "undefined") {
             requestTick = setImmediate.bind(window, flush);
