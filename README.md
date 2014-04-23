@@ -798,7 +798,7 @@ From previous event:
     at Object.<anonymous> (/path/to/test.js:7:1)
 ```
 
-Note how you can see the the function that triggered the async operation in the
+Note how you can see the function that triggered the async operation in the
 stack trace! This is very helpful for debugging, as otherwise you end up getting
 only the first line, plus a bunch of Q internals, with no sign of where the
 operation started.
