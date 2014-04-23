@@ -294,7 +294,7 @@ If you have a promise for an array, you can use ``spread`` as a
 replacement for ``then``.  The ``spread`` function “spreads” the
 values over the arguments of the fulfillment handler.  The rejection handler
 will get called at the first sign of failure.  That is, whichever of
-the recived promises fails first gets handled by the rejection handler.
+the received promises fails first gets handled by the rejection handler.
 
 ```javascript
 function eventualAdd(a, b) {
