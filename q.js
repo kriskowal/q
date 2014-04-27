@@ -1563,6 +1563,64 @@ Promise.prototype.allSettled = function () {
 };
 
 /**
+ * @see Promise#auto
+ */
+Q.auto = auto;
+function auto(promiseMap) {
+    return Q(promiseMap).auto();
+}
+
+/**
+ * Resolve promises and tasks based on their dependency.
+ * @param object an object which define task name and dependency like
+ * @returns a promise for an object of the corresponding values
+ */
+Promise.prototype.auto = function () {
+    return this.then(function (_promiseObj) {
+        var keys = [];
+        var promiseObj = {};
+        for (var key in _promiseObj) {
+            if (_promiseObj.hasOwnProperty(key)) {
+                keys.push(key);
+                promiseObj[key] = _promiseObj[key];
+            }
+        }
+
+        function getPromise(circularDetect, key) {
+            circularDetect.push(key);
+            var promise = promiseObj[key];
+            if (promise.length && promise.slice) {
+                var dependencies = array_map(promise.slice(0, promise.length - 1), function (key) {
+                    if (circularDetect.indexOf(key) !== -1) {
+                        return Q.reject("circular dependencies are found in q.auto: " + circularDetect.join("->") + "->" + key);
+                    }
+
+                    return getPromise(circularDetect, key);
+                });
+                promise = promiseObj[key] = Q.all(dependencies).spread(promise[promise.length - 1]);
+            } else if (promise !== null && promise !== undefined && !isPromise(promise) && promise.apply) {
+                promise = promise();
+            }
+
+            return promise;
+        }
+
+        var promises = array_map(keys, function (key) {
+            return getPromise([], key);
+        });
+
+        return Q.all(promises).then(function (results) {
+            var resultObj = {};
+            for (var i = 0, l = keys.length; i < l; i ++) {
+                resultObj[keys[i]] = results[i];
+            }
+
+            return resultObj;
+        });
+    });
+};
+
+/**
  * Captures the failure of a promise, giving an oportunity to recover
  * with a callback.  If the given promise is fulfilled, the returned
  * promise is fulfilled.
