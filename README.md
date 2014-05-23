@@ -610,6 +610,46 @@ requestOkText("http://localhost:3000")
 });
 ```
 
+#### Using `Q.Promise`
+
+This is an alternative promise-creation API that has the same power as
+the deferred concept, but without introducing another conceptual entity.
+
+Rewriting the `requestOkText` example above using `Q.Promise`:
+
+```javascript
+function requestOkText(url) {
+    return Q.Promise(function(resolve, reject, notify) {
+        var request = new XMLHttpRequest();
+
+        request.open("GET", url, true);
+        request.onload = onload;
+        request.onerror = onerror;
+        request.onprogress = onprogress;
+        request.send();
+
+        function onload() {
+            if (request.status === 200) {
+                resolve(request.responseText);
+            } else {
+                reject(new Error("Status code was " + request.status));
+            }
+        }
+
+        function onerror() {
+            reject(new Error("Can't XHR " + JSON.stringify(url)));
+        }
+
+        function onprogress(event) {
+            notify(event.loaded / event.total);
+        }
+    });
+}
+```
+
+If `requestOkText` were to throw an exception, the returned promise would be
+rejected with that thrown exception as the rejection reason.
+
 ### The Middle
 
 If you are using a function that may return a promise, but just might
