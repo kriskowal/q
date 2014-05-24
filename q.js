@@ -1453,7 +1453,7 @@ Q.ninvoke = function Q_ninvoke(object, name /*...args*/) {
         args[index - 2] = arguments[index];
     }
     var deferred = Q.defer();
-    args[index - 2] = makeNodebackResolver(deferred.resolve);
+    args[index - 2] = deferred.makeNodeResolver();
     Q(object).dispatch("invoke", [name, args]).catch(deferred.reject);
     return deferred.promise;
 };
@@ -1474,7 +1474,7 @@ Q.denodeify = function Q_denodeify(callback, pattern) {
             args[index] = arguments[index];
         }
         var deferred = Q.defer();
-        args[index] = makeNodebackResolver(deferred.resolve, pattern);
+        args[index] = deferred.makeNodeResolver(pattern);
         Q(callback).apply(this, args).catch(deferred.reject);
         return deferred.promise;
     };
@@ -1483,12 +1483,17 @@ Q.denodeify = function Q_denodeify(callback, pattern) {
 /**
  * Creates a Node.js-style callback that will resolve or reject the deferred
  * promise.
- * TODO
+ * @param unpack `true` means that the Node.js-style-callback accepts a
+ * fixed or variable number of arguments and that the deferred should be resolved
+ * with an array of these value arguments, or rejected with the error argument.
+ * An array of names means that the Node.js-style-callback accepts a fixed
+ * number of arguments, and that the resolution should be an object with
+ * properties corresponding to the given names and respective value arguments.
  * @returns a nodeback
- * @private
  */
-function makeNodebackResolver(resolve, names) {
-    if (names === true) {
+Deferred.prototype.makeNodeResolver = function (unpack) {
+    var resolve = this.resolve;
+    if (unpack === true) {
         return function variadicNodebackToResolver(error) {
             if (error) {
                 resolve(Q_reject(error));
@@ -1500,14 +1505,14 @@ function makeNodebackResolver(resolve, names) {
                 resolve(value);
             }
         };
-    } else if (names) {
+    } else if (unpack) {
         return function namedArgumentNodebackToResolver(error) {
             if (error) {
                 resolve(Q_reject(error));
             } else {
                 var value = {};
-                for (var index in names) {
-                    value[names[index]] = arguments[index + 1];
+                for (var index in unpack) {
+                    value[unpack[index]] = arguments[index + 1];
                 }
                 resolve(value);
             }
@@ -1521,7 +1526,7 @@ function makeNodebackResolver(resolve, names) {
             }
         };
     }
-}
+};
 
 /**
  * TODO
@@ -1708,7 +1713,7 @@ Promise.prototype.passByCopy = deprecate(function (value) {
 Q.nfapply = deprecate(function (callback, args) {
     var deferred = Q.defer();
     var nodeArgs = Array.prototype.slice.call(args);
-    nodeArgs.push(makeNodebackResolver(deferred.resolve));
+    nodeArgs.push(deferred.makeNodeResolver());
     Q(callback).apply(this, nodeArgs).catch(deferred.reject);
     return deferred.promise;
 }, "nfapply");
@@ -1735,7 +1740,7 @@ Q.nfbind = deprecate(function (callback /*...args*/) {
     return function () {
         var nodeArgs = baseArgs.concat(Array.prototype.slice.call(arguments));
         var deferred = Q.defer();
-        nodeArgs.push(makeNodebackResolver(deferred.resolve));
+        nodeArgs.push(deferred.makeNodeResolver());
         Q(callback).apply(this, nodeArgs).catch(deferred.reject);
         return deferred.promise;
     };
@@ -1754,7 +1759,7 @@ Q.nbind = deprecate(function (callback, thisp /*...args*/) {
     return function () {
         var nodeArgs = baseArgs.concat(Array.prototype.slice.call(arguments));
         var deferred = Q.defer();
-        nodeArgs.push(makeNodebackResolver(deferred.resolve));
+        nodeArgs.push(deferred.makeNodeResolver());
         function bound() {
             return callback.apply(thisp, arguments);
         }
@@ -1765,7 +1770,7 @@ Q.nbind = deprecate(function (callback, thisp /*...args*/) {
 
 Q.npost = deprecate(function (object, name, nodeArgs) {
     var deferred = Q.defer();
-    nodeArgs.push(makeNodebackResolver(deferred.resolve));
+    nodeArgs.push(deferred.makeNodeResolver());
     Q(object).dispatch("invoke", [name, nodeArgs]).catch(deferred.reject);
     return deferred.promise;
 }, "npost", "ninvoke (with spread arguments)");
@@ -1773,8 +1778,6 @@ Q.npost = deprecate(function (object, name, nodeArgs) {
 Promise.prototype.npost = deprecate(function (name, args) {
     return Q.npost(this, name, args);
 }, "npost", "Q.ninvoke (with caveats)");
-
-Q.makeNodeResolver = deprecate(makeNodebackResolver, "makeNodeResolver");
 
 Promise.prototype.ninvoke = deprecate(function (name) {
     var args = new Array(arguments.length - 1);

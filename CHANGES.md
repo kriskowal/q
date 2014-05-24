@@ -62,8 +62,10 @@ deprecation warnings. Deprecated features will be removed outright in version 3.
    partially apply arguments. It now also takes a second argument
    that determines whether the decorated function needs a variadic or named
    argument nodeback.
- - :warning: `makeNodeResolver` has been deprecated and no longer
-   implicitly captures variadic arguments in an array.
+ - :warning: `makeNodeResolver` no longer implicitly captures variadic arguments
+   in an array. The user must pass `true` to resolve with an array of variadic
+   arguments. The user may pass an array of names to resolve with an object with
+   the corresponding properties for each argument.
  - Promises now support vicious cycle detection.  If a deferred promise
    ultimately depends upon its own resolution, it will be rejected with
    the singleton vicious cycle error.

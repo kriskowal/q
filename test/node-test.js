@@ -213,7 +213,7 @@ describe("node support", function () {
 
         it("fulfills a promise with a single callback argument", function (done) {
             var deferred = Q.defer();
-            var callback = Q.makeNodeResolver(deferred.resolve);
+            var callback = deferred.makeNodeResolver();
             callback(null, 10);
             deferred.promise.then(function (value) {
                 expect(value).toBe(10);
@@ -223,7 +223,7 @@ describe("node support", function () {
 
         it("rejects a promise", function (done) {
             var deferred = Q.defer();
-            var callback = Q.makeNodeResolver(deferred.resolve);
+            var callback = deferred.makeNodeResolver();
             var exception = new Error("Holy Exception of Anitoch");
             callback(exception);
             deferred.promise.then(function () {
