@@ -366,7 +366,7 @@ return funcs.reduce(function (soFar, f) {
 }, Q(initialVal));
 ```
 
-Or, you could use th ultra-compact version:
+Or, you could use the ultra-compact version:
 
 ```javascript
 return funcs.reduce(Q.when, Q(initialVal));
