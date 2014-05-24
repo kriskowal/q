@@ -181,7 +181,7 @@ function deprecate(callback, name, alternative) {
 
 var handlers = new WeakMap();
 
-function Q_inspect(promise) {
+function Q_getHandler(promise) {
     var handler = handlers.get(promise);
     if (!handler || !handler.became) {
         return handler;
@@ -202,7 +202,7 @@ function follow(handler) {
 
 var theViciousCycleError = new Error("Can't resolve a promise with itself");
 var theViciousCycleRejection = Q_reject(theViciousCycleError);
-var theViciousCycle = Q_inspect(theViciousCycleRejection);
+var theViciousCycle = Q_getHandler(theViciousCycleRejection);
 
 var thenables = new WeakMap();
 
@@ -324,7 +324,7 @@ function Q_all(questions) {
         var handler;
         if (
             Q_isPromise(promise) &&
-            (handler = Q_inspect(promise)).state === "fulfilled"
+            (handler = Q_getHandler(promise)).state === "fulfilled"
         ) {
             answers[index] = handler.value;
         } else {
@@ -624,7 +624,7 @@ function Promise(handler) {
     if (typeof handler === "function") {
         var setup = handler;
         var deferred = defer();
-        handler = Q_inspect(deferred.promise);
+        handler = Q_getHandler(deferred.promise);
         try {
             setup(deferred.resolve, deferred.reject, deferred.setEstimate);
         } catch (error) {
@@ -705,14 +705,14 @@ Promise.prototype.inspect = function Promise_inspect() {
     // the second layer captures only the relevant "state" properties of the
     // handler to prevent leaking the capability to access or alter the
     // handler.
-    return Q_inspect(this).inspect();
+    return Q_getHandler(this).inspect();
 };
 
 /**
  * @returns {boolean} whether the promise is waiting for a result.
  */
 Promise.prototype.isPending = function Promise_isPending() {
-    return Q_inspect(this).state === "pending";
+    return Q_getHandler(this).state === "pending";
 };
 
 /**
@@ -720,7 +720,7 @@ Promise.prototype.isPending = function Promise_isPending() {
  * fulfillment value.
  */
 Promise.prototype.isFulfilled = function Promise_isFulfilled() {
-    return Q_inspect(this).state === "fulfilled";
+    return Q_getHandler(this).state === "fulfilled";
 };
 
 /**
@@ -728,14 +728,14 @@ Promise.prototype.isFulfilled = function Promise_isFulfilled() {
  * its rejection.
  */
 Promise.prototype.isRejected = function Promise_isRejected() {
-    return Q_inspect(this).state === "rejected";
+    return Q_getHandler(this).state === "rejected";
 };
 
 /**
  * TODO
  */
 Promise.prototype.toBePassed = function Promise_toBePassed() {
-    return Q_inspect(this).state === "passed";
+    return Q_getHandler(this).state === "passed";
 };
 
 /**
@@ -869,7 +869,7 @@ Promise.prototype.done = function Promise_done(fulfilled, rejected) {
             _rejected = process.domain.bind(_rejected);
         }
 
-        Q_inspect(self).dispatch(_fulfilled, "then", [_rejected]);
+        Q_getHandler(self).dispatch(_fulfilled, "then", [_rejected]);
     });
 };
 
@@ -959,7 +959,7 @@ Promise.prototype.observeEstimate = function Promise_observeEstimate(emit) {
  * TODO
  */
 Promise.prototype.getEstimate = function Promise_getEstimate() {
-    return Q_inspect(this).estimate;
+    return Q_getHandler(this).estimate;
 };
 
 /**
@@ -976,15 +976,15 @@ Promise.prototype.dispatch = function Promise_dispatch(op, args) {
 Promise.prototype.rawDispatch = function Promise_rawDispatch(resolve, op, args) {
     var self = this;
     asap(function Promise_dispatch_task() {
-        Q_inspect(self).dispatch(resolve, op, args);
+        Q_getHandler(self).dispatch(resolve, op, args);
     });
 };
 
 /**
  * TODO
  */
-Promise.prototype.get = function Promise_get(key) {
-    return this.dispatch("get", [key]);
+Promise.prototype.get = function Promise_get(name) {
+    return this.dispatch("get", [name]);
 };
 
 /**
@@ -1147,7 +1147,7 @@ function Deferred(promise) {
  * TODO
  */
 Deferred.prototype.resolve = function Deferred_resolve(value) {
-    var handler = Q_inspect(promises.get(this));
+    var handler = Q_getHandler(promises.get(this));
     if (!handler.messages) {
         return;
     }
@@ -1158,7 +1158,7 @@ Deferred.prototype.resolve = function Deferred_resolve(value) {
  * TODO
  */
 Deferred.prototype.reject = function Deferred_reject(reason) {
-    var handler = Q_inspect(promises.get(this));
+    var handler = Q_getHandler(promises.get(this));
     if (!handler.messages) {
         return;
     }
@@ -1176,7 +1176,7 @@ Deferred.prototype.setEstimate = function Deferred_setEstimate(estimate) {
     if (estimate < 1e12 && estimate !== -Infinity) {
         throw new Error("Estimate values should be a number of miliseconds in the future");
     }
-    var handler = Q_inspect(promises.get(this));
+    var handler = Q_getHandler(promises.get(this));
     // TODO There is a bit of capability leakage going on here. The Deferred
     // should only be able to set the estimate for its original
     // Pending, not for any handler that promise subsequently became.
@@ -1247,7 +1247,7 @@ Fulfilled.prototype.invoke = function Fulfilled_invoke(name, args) {
     return this.callInvoke(this.value[name], args, this.value);
 };
 
-Fulfilled.prototype.callInvoke = function Fulfilled_invoke(callback, args, thisp) {
+Fulfilled.prototype.callInvoke = function Fulfilled_callInvoke(callback, args, thisp) {
     var waitToBePassed;
     for (var index = 0; index < args.length; index++) {
         if (Q_isPromise(args[index]) && args[index].toBePassed()) {
@@ -1356,7 +1356,7 @@ Pending.prototype.dispatch = function Pending_dispatch(resolve, op, operands) {
 
 Pending.prototype.become = function Pending_become(promise) {
     this.became = theViciousCycle;
-    var handler = Q_inspect(promise);
+    var handler = Q_getHandler(promise);
     this.became = handler;
 
     handlers.set(promise, handler);
@@ -1366,7 +1366,7 @@ Pending.prototype.become = function Pending_become(promise) {
         // makeQ does not have this asap call, so it must be queueing events
         // downstream. TODO look at makeQ to ascertain
         asap(function Pending_become_eachMessage_task() {
-            var handler = Q_inspect(promise);
+            var handler = Q_getHandler(promise);
             handler.dispatch.apply(handler, message);
         });
     });
@@ -1410,7 +1410,7 @@ Thenable.prototype.cast = function Thenable_cast() {
                 deferred.reject(exception);
             }
         });
-        this.became = Q_inspect(deferred.promise);
+        this.became = Q_getHandler(deferred.promise);
     }
     return this.became;
 };
