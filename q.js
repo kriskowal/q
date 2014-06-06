@@ -1,4 +1,4 @@
-// vim:ts=4:sts=4:sw=4:
+/* vim:ts=4:sts=4:sw=4: */
 /*!
  *
  * Copyright 2009-2013 Kris Kowal under the terms of the MIT
@@ -1458,6 +1458,17 @@ Q.ninvoke = function Q_ninvoke(object, name /*...args*/) {
     return deferred.promise;
 };
 
+Promise.prototype.ninvoke = function Promise_ninvoke(name /*...args*/) {
+    var args = new Array(arguments.length);
+    for (var index = 1; index < arguments.length; index++) {
+        args[index - 1] = arguments[index];
+    }
+    var deferred = Q.defer();
+    args[index - 1] = deferred.makeNodeResolver();
+    this.dispatch("invoke", [name, args]).catch(deferred.reject);
+    return deferred.promise;
+};
+
 /**
  * Wraps a Node.js continuation passing function and returns an equivalent
  * version that returns a promise.
@@ -1778,14 +1789,6 @@ Q.npost = deprecate(function (object, name, nodeArgs) {
 Promise.prototype.npost = deprecate(function (name, args) {
     return Q.npost(this, name, args);
 }, "npost", "Q.ninvoke (with caveats)");
-
-Promise.prototype.ninvoke = deprecate(function (name) {
-    var args = new Array(arguments.length - 1);
-    for (var index = 1; index < arguments.length; index++) {
-        args[index - 1] = arguments[index];
-    }
-    return Q.npost(this, name, args);
-}, "ninvoke", "Q.ninvoke");
 
 Q.nmapply = deprecate(Q.nmapply, "nmapply", "q/node nmapply");
 Promise.prototype.nmapply = deprecate(Promise.prototype.npost, "nmapply", "Q.nmapply");

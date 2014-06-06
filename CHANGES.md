@@ -1,6 +1,6 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=70 -->
 
-## 2.0.0 :warning: BACKWARD INCOMPATIBILITY
+## 2.0.2 :warning: BACKWARD INCOMPATIBILITY
 
 This is an experimental release train, based on a rewrite of Q. The full
 interface of version 1 is supported but portions of the interface issue
