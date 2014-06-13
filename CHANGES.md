@@ -6,13 +6,11 @@ This is an experimental release train, based on a rewrite of Q. The full
 interface of version 1 is supported but portions of the interface issue
 deprecation warnings. Deprecated features will be removed outright in version 3.
 
- - :warning: As of `1.0`, Q will require ECMAScript 5. Using `es5-shim`,
+ - :warning: As of `2.0`, Q will require ECMAScript 5. Using `es5-shim`,
    nor even `es5-sham`, is not sufficient to make legacy engines
    compatible because Q requires a WeakMap shim that depends on ES5
-   properties.  The `0.9` version train will continue to support older
-   browsers and will attempt to provide a forward-compatible feature set
-   if you take care to eliminate all deprecation warnings before
-   migrating.
+   properties.  The `0.9` and `1.0` version trains will continue to support
+   older browsers.
  - :warning: Release management has changed.  The source for this
    library is `q.js` and is only suitable for consumption as a CommonJS,
    ergo Node.js, module.  Releases are created using `grunt`, including
