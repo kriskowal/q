@@ -234,6 +234,32 @@ describe("node support", function () {
             .done(done, done);
         });
 
+        it("provides arguments as array given true", function (done) {
+            var deferred = Q.defer();
+            var callback = deferred.makeNodeResolver(true);
+            callback(null, 3, 4, 5);
+            deferred.promise.then(function (value) {
+                expect(value.length).toBe(3);
+                expect(value[0]).toBe(3);
+                expect(value[1]).toBe(4);
+                expect(value[2]).toBe(5);
+            })
+            .done(done, done);
+        });
+
+        it("provides arguments as object given array of names", function (done) {
+            var deferred = Q.defer();
+            var callback = deferred.makeNodeResolver(["x", "y", "z"]);
+            callback(null, 3, 4, 5);
+            deferred.promise.then(function (value) {
+                expect(Object.keys(value).length).toBe(3);
+                expect(value.x).toBe(3);
+                expect(value.y).toBe(4);
+                expect(value.z).toBe(5);
+            })
+            .done(done, done);
+        });
+
     });
 
     describe("nodeify", function () {
