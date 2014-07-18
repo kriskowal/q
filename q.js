@@ -1522,7 +1522,7 @@ Deferred.prototype.makeNodeResolver = function (unpack) {
                 resolve(Q_reject(error));
             } else {
                 var value = {};
-                for (var index in unpack) {
+                for (var index = 0; index < unpack.length; index++) {
                     value[unpack[index]] = arguments[index + 1];
                 }
                 resolve(value);
