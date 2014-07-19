@@ -642,7 +642,7 @@ function promise(resolver) {
     if (typeof resolver !== "function") {
         throw new TypeError("resolver must be a function.");
     }
-    var deferred = defer();
+    var deferred = Q.defer();
     try {
         resolver(deferred.resolve, deferred.reject, deferred.notify);
     } catch (reason) {
@@ -790,7 +790,7 @@ Promise.prototype.toString = function () {
 
 Promise.prototype.then = function (fulfilled, rejected, progressed) {
     var self = this;
-    var deferred = defer();
+    var deferred = Q.defer();
     var done = false;   // ensure the untrusted promise makes at most a
                         // single call to one of the callbacks
 
@@ -1103,7 +1103,7 @@ function fulfill(value) {
  * @returns a Q promise
  */
 function coerce(promise) {
-    var deferred = defer();
+    var deferred = Q.defer();
     nextTick(function () {
         try {
             promise.then(deferred.resolve, deferred.reject, deferred.notify);
@@ -1311,7 +1311,7 @@ function dispatch(object, op, args) {
 
 Promise.prototype.dispatch = function (op, args) {
     var self = this;
-    var deferred = defer();
+    var deferred = Q.defer();
     nextTick(function () {
         self.promiseDispatch(deferred.resolve, op, args);
     });
@@ -1486,7 +1486,7 @@ Q.all = all;
 function all(promises) {
     return when(promises, function (promises) {
         var countDown = 0;
-        var deferred = defer();
+        var deferred = Q.defer();
         array_reduce(promises, function (undefined, promise, index) {
             var snapshot;
             if (
@@ -1691,7 +1691,7 @@ Q.timeout = function (object, ms, error) {
 };
 
 Promise.prototype.timeout = function (ms, error) {
-    var deferred = defer();
+    var deferred = Q.defer();
     var timeoutId = setTimeout(function () {
         if (!error || "string" === typeof error) {
             error = new Error(error || "Timed out after " + ms + " ms");
@@ -1730,7 +1730,7 @@ Q.delay = function (object, timeout) {
 
 Promise.prototype.delay = function (timeout) {
     return this.then(function (value) {
-        var deferred = defer();
+        var deferred = Q.defer();
         setTimeout(function () {
             deferred.resolve(value);
         }, timeout);
@@ -1752,7 +1752,7 @@ Q.nfapply = function (callback, args) {
 };
 
 Promise.prototype.nfapply = function (args) {
-    var deferred = defer();
+    var deferred = Q.defer();
     var nodeArgs = array_slice(args);
     nodeArgs.push(deferred.makeNodeResolver());
     this.fapply(nodeArgs).fail(deferred.reject);
@@ -1775,7 +1775,7 @@ Q.nfcall = function (callback /*...args*/) {
 
 Promise.prototype.nfcall = function (/*...args*/) {
     var nodeArgs = array_slice(arguments);
-    var deferred = defer();
+    var deferred = Q.defer();
     nodeArgs.push(deferred.makeNodeResolver());
     this.fapply(nodeArgs).fail(deferred.reject);
     return deferred.promise;
@@ -1794,7 +1794,7 @@ Q.denodeify = function (callback /*...args*/) {
     var baseArgs = array_slice(arguments, 1);
     return function () {
         var nodeArgs = baseArgs.concat(array_slice(arguments));
-        var deferred = defer();
+        var deferred = Q.defer();
         nodeArgs.push(deferred.makeNodeResolver());
         Q(callback).fapply(nodeArgs).fail(deferred.reject);
         return deferred.promise;
@@ -1812,7 +1812,7 @@ Q.nbind = function (callback, thisp /*...args*/) {
     var baseArgs = array_slice(arguments, 2);
     return function () {
         var nodeArgs = baseArgs.concat(array_slice(arguments));
-        var deferred = defer();
+        var deferred = Q.defer();
         nodeArgs.push(deferred.makeNodeResolver());
         function bound() {
             return callback.apply(thisp, arguments);
@@ -1845,7 +1845,7 @@ Q.npost = function (object, name, args) {
 Promise.prototype.nmapply = // XXX As proposed by "Redsandro"
 Promise.prototype.npost = function (name, args) {
     var nodeArgs = array_slice(args || []);
-    var deferred = defer();
+    var deferred = Q.defer();
     nodeArgs.push(deferred.makeNodeResolver());
     this.dispatch("post", [name, nodeArgs]).fail(deferred.reject);
     return deferred.promise;
@@ -1865,7 +1865,7 @@ Q.nsend = // XXX Based on Mark Miller's proposed "send"
 Q.nmcall = // XXX Based on "Redsandro's" proposal
 Q.ninvoke = function (object, name /*...args*/) {
     var nodeArgs = array_slice(arguments, 2);
-    var deferred = defer();
+    var deferred = Q.defer();
     nodeArgs.push(deferred.makeNodeResolver());
     Q(object).dispatch("post", [name, nodeArgs]).fail(deferred.reject);
     return deferred.promise;
@@ -1875,7 +1875,7 @@ Promise.prototype.nsend = // XXX Based on Mark Miller's proposed "send"
 Promise.prototype.nmcall = // XXX Based on "Redsandro's" proposal
 Promise.prototype.ninvoke = function (name /*...args*/) {
     var nodeArgs = array_slice(arguments, 1);
-    var deferred = defer();
+    var deferred = Q.defer();
     nodeArgs.push(deferred.makeNodeResolver());
     this.dispatch("post", [name, nodeArgs]).fail(deferred.reject);
     return deferred.promise;
