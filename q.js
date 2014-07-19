@@ -64,10 +64,14 @@
 "use strict";
 
 var hasStacks = false;
-try {
-    throw new Error();
-} catch (e) {
-    hasStacks = !!e.stack;
+if (new Error().stack) {
+    hasStacks = true;
+} else {
+    try {
+        throw new Error();
+    } catch (e) {
+        hasStacks = !!e.stack;
+    }
 }
 
 // All code after this point will be filtered from stack traces reported
@@ -411,20 +415,24 @@ function captureLine() {
     if (!hasStacks) {
         return;
     }
-
-    try {
-        throw new Error();
-    } catch (e) {
-        var lines = e.stack.split("\n");
-        var firstLine = lines[0].indexOf("@") > 0 ? lines[1] : lines[2];
-        var fileNameAndLineNumber = getFileNameAndLineNumber(firstLine);
-        if (!fileNameAndLineNumber) {
-            return;
+    var ex = new Error();
+    if (!ex.stack) {
+        try {
+            throw new Error();
+        } catch (e) {
+            ex = e;
         }
-
-        qFileName = fileNameAndLineNumber[0];
-        return fileNameAndLineNumber[1];
     }
+
+    var lines = ex.stack.split("\n");
+    var firstLine = lines[0].indexOf("@") > 0 ? lines[1] : lines[2];
+    var fileNameAndLineNumber = getFileNameAndLineNumber(firstLine);
+    if (!fileNameAndLineNumber) {
+        return;
+    }
+
+    qFileName = fileNameAndLineNumber[0];
+    return fileNameAndLineNumber[1];
 }
 
 function deprecate(callback, name, alternative) {
@@ -531,17 +539,21 @@ function defer() {
     };
 
     if (Q.longStackSupport && hasStacks) {
-        try {
-            throw new Error();
-        } catch (e) {
-            // NOTE: don't try to use `Error.captureStackTrace` or transfer the
-            // accessor around; that causes memory leaks as per GH-111. Just
-            // reify the stack trace as a string ASAP.
-            //
-            // At the same time, cut off the first line; it's always just
-            // "[object Promise]\n", as per the `toString`.
-            promise.stack = e.stack.substring(e.stack.indexOf("\n") + 1);
+        var ex = new Error();
+        if (!ex.stack) {
+            try {
+                throw new Error();
+            } catch (e) {
+                // NOTE: don't try to use `Error.captureStackTrace` or transfer the
+                // accessor around; that causes memory leaks as per GH-111. Just
+                // reify the stack trace as a string ASAP.
+                //
+                // At the same time, cut off the first line; it's always just
+                // "[object Promise]\n", as per the `toString`.
+                ex = e;
+            }
         }
+        promise.stack = ex.stack.substring(ex.stack.indexOf("\n") + 1);
     }
 
     // NOTE: we do the checks for `resolvedPromise` in each method, instead of
