@@ -450,7 +450,7 @@ function Q(value) {
     // If the object is already a Promise, return it directly.  This enables
     // the resolve function to both be used to created references from objects,
     // but to tolerably coerce non-promises to promises.
-    if (isPromise(value)) {
+    if (value instanceof Promise) {
         return value;
     }
 
@@ -912,7 +912,9 @@ function nearer(value) {
  */
 Q.isPromise = isPromise;
 function isPromise(object) {
-    return object instanceof Promise;
+    return isObject(object) &&
+        typeof object.promiseDispatch === "function" &&
+        typeof object.inspect === "function";
 }
 
 Q.isPromiseAlike = isPromiseAlike;
