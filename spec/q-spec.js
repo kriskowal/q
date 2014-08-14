@@ -841,6 +841,77 @@ describe("inspect", function () {
 
 });
 
+describe("local", function() {
+    it("dispatch local data", function () {
+        var testValue = false;
+
+        Q(10).local(function (localData) {
+            localData.testValue = 100;
+        })
+        .local(function (localData) {
+console.log( 'Hoo', localData );
+            testValue = localData.testValue;
+        });
+
+        waitsFor(function () {
+            return (testValue !== false);
+        });
+
+        runs(function () {
+            expect(testValue).toBe(100);
+        });
+    });
+
+    it("dispatch local data with a deferred promise", function() {
+        var testValue = false;
+
+        Q(10)
+        .then(function() {
+            var deferred = Q.defer();
+            
+            setTimeout( function() { deferred.resolve(true); }, 10 );
+            
+            return deferred.promise
+            .local(function(localData) {
+                localData.testValue = 100;
+            })
+        })
+        .local(function(localData) {
+            testValue = localData.testValue;
+        });
+
+        waitsFor(function () {
+            return (testValue !== false);
+        });
+
+        runs(function () {
+            expect(testValue).toBe(100);
+        });
+    });
+    
+    it("dispatch local data from a subchain", function() {
+        var testValue = false;
+
+        Q(10)
+        .then(function() {
+            return Q(11).local(function(localData) {
+                localData.testValue = 100;
+            });
+        })
+        .local(function(localData) {
+            testValue = localData.testValue;
+        });
+
+        waitsFor(function () {
+            return (testValue !== false);
+        });
+
+        runs(function () {
+            expect(testValue).toBe(100);
+        });
+    });
+});
+
 describe("promise states", function () {
 
     it("of fulfilled value", function () {

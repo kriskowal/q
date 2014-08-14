@@ -551,6 +551,7 @@ function defer() {
     function become(newPromise) {
         resolvedPromise = newPromise;
         promise.source = newPromise;
+        newPromise.localData = promise.localData /* || {}*/;
 
         array_reduce(messages, function (undefined, message) {
             nextTick(function () {
@@ -782,6 +783,8 @@ Promise.prototype.then = function (fulfilled, rejected, progressed) {
     var done = false;   // ensure the untrusted promise makes at most a
                         // single call to one of the callbacks
 
+    deferred.promise.localData = this.localData /* || {}*/;
+
     function _fulfilled(value) {
         try {
             return typeof fulfilled === "function" ? fulfilled(value) : value;
@@ -960,6 +963,33 @@ Promise.prototype.isRejected = function () {
     return this.inspect().state === "rejected";
 };
 
+
+Q.local = function(promise, fulfilled) {
+    return promise.local(fulfilled);
+};
+
+Promise.prototype.local = function(fulfilled) {
+    var self = this;
+
+    /*if((!self.localData) && (self.source) && (self.source.localData)) {
+        self.localData = self.source.localData;
+    }*/
+
+    self.localData = self.localData || {};
+
+    return this.then(function() {
+        /*if((!self.localData) && (self.source) && (self.source.localData)) {
+            self.localData = self.source.localData;
+        }*/
+
+        // self.localData = self.localData || {};
+
+        return self.localData;
+    }).then(fulfilled);
+};
+
+
+
 //// BEGIN UNHANDLED REJECTION TRACKING
 
 // This promise library consumes exceptions thrown in handlers so they can be
@@ -1079,7 +1109,8 @@ function fulfill(value) {
         },
         "keys": function () {
             return object_keys(value);
-        }
+        },
+        "localData" : {}
     }, void 0, function inspect() {
         return { state: "fulfilled", value: value };
     });
