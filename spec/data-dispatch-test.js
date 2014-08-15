@@ -15,15 +15,15 @@ Q(10)
     .then(function() {
         return Q(30)
             .local(function(localData) {
-                if( localData.testValue !== 1002 )
+               /* if( localData.testValue !== 1002 )
                 {
                     console.log( localData );
                     throw new Error( 'Failed v4' );
-                }
+                }*/
 
                 localData.testValue = 1001;
             })
-            .thenResolve(4);
+           .thenResolve(4);
     })
     .local(function(localData) {
         if( localData.testValue !== 1001 ) {
@@ -62,7 +62,13 @@ Q(10)
                     console.error("ErrorLocalData", localData);
                     throw new Error("Failed v2", localData);
                 }
+
+                console.log( "Happy", localData );
             });
+            /*.then( function() {
+               console.log( "moo" );
+            })
+            .thenResolve( 4 );*/
 
         localCall.__localCall = true;
 

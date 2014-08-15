@@ -655,19 +655,19 @@ function defer() {
             newPromise.setDataHolder(localDataHolder);
         }
 
-        if(promise.setDataHolder) {
+        /*if(promise.setDataHolder) {
             promise.setDataHolder(localDataHolder);
-        }
+        }*/
 
 
-        if ( (!newPromise.localData) ||
+        /*if ( (!newPromise.localData) ||
             ((promise.localData) && (promise.localData.isAccessed()))
         ) {
             newPromise.localData = promise.localData;
         }
         else {
             newPromise = newPromise;
-        }
+        }*/
 
         array_reduce(messages, function (undefined, message) {
             nextTick(function () {
@@ -907,10 +907,14 @@ Promise.prototype.then = function (fulfilled, rejected, progressed) {
     {
         deferred.promise.localData = this.localData;
     }
-    else if( ( this.localData ) && ( deferred.promise.localData ) && ( this.localData !== deferred.promise.localData ) )
+    else if( ( this.localData ) && ( deferred.promise.localData ) )
+    {
+        this.localData = deferred.promise.localData;
+    }
+    /*else*/ /*if( ( this.localData ) && ( deferred.promise.localData ) && ( this.localData !== deferred.promise.localData ) )
     {
         self = self;
-    }
+    }*/
     else
     {
         this.localData = new QDataDispatchPacket();
@@ -966,9 +970,9 @@ Promise.prototype.then = function (fulfilled, rejected, progressed) {
                 deferred.promise.localData = dataHolder;
             }
 
-            if( ( !deferred.promise.localData ) || ( deferred.promise.localData.isAccessed() === false ) ) {
+           /* if( ( !deferred.promise.localData ) || ( deferred.promise.localData.isAccessed() === false ) ) {
                 deferred.promise.localData = self.localData;
-            }
+            }*/
 
 
         self.promiseDispatch(function (value) {
