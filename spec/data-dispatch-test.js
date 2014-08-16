@@ -1,7 +1,6 @@
 /**
- * Created by Aleksi Asikainen on 8/15/2014.
- *
- * Requires Node
+ * Local data access test/dev script
+ * Written for Node
  */
 "use strict";
 
@@ -13,32 +12,72 @@ Q(10)
        localData.testValue = 1000;
     })
     .then(function() {
+        return Q.all([
+            Q(40).local(function (localData) {
+                localData.allValue = 111;
+            }),
+            Q(50).local(function (localData) {
+                localData.allValue2 = 222;
+            })
+        ]);
+    })
+    .local(function(localData) {
+        if( ( localData.allValue !== 111 ) || ( localData.allValue2 !== 222 ) ) {
+            console.error( localData );
+            throw new Error( "Failed v7" );
+        }
+    })
+/*    .then(function() {
         return Q(30)
             .local(function(localData) {
-               /* if( localData.testValue !== 1002 )
+                if( localData.testValue !== 1000 )
                 {
-                    console.log( localData );
-                    throw new Error( 'Failed v4' );
-                }*/
+                    console.error( localData );
+                    throw new Error( "Failed v4" );
+                }
 
                 localData.testValue = 1001;
             })
-           .thenResolve(4);
+            .thenResolve(4);
     })
     .local(function(localData) {
         if( localData.testValue !== 1001 ) {
-            console.error("ErrorLocalData", localData);
+            console.error(localData);
             throw new Error("Failed v1");
         }
     })
-/*   .then(function() {
+   .then(function() {
         return Q(20).local(function(localData) {
-            if( localData.testValue !== 1001 ) {
-                console.error("ErrorLocalData", localData);
-                throw new Error("Failed v2", localData);
+           if( localData.testValue !== 1001 ) {
+                console.error(localData);
+                throw new Error("Failed v2");
             }
         });
-    });*/
+    })
+    .then(function() {
+        var deferred = Q.defer();
+
+        deferred.resolve(true);
+
+        return deferred.promise.local( function( localData ) {
+           if( localData.testValue !== 1001 ) {
+                console.error(localData);
+                throw new Error("Failed v5");
+            }
+        });
+    })
+    .then(function() {
+        var deferred = Q.defer();
+
+        setTimeout( function() { deferred.resolve(true); }, 10 );
+
+        return deferred.promise.local( function( localData ) {
+           if( localData.testValue !== 1001 ) {
+                console.error(localData);
+                throw new Error("Failed v6");
+            }
+        });
+    })
     .thenResolve( 49 )
     .then( function() {
         return Q(20)
@@ -46,51 +85,27 @@ Q(10)
                return 4114;
             });
     })
-    .then( function( val ) {
-       console.log( val );
+    .then( function() {
     })
    .then(function() {
-        var firstQ = Q(20);
-        firstQ.__firstQPromise = true;
-
-        var localCall = firstQ
-            .then(function() {
-              firstQ = firstQ;
-            })
-            .local(function(localData) {
-                if( localData.testValue !== 1001 ) {
-                    console.error("ErrorLocalData", localData);
-                    throw new Error("Failed v2", localData);
-                }
-
-                console.log( "Happy", localData );
-            });
-            /*.then( function() {
-               console.log( "moo" );
-            })
-            .thenResolve( 4 );*/
-
-        localCall.__localCall = true;
-
-        return localCall;
-    })
-.done( function() {
+        return Q(20)
+        .then(function() {
+        })
+        .local(function(localData) {
+            if( localData.testValue !== 1001 ) {
+                console.error(localData);
+                throw new Error("Failed v3");
+            }
+        })
+        .then( function() {
+        })
+        .thenResolve( 4 );
+    })*/
+    .done( function() {
         console.log("");
         console.log("Success");
         console.log("");
     });
-
-    //lastPromise.__thisIsLastPromise = true;
-
-/*    .done( function() {
-        console.log("");
-        console.log("Success");
-        console.log("");
-    });*/
-
-
-
-
 
 
 

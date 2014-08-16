@@ -841,15 +841,14 @@ describe("inspect", function () {
 
 });
 
-describe("local", function() {
-    it("dispatch local data", function () {
+describe("local", function () {
+    it("accesses local data", function () {
         var testValue = false;
 
         Q(10).local(function (localData) {
             localData.testValue = 100;
         })
         .local(function (localData) {
-console.log( 'Hoo', localData );
             testValue = localData.testValue;
         });
 
@@ -862,39 +861,148 @@ console.log( 'Hoo', localData );
         });
     });
 
-    it("dispatch local data with a deferred promise", function() {
+    it("dispatches local data from a subchain", function () {
         var testValue = false;
 
         Q(10)
-        .then(function() {
+        .then(function () {
+            return Q(11).local(function (localData) {
+                localData.testValue = 100;
+            });
+        })
+        .local(function (localData) {
+            testValue = localData.testValue;
+        });
+
+        waitsFor(function () {
+            return (testValue !== false);
+        });
+
+        runs(function () {
+            expect(testValue).toBe(100);
+        });
+    });
+
+    it("writes and reads local data from separate subchains", function() {
+        var testValue = false;
+
+        Q(10)
+        .then(function () {
+            return Q(11)
+            .local(function (localData) {
+                localData.testValue = 100;
+            });
+        })
+        .then(function () {
+            return Q(12)
+            .local(function (localData) {
+                testValue = localData.testValue;
+            });
+        });
+
+        waitsFor(function () {
+            return (testValue !== false);
+        });
+
+        runs(function () {
+            expect(testValue).toBe(100);
+        });
+    });
+
+    it("writes and reads local data from deep subchains", function () {
+        var testValue = false;
+
+        Q(10)
+        .local(function (localData) {
+            localData.testValue = 20;
+        })
+        .then(function () {
+            return Q(11).then(function () {
+                return Q(12).then(function() {
+                    return Q(13)
+                    .local(function (localData) {
+                        localData.testValue += 100;
+                    });
+                });
+            });
+        })
+        .then(function () {
+            return Q(14).then(function () {
+                return Q(15).then(function() {
+                    return Q(16)
+                    .local(function (localData) {
+                        localData.testValue += 200;
+                    });
+                });
+            });
+        })
+        .local(function (localData) {
+            testValue = localData.testValue;
+        });
+
+        waitsFor(function () {
+            return (testValue !== false);
+        });
+
+        runs(function () {
+            expect(testValue).toBe(320);
+        });
+    });
+
+    it("treats the return value of the callback function just like `then` does", function () {
+        var testValue = false;
+
+        Q(10)
+        .local(function (/*localData*/) { return 123; } )
+        .then(function (returnValue) {
+            testValue = returnValue;
+        });
+
+        waitsFor(function () {
+            return (testValue !== false);
+        });
+
+        runs(function () {
+            expect(testValue).toBe(123);
+        });
+    });
+
+    it("can access local data from error subchains", function () {
+        var testValue = false;
+
+        Q(10)
+        .then(function () {
+            throw new Error("Testing failure management");
+        })
+        .fail(function () {
+            return Q(11).local(function (localData) {
+                localData.testValue = 100;
+            });
+        })
+        .local(function (localData) {
+            testValue = localData.testValue;
+        });
+
+        waitsFor(function () {
+            return (testValue !== false);
+        });
+
+        runs(function () {
+            expect(testValue).toBe(100);
+        });
+    });
+
+    it("dispatches local data with a deferred promise", function () {
+        var testValue = false;
+
+        Q(10)
+        .then(function () {
             var deferred = Q.defer();
-            
-            setTimeout( function() { deferred.resolve(true); }, 10 );
-            
+
+            setTimeout(function() { deferred.resolve(true); }, 5);
+
             return deferred.promise
             .local(function(localData) {
-                localData.testValue = 100;
-            })
-        })
-        .local(function(localData) {
-            testValue = localData.testValue;
-        });
-
-        waitsFor(function () {
-            return (testValue !== false);
-        });
-
-        runs(function () {
-            expect(testValue).toBe(100);
-        });
-    });
-    
-    it("dispatch local data from a subchain", function() {
-        var testValue = false;
-
-        Q(10)
-        .then(function() {
-            return Q(11).local(function(localData) {
                 localData.testValue = 100;
             });
         })
@@ -908,6 +1016,64 @@ console.log( 'Hoo', localData );
 
         runs(function () {
             expect(testValue).toBe(100);
+        });
+    });
+
+    it("dispatches local data with an immediately resolved deferred promise", function () {
+        var testValue = false;
+
+        Q(10)
+        .then(function () {
+            var deferred = Q.defer();
+            deferred.resolve(true);
+
+            return deferred.promise
+            .local(function(localData) {
+                localData.testValue = 100;
+            })
+            .thenResolve(true);
+        })
+        .local(function(localData) {
+            testValue = localData.testValue;
+        });
+
+        waitsFor(function () {
+            return (testValue !== false);
+        });
+
+        runs(function () {
+            expect(testValue).toBe(100);
+        });
+    });
+
+    it( "can access local data from chains executed simultaneously with `Q.all`", function () {
+        var testValue = false,
+            testValue2 = false;
+
+        Q(10)
+        .local( function () {} )
+        .then(function () {
+            return Q.all([
+                Q(10).local(function (localData) {
+                    localData.testValue = 111;
+                }),
+                Q(11).local(function (localData) {
+                    localData.testValue2 = 222;
+                })
+            ]);
+        })
+        .local(function (localData) {
+            testValue = localData.testValue;
+            testValue2 = localData.testValue2;
+        });
+
+        waitsFor(function () {
+            return ((testValue !== false) && ( testValue2 !== false ));
+        });
+
+        runs(function () {
+            expect(testValue).toBe(111);
+            expect(testValue2).toBe(222);
         });
     });
 });
