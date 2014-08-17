@@ -12,22 +12,36 @@ Q(10)
        localData.testValue = 1000;
     })
     .then(function() {
-        return Q.all([
-            Q(40).local(function (localData) {
+
+        var promiseChain1 = Q(40).local(function (localData) {
+                console.log( 'local' );
                 localData.allValue = 111;
-            }),
-            Q(50).local(function (localData) {
+            });
+
+        promiseChain1.__promiseChain1 = true;
+
+        /*var promiseChain2 = Q(50).local(function (localData) {
                 localData.allValue2 = 222;
-            })
+            });
+
+        promiseChain2.__promiseChain2 = true;*/
+
+        var allPromise = Q.all([
+            promiseChain1/*,
+            promiseChain2*/
         ]);
+
+        allPromise.__qAllPromise = true;
+
+        return allPromise;
     })
     .local(function(localData) {
         if( ( localData.allValue !== 111 ) || ( localData.allValue2 !== 222 ) ) {
-            console.error( localData );
-            throw new Error( "Failed v7" );
+           console.error( localData );
+           throw new Error( "Failed v7" );
         }
     })
-/*    .then(function() {
+ /*   .then(function() {
         return Q(30)
             .local(function(localData) {
                 if( localData.testValue !== 1000 )

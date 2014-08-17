@@ -337,7 +337,7 @@ QDataDispatchPacket.prototype.get = function() {
 };
 
 QDataDispatchPacket.prototype.set = function(value) {
-    this.accessed = true;
+    // this.accessed = true;
     this.value = value;
 };
 
@@ -945,7 +945,12 @@ Promise.prototype.then = function (fulfilled, rejected, progressed) {
             }
             done = true;
 
-            if( ( deferred.promise.getDataHolder() ) && ( self.localData.isAccessed() === false ) )
+            if( !self.localData )
+            {
+                self = self;
+            }
+
+            if( ( deferred.promise.getDataHolder() ) && ( ( !self.localData ) || ( self.localData.isAccessed() === false ) ) )
             {
                 self.localData = deferred.promise.getDataHolder();
 
@@ -1125,6 +1130,7 @@ Promise.prototype.local = function(fulfilled) {
     var self = this;
 
     return this.then(function() {
+       //  return Q(10).then( function() { return self.localData.get(); } );
         return self.localData.get();
     })
     .then(fulfilled);
@@ -1278,6 +1284,8 @@ function fulfill(value) {
     fulfilledPromise.getDataHolder = function() {
         return this.localData;
     };
+
+    fulfilledPromise.setDataHolder( new QDataDispatchPacket() );
 
     return fulfilledPromise;
 }
@@ -1669,24 +1677,38 @@ Promise.prototype.keys = function () {
 // http://wiki.ecmascript.org/doku.php?id=strawman:concurrency&rev=1308776521#allfulfilled
 Q.all = all;
 function all(promises) {
-    return when(promises, function (promises) {
+    var allPromise = when(promises, function (promises) {
         var countDown = 0;
         var deferred = defer();
+
+        var whenPromises = [];
 
         var oldSetFunction = deferred.promise.setDataHolder;
 
         deferred.promise.setDataHolder = function(myHolder, force) {
-            var l = promises.length;
+            var l = promises.length, i;
 
-            for(var i = 0; i < l; i++ ) {
+            for(i = 0; i < l; i++ ) {
                 if (promises[i].setDataHolder) {
                     promises[i].setDataHolder(myHolder, force);
-                } else {
-                    promises[i].localData = myHolder;
                 }
+
+               // promises[i].localData = myHolder;
             }
 
-            oldSetFunction(myHolder, force);
+
+            l = whenPromises.length;
+
+            for(i = 0; i < l; i++ ) {
+                if (whenPromises[i].setDataHolder) {
+                    whenPromises[i].setDataHolder(myHolder, force);
+                }
+
+                whenPromises[i].localData = myHolder;
+            }
+
+
+            oldSetFunction.call(deferred.promise, myHolder, force);
         };
 
         array_reduce(promises, function (undefined, promise, index) {
@@ -1698,7 +1720,7 @@ function all(promises) {
                 promises[index] = snapshot.value;
             } else {
                 ++countDown;
-                when(
+                var nextPromise = when(
                     promise,
                     function (value) {
                         promises[index] = value;
@@ -1711,6 +1733,8 @@ function all(promises) {
                         deferred.notify({ index: index, value: progress });
                     }
                 );
+
+                whenPromises.push( nextPromise );
             }
         }, void 0);
         if (countDown === 0) {
@@ -1719,6 +1743,59 @@ function all(promises) {
 
         return deferred.promise;
     });
+
+
+    for( var i = 0; i < promises.length; i++ ) {
+        if( promises[ i ].setDataHolder ) {
+            promises[ i ].setDataHolder( allPromise.localData );
+        } else {
+            promises[ i ].setDataHolder = function( myHolder, force ) {
+                 if( this.localData === myHolder ) {
+                     return;
+                 }
+
+                if( this.localData ) {
+                    if( !force ) {
+                        this.localData.replace( myHolder, this );
+                    }
+                }
+                else {
+                    myHolder.register( this );
+                }
+
+                this.localData = myHolder;
+            };
+
+            promises[ i ].getDataHolder = function() {
+              return this.localData;
+            };
+        }
+
+        promises[ i ].localData = allPromise.localData;
+    }
+
+    allPromise.__realAllPromise = true;
+
+    // allPromise.setDataHolder(allPromise.localData);
+    var mySetter = allPromise.setDataHolder;
+
+    allPromise.setDataHolder = function(myHolder, force) {
+        var l = promises.length, i;
+
+        for(i = 0; i < l; i++ ) {
+            if (promises[i].setDataHolder) {
+                promises[i].setDataHolder(myHolder, force);
+            }
+
+            promises[i].localData = myHolder;
+        }
+
+        mySetter.call(allPromise, myHolder, force);
+    };
+
+
+
+    return allPromise;
 }
 
 Promise.prototype.all = function () {
