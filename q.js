@@ -627,7 +627,6 @@ function defer() {
         }
 
         newPromise.setDataHolder(localDataHolder);
-        promise.setDataHolder(localDataHolder);
 
         array_reduce(messages, function (undefined, message) {
             nextTick(function () {
@@ -888,39 +887,7 @@ Promise.prototype.then = function (fulfilled, rejected, progressed) {
         var promiseAData = promiseA.getDataHolder(),
             promiseBData = promiseB.getDataHolder();
 
-        if (promiseAData === promiseBData) {
-            return;
-        }
-
-        if ((!promiseAData) && (promiseBData)) {
-            promiseA.setDataHolder(promiseBData);
-        }
-        else if ((promiseAData) && (!promiseBData)) {
-            promiseB.setDataHolder(promiseAData);
-        }
-        else if ((promiseAData) && (promiseBData)) {
-            promiseA.setDataHolder(promiseBData);
-        }
-        else {
-            promiseAData = new QDataDispatchPacket();
-
-            promiseA.setDataHolder(promiseAData);
-            promiseB.setDataHolder(promiseAData);
-        }
-    }
-
-    function _propagateDataForNextTick (promiseA, promiseB) {
-        var promiseAData = promiseA.getDataHolder(),
-            promiseBData = promiseB.getDataHolder();
-
-        if (promiseAData === promiseBData) {
-            return;
-        }
-
-        if ((promiseBData) && ((!promiseAData) || (promiseAData.isAccessed() === false))) {
-            promiseA.setDataHolder(promiseBData);
-        }
-        else {
+        if ((promiseAData) && (!promiseBData)) {
             promiseB.setDataHolder(promiseAData);
         }
     }
@@ -936,16 +903,14 @@ Promise.prototype.then = function (fulfilled, rejected, progressed) {
         if ((promiseBData) && ((!promiseAData) || (promiseAData.isAccessed() === false))) {
             promiseA.setDataHolder(promiseBData);
         }
-        else {
-            promiseB.setDataHolder(promiseAData);
-        }
     }
 
     _propagateDataForThen(self, deferred.promise);
 
     nextTick(function () {
 
-        _propagateDataForNextTick(self, deferred.promise);
+        // needed here
+        _propagateDataForDispatch(self, deferred.promise);
 
         self.promiseDispatch(function (value) {
             if (done) {
@@ -953,6 +918,7 @@ Promise.prototype.then = function (fulfilled, rejected, progressed) {
             }
             done = true;
 
+            // also needed here
             _propagateDataForDispatch(self, deferred.promise);
 
             deferred.resolve(_fulfilled(value));
