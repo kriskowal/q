@@ -1624,7 +1624,6 @@ function all(promises) {
     var allPromise = when(promises, function (promises) {
         var countDown = 0;
         var deferred = defer();
-
         array_reduce(promises, function (undefined, promise, index) {
             var snapshot;
             if (
@@ -1649,11 +1648,9 @@ function all(promises) {
                 );
             }
         }, void 0);
-
         if (countDown === 0) {
             deferred.resolve(promises);
         }
-
         return deferred.promise;
     });
 
