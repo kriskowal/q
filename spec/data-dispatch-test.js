@@ -14,21 +14,20 @@ Q(10)
     .then(function() {
 
         var promiseChain1 = Q(40).local(function (localData) {
-                console.log( 'local' );
                 localData.allValue = 111;
             });
 
         promiseChain1.__promiseChain1 = true;
 
-        /*var promiseChain2 = Q(50).local(function (localData) {
+        var promiseChain2 = Q(50).local(function (localData) {
                 localData.allValue2 = 222;
             });
 
-        promiseChain2.__promiseChain2 = true;*/
+        promiseChain2.__promiseChain2 = true;
 
         var allPromise = Q.all([
-            promiseChain1/*,
-            promiseChain2*/
+            promiseChain1,
+            promiseChain2
         ]);
 
         allPromise.__qAllPromise = true;
@@ -41,7 +40,7 @@ Q(10)
            throw new Error( "Failed v7" );
         }
     })
- /*   .then(function() {
+    .then(function() {
         return Q(30)
             .local(function(localData) {
                 if( localData.testValue !== 1000 )
@@ -114,7 +113,7 @@ Q(10)
         .then( function() {
         })
         .thenResolve( 4 );
-    })*/
+    })
     .done( function() {
         console.log("");
         console.log("Success");

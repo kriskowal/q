@@ -1663,27 +1663,6 @@ function all(promises) {
         var countDown = 0;
         var deferred = defer();
 
-/*        var whenPromises = [];
-
-        var oldSetFunction = deferred.promise.setDataHolder;
-
-        deferred.promise.setDataHolder = function(myHolder, force) {
-            var l = promises.length, i;
-
-            for(i = 0; i < l; i++ ) {
-                promises[i].setDataHolder(myHolder, force);
-            }
-
-            l = whenPromises.length;
-
-            for(i = 0; i < l; i++ ) {
-                whenPromises[i].setDataHolder(myHolder, force);
-            }
-
-            oldSetFunction.call(deferred.promise, myHolder, force);
-        };
-*/
-
         array_reduce(promises, function (undefined, promise, index) {
             var snapshot;
             if (
@@ -1706,10 +1685,9 @@ function all(promises) {
                         deferred.notify({ index: index, value: progress });
                     }
                 );
-
-               // whenPromises.push( nextPromise );
             }
         }, void 0);
+
         if (countDown === 0) {
             deferred.resolve(promises);
         }
@@ -1718,13 +1696,6 @@ function all(promises) {
     });
 
 
-/*    for( var i = 0; i < promises.length; i++ ) {
-        promises[ i ].setDataHolder( allPromise.getDataHolder() );
-    }
-
-    allPromise.__realAllPromise = true;
-
-    // allPromise.setDataHolder(allPromise.localData);
     var mySetter = allPromise.setDataHolder;
 
     allPromise.setDataHolder = function(myHolder, force) {
@@ -1736,8 +1707,6 @@ function all(promises) {
 
         mySetter.call(allPromise, myHolder, force);
     };
-*/
-
 
     return allPromise;
 }
