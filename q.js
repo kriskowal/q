@@ -324,7 +324,6 @@ if (typeof ReturnValue !== "undefined") {
     };
 }
 
-
 var QDataDispatchPacket = function (value) {
     this.value = value || {};
     this.accessed = false;
@@ -852,7 +851,6 @@ Promise.prototype.toString = function () {
     return "[object Promise]";
 };
 
-
 Promise.prototype.then = function (fulfilled, rejected, progressed) {
     var self = this;
     var deferred = defer();
@@ -908,7 +906,6 @@ Promise.prototype.then = function (fulfilled, rejected, progressed) {
     _propagateDataForThen(self, deferred.promise);
 
     nextTick(function () {
-
         // needed here
         _propagateDataForDispatch(self, deferred.promise);
 
@@ -1068,7 +1065,6 @@ Promise.prototype.isRejected = function () {
     return this.inspect().state === "rejected";
 };
 
-
 Q.local = function(promise, fulfilled) {
     return promise.local(fulfilled);
 };
@@ -1102,15 +1098,12 @@ Promise.prototype.setDataHolder = function (myHolder, force) {
     this.localData = myHolder;
 };
 
-
 /**
  * @private
  */
 Promise.prototype.getDataHolder = function () {
     return this.localData;
 };
-
-
 
 
 //// BEGIN UNHANDLED REJECTION TRACKING
@@ -1641,7 +1634,7 @@ function all(promises) {
                 promises[index] = snapshot.value;
             } else {
                 ++countDown;
-                var nextPromise = when(
+                when(
                     promise,
                     function (value) {
                         promises[index] = value;
@@ -1663,7 +1656,6 @@ function all(promises) {
 
         return deferred.promise;
     });
-
 
     var mySetter = allPromise.setDataHolder;
 
