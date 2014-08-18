@@ -337,7 +337,7 @@ QDataDispatchPacket.prototype.get = function() {
 };
 
 QDataDispatchPacket.prototype.set = function(value) {
-    // this.accessed = true;
+    this.accessed = true;
     this.value = value;
 };
 
@@ -345,19 +345,14 @@ QDataDispatchPacket.prototype.isAccessed = function() {
     return this.accessed;
 };
 
-QDataDispatchPacket.prototype.register = function(deferred) {
-    this.listeners.push(deferred);
+QDataDispatchPacket.prototype.register = function(promise) {
+    this.listeners.push(promise);
 };
 
-QDataDispatchPacket.prototype.replace = function(dispatchPacket, deferred) {
+QDataDispatchPacket.prototype.replace = function(dispatchPacket, promise) {
     for( var i = 0; i < this.listeners.length; i++ ) {
-        if(this.listeners[ i ] !== deferred)
+        if(this.listeners[ i ] !== promise)
         {
-            if( ( !this.listeners[ i ].promise ) || ( !this.listeners[ i ].setDataHolder ) )
-            {
-                i = i;
-            }
-
             this.listeners[ i ].setDataHolder(dispatchPacket, true);
         }
     }
@@ -565,7 +560,6 @@ function defer() {
             }
 
             localDataHolder = myHolder;
-            // localDataHolder.replace( myHolder );
         } else {
             localDataHolder = myHolder;
 
@@ -627,15 +621,11 @@ function defer() {
         promise.source = newPromise;
 
         if(!localDataHolder) {
-            promise.setDataHolder( promise.localData || newPromise.localData || new QDataDispatchPacket() );
+            deferred.setDataHolder( promise.getDataHolder() || newPromise.getDataHolder() || new QDataDispatchPacket() );
         }
 
-        if(newPromise.setDataHolder) {
-            newPromise.setDataHolder(localDataHolder);
-        }
-
-        promise.localData = localDataHolder;
-        newPromise.localData = localDataHolder;
+        newPromise.setDataHolder(localDataHolder);
+        promise.setDataHolder(localDataHolder);
 
         array_reduce(messages, function (undefined, message) {
             nextTick(function () {
@@ -861,32 +851,12 @@ Promise.prototype.toString = function () {
     return "[object Promise]";
 };
 
+
 Promise.prototype.then = function (fulfilled, rejected, progressed) {
     var self = this;
     var deferred = defer();
     var done = false;   // ensure the untrusted promise makes at most a
                         // single call to one of the callbacks
-
-    if( ( !this.localData ) && ( deferred.promise.localData ) )
-    {
-        this.localData = deferred.promise.localData;
-    }
-    else if( ( this.localData ) && ( !deferred.promise.localData ) )
-    {
-        deferred.promise.setDataHolder( this.localData );
-    }
-    else if( ( this.localData ) && ( deferred.promise.localData ) )
-    {
-        this.localData = deferred.promise.localData;
-    }
-    else
-    {
-        this.localData = new QDataDispatchPacket();
-        deferred.promise.setDataHolder( this.localData );
-    }
-
-
-    // deferred.promise.localData = this.localData /* || {}*/;
 
     function _fulfilled(value) {
         try {
@@ -912,32 +882,70 @@ Promise.prototype.then = function (fulfilled, rejected, progressed) {
         return typeof progressed === "function" ? progressed(value) : value;
     }
 
+    function _propagateDataThen(promiseA, promiseB) {
+        var promiseAData = promiseA.getDataHolder(),
+            promiseBData = promiseB.getDataHolder();
+
+        if( promiseAData === promiseBData ) {
+            return;
+        }
+
+        if ( ( !promiseAData ) && ( promiseBData ) ) {
+            promiseA.setDataHolder( promiseBData );
+        }
+        else if ( ( promiseAData ) && ( !promiseBData ) ) {
+            promiseB.setDataHolder( promiseAData );
+        }
+        else if ( ( promiseAData ) && ( promiseBData ) ) {
+            promiseA.setDataHolder( promiseBData );
+        }
+        else {
+            promiseAData = new QDataDispatchPacket();
+
+            promiseA.setDataHolder( promiseAData );
+            promiseB.setDataHolder( promiseAData );
+        }
+    }
+
+    function _propagateDataNextTick(promiseA, promiseB) {
+        var promiseAData = promiseA.getDataHolder(),
+            promiseBData = promiseB.getDataHolder();
+
+        if( promiseAData === promiseBData ) {
+            return;
+        }
+
+        if ( ( promiseBData ) && ( ( !promiseAData ) || ( promiseAData.isAccessed() === false ) ) ) {
+            promiseA.setDataHolder( promiseBData );
+        }
+        else {
+            promiseB.setDataHolder( promiseAData );
+        }
+    }
+
+    function _propagateDataDispatch( promiseA, promiseB ) {
+        var promiseAData = promiseA.getDataHolder(),
+            promiseBData = promiseB.getDataHolder();
+
+        if( promiseAData === promiseBData ) {
+            return;
+        }
+
+        if( ( promiseBData ) && ( ( !promiseAData ) || ( promiseAData.isAccessed() === false ) ) ) {
+            promiseA.setDataHolder(promiseBData);
+        }
+        else {
+            promiseB.setDataHolder(promiseAData);
+        }
+    }
+
+
+
+    _propagateDataThen(self, deferred.promise);
+
     nextTick(function () {
 
-            if( ( deferred.promise.getDataHolder() ) && ( self.localData.isAccessed() === false ) )
-            {
-                self.localData = deferred.promise.getDataHolder();
-
-                if( self.setDataHolder )
-                {
-                    self.setDataHolder( deferred.promise.getDataHolder() );
-                }
-            }
-
-            if( ( self.getDataHolder ) && ( deferred.promise.setDataHolder ) )
-            {
-                var dataHolder = self.getDataHolder();
-
-                deferred.promise.setDataHolder( dataHolder );
-
-                self.localData = dataHolder;
-                deferred.promise.localData = dataHolder;
-            }
-
-           /* if( ( !deferred.promise.localData ) || ( deferred.promise.localData.isAccessed() === false ) ) {
-                deferred.promise.localData = self.localData;
-            }*/
-
+        _propagateDataNextTick(self, deferred.promise);
 
         self.promiseDispatch(function (value) {
             if (done) {
@@ -945,34 +953,7 @@ Promise.prototype.then = function (fulfilled, rejected, progressed) {
             }
             done = true;
 
-            if( !self.localData )
-            {
-                self = self;
-            }
-
-            if( ( deferred.promise.getDataHolder() ) && ( ( !self.localData ) || ( self.localData.isAccessed() === false ) ) )
-            {
-                self.localData = deferred.promise.getDataHolder();
-
-                if( self.setDataHolder )
-                {
-                    self.setDataHolder( deferred.promise.getDataHolder() );
-                }
-            }
-
-            if( ( self.getDataHolder ) && ( deferred.promise.setDataHolder ) )
-            {
-                var dataHolder = self.getDataHolder();
-
-                deferred.promise.setDataHolder( dataHolder );
-
-                self.localData = dataHolder;
-                deferred.promise.localData = dataHolder;
-            }
-
-            if( ( !deferred.promise.localData ) || ( deferred.promise.localData.isAccessed() === false ) ) {
-                deferred.promise.localData = self.localData;
-            }
+            _propagateDataDispatch(self, deferred.promise);
 
             deferred.resolve(_fulfilled(value));
         }, "when", [function (exception) {
@@ -1131,10 +1112,34 @@ Promise.prototype.local = function(fulfilled) {
 
     return this.then(function() {
        //  return Q(10).then( function() { return self.localData.get(); } );
-        return self.localData.get();
+        return self.getDataHolder().get();
     })
     .then(fulfilled);
 };
+
+
+Promise.prototype.setDataHolder = function( myHolder, force ) {
+    if( this.localData === myHolder ) {
+        return;
+    }
+
+    if( this.localData ) {
+        if( !force ) {
+            this.localData.replace( myHolder, this );
+        }
+    }
+    else {
+        myHolder.register( this );
+    }
+
+    this.localData = myHolder;
+};
+
+
+Promise.prototype.getDataHolder = function() {
+    return this.localData;
+};
+
 
 
 
@@ -1261,29 +1266,6 @@ function fulfill(value) {
     }, void 0, function inspect() {
         return { state: "fulfilled", value: value };
     });
-
-
-    fulfilledPromise.setDataHolder = function( myHolder, force ) {
-        if( this.localData === myHolder ) {
-            return;
-        }
-
-        if( this.localData ) {
-            if( !force ) {
-                this.localData.replace( myHolder, this );
-            }
-        }
-        else {
-            myHolder.register( this );
-        }
-
-        this.localData = myHolder;
-    };
-
-
-    fulfilledPromise.getDataHolder = function() {
-        return this.localData;
-    };
 
     fulfilledPromise.setDataHolder( new QDataDispatchPacket() );
 
@@ -1681,7 +1663,7 @@ function all(promises) {
         var countDown = 0;
         var deferred = defer();
 
-        var whenPromises = [];
+/*        var whenPromises = [];
 
         var oldSetFunction = deferred.promise.setDataHolder;
 
@@ -1689,27 +1671,18 @@ function all(promises) {
             var l = promises.length, i;
 
             for(i = 0; i < l; i++ ) {
-                if (promises[i].setDataHolder) {
-                    promises[i].setDataHolder(myHolder, force);
-                }
-
-               // promises[i].localData = myHolder;
+                promises[i].setDataHolder(myHolder, force);
             }
-
 
             l = whenPromises.length;
 
             for(i = 0; i < l; i++ ) {
-                if (whenPromises[i].setDataHolder) {
-                    whenPromises[i].setDataHolder(myHolder, force);
-                }
-
-                whenPromises[i].localData = myHolder;
+                whenPromises[i].setDataHolder(myHolder, force);
             }
-
 
             oldSetFunction.call(deferred.promise, myHolder, force);
         };
+*/
 
         array_reduce(promises, function (undefined, promise, index) {
             var snapshot;
@@ -1734,7 +1707,7 @@ function all(promises) {
                     }
                 );
 
-                whenPromises.push( nextPromise );
+               // whenPromises.push( nextPromise );
             }
         }, void 0);
         if (countDown === 0) {
@@ -1745,33 +1718,8 @@ function all(promises) {
     });
 
 
-    for( var i = 0; i < promises.length; i++ ) {
-        if( promises[ i ].setDataHolder ) {
-            promises[ i ].setDataHolder( allPromise.localData );
-        } else {
-            promises[ i ].setDataHolder = function( myHolder, force ) {
-                 if( this.localData === myHolder ) {
-                     return;
-                 }
-
-                if( this.localData ) {
-                    if( !force ) {
-                        this.localData.replace( myHolder, this );
-                    }
-                }
-                else {
-                    myHolder.register( this );
-                }
-
-                this.localData = myHolder;
-            };
-
-            promises[ i ].getDataHolder = function() {
-              return this.localData;
-            };
-        }
-
-        promises[ i ].localData = allPromise.localData;
+/*    for( var i = 0; i < promises.length; i++ ) {
+        promises[ i ].setDataHolder( allPromise.getDataHolder() );
     }
 
     allPromise.__realAllPromise = true;
@@ -1782,17 +1730,13 @@ function all(promises) {
     allPromise.setDataHolder = function(myHolder, force) {
         var l = promises.length, i;
 
-        for(i = 0; i < l; i++ ) {
-            if (promises[i].setDataHolder) {
-                promises[i].setDataHolder(myHolder, force);
-            }
-
-            promises[i].localData = myHolder;
+        for( i = 0; i < l; i++ ) {
+            promises[i].setDataHolder(myHolder, force);
         }
 
         mySetter.call(allPromise, myHolder, force);
     };
-
+*/
 
 
     return allPromise;
