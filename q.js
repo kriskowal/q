@@ -93,7 +93,8 @@ var nextTick =(function () {
     function flush() {
         /* jshint loopfunc: true */
 
-        while ((head = head.next)) {
+        while (head.next) {
+            head = head.next;
             var task = head.task;
             head.task = void 0;
             var domain = head.domain;
