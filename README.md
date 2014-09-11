@@ -703,6 +703,27 @@ return Q.invoke($, 'ajax', ...)
 ```
 
 
+### Local data dispatch
+
+Connected promise chains share a data object which can be accessed from any
+section of the chain
+
+```javascript
+Q.all([a, b])
+.local(function(localData) {
+    localData.myVariable = 'Hello world';
+})
+.all([a, b])
+.all([c, d])
+.then(function() {
+    return Q.all([c, d])
+        .local(function(localData) {
+            console.log(localData.myVariable);
+        });
+});
+```
+
+
 ### Over the Wire
 
 A promise can serve as a proxy for another object, even a remote

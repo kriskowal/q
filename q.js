@@ -324,6 +324,46 @@ if (typeof ReturnValue !== "undefined") {
     };
 }
 
+var QDataDispatchPacket = function (value) {
+    this.value = value || {};
+    this.accessed = false;
+    this.listeners = [];
+};
+
+QDataDispatchPacket.prototype.get = function () {
+    this.accessed = true;
+    return this.value;
+};
+
+QDataDispatchPacket.prototype.set = function (value) {
+    this.accessed = true;
+    this.value = value;
+};
+
+QDataDispatchPacket.prototype.isAccessed = function () {
+    return this.accessed;
+};
+
+// Register a listener for data propagation
+// Accepts also a deferred in place of a promise
+QDataDispatchPacket.prototype.register = function (promise) {
+    this.listeners.push(promise);
+};
+
+// Replace existing data packet with another one and propagate change to
+// all promises listening on the old one
+// Accepts also deferred in place of a promise
+QDataDispatchPacket.prototype.replace = function (dispatchPacket, promise) {
+    var l = this.listeners.length;
+
+    for (var i = 0; i < l; i++) {
+        if (this.listeners[i] !== promise) {
+            this.listeners[i].setDataHolder(dispatchPacket, true);
+        }
+    }
+};
+
+
 // long stack traces
 
 var STACK_JUMP_SEPARATOR = "From previous event:";
@@ -492,7 +532,7 @@ function defer() {
     // forward to the resolved promise.  We coerce the resolution value to a
     // promise using the `resolve` function because it handles both fully
     // non-thenable values and other thenables gracefully.
-    var messages = [], progressListeners = [], resolvedPromise;
+    var messages = [], progressListeners = [], resolvedPromise, localDataHolder;
 
     var deferred = object_create(defer.prototype);
     var promise = object_create(Promise.prototype);
@@ -509,6 +549,35 @@ function defer() {
                 resolvedPromise.promiseDispatch.apply(resolvedPromise, args);
             });
         }
+    };
+
+    promise.setDataHolder = function (myHolder, force) {
+        if (localDataHolder === myHolder) {
+            return;
+        }
+
+        if (localDataHolder) {
+            if (!force) {
+                localDataHolder.replace(myHolder, deferred);
+            }
+
+            localDataHolder = myHolder;
+        } else {
+            localDataHolder = myHolder;
+            localDataHolder.register( deferred );
+        }
+    };
+
+    deferred.setDataHolder = function (myHolder, force) {
+        return promise.setDataHolder(myHolder, force);
+    };
+
+    promise.getDataHolder = function () {
+        return localDataHolder;
+    };
+
+    deferred.getDataHolder = function() {
+        return promise.getDataHolder();
     };
 
     // XXX deprecated
@@ -551,6 +620,12 @@ function defer() {
     function become(newPromise) {
         resolvedPromise = newPromise;
         promise.source = newPromise;
+
+        if(!localDataHolder) {
+            deferred.setDataHolder(promise.getDataHolder() || newPromise.getDataHolder() || new QDataDispatchPacket());
+        }
+
+        newPromise.setDataHolder(localDataHolder);
 
         array_reduce(messages, function (undefined, message) {
             nextTick(function () {
@@ -806,12 +881,42 @@ Promise.prototype.then = function (fulfilled, rejected, progressed) {
         return typeof progressed === "function" ? progressed(value) : value;
     }
 
+    function _propagateDataForThen (promiseA, promiseB) {
+        var promiseAData = promiseA.getDataHolder(),
+            promiseBData = promiseB.getDataHolder();
+
+        if ((promiseAData) && (!promiseBData)) {
+            promiseB.setDataHolder(promiseAData);
+        }
+    }
+
+    function _propagateDataForDispatch(promiseA, promiseB) {
+        var promiseAData = promiseA.getDataHolder(),
+            promiseBData = promiseB.getDataHolder();
+
+        if (promiseAData === promiseBData) {
+            return;
+        }
+
+        if ((promiseBData) && ((!promiseAData) || (promiseAData.isAccessed() === false))) {
+            promiseA.setDataHolder(promiseBData);
+        }
+    }
+
+    _propagateDataForThen(self, deferred.promise);
+
     nextTick(function () {
+        // needed here
+        _propagateDataForDispatch(self, deferred.promise);
+
         self.promiseDispatch(function (value) {
             if (done) {
                 return;
             }
             done = true;
+
+            // also needed here
+            _propagateDataForDispatch(self, deferred.promise);
 
             deferred.resolve(_fulfilled(value));
         }, "when", [function (exception) {
@@ -960,6 +1065,47 @@ Promise.prototype.isRejected = function () {
     return this.inspect().state === "rejected";
 };
 
+Q.local = function(promise, fulfilled) {
+    return promise.local(fulfilled);
+};
+
+Promise.prototype.local = function (fulfilled) {
+    var self = this;
+
+    return this.then(function () {
+        return self.getDataHolder().get();
+    })
+    .then(fulfilled);
+};
+
+/**
+ * @private
+ */
+Promise.prototype.setDataHolder = function (myHolder, force) {
+    if (this.localData === myHolder) {
+        return;
+    }
+
+    if (this.localData) {
+        if (!force) {
+            this.localData.replace(myHolder, this);
+        }
+    }
+    else {
+        myHolder.register(this);
+    }
+
+    this.localData = myHolder;
+};
+
+/**
+ * @private
+ */
+Promise.prototype.getDataHolder = function () {
+    return this.localData;
+};
+
+
 //// BEGIN UNHANDLED REJECTION TRACKING
 
 // This promise library consumes exceptions thrown in handlers so they can be
@@ -1052,7 +1198,7 @@ function reject(reason) {
  */
 Q.fulfill = fulfill;
 function fulfill(value) {
-    return Promise({
+    var fulfilledPromise = Promise({
         "when": function () {
             return value;
         },
@@ -1083,6 +1229,9 @@ function fulfill(value) {
     }, void 0, function inspect() {
         return { state: "fulfilled", value: value };
     });
+
+    fulfilledPromise.setDataHolder( new QDataDispatchPacket() );
+    return fulfilledPromise;
 }
 
 /**
@@ -1472,7 +1621,7 @@ Promise.prototype.keys = function () {
 // http://wiki.ecmascript.org/doku.php?id=strawman:concurrency&rev=1308776521#allfulfilled
 Q.all = all;
 function all(promises) {
-    return when(promises, function (promises) {
+    var allPromise = when(promises, function (promises) {
         var countDown = 0;
         var deferred = defer();
         array_reduce(promises, function (undefined, promise, index) {
@@ -1504,6 +1653,22 @@ function all(promises) {
         }
         return deferred.promise;
     });
+
+    var mySetter = allPromise.setDataHolder;
+
+    allPromise.setDataHolder = function (myHolder, force) {
+        var l = promises.length;
+
+        for (var i = 0; i < l; i++) {
+            if (Q.isPromise(promises[i])) {
+                promises[i].setDataHolder(myHolder, force);
+            }
+        }
+
+        mySetter.call(allPromise, myHolder, force);
+    };
+
+    return allPromise;
 }
 
 Promise.prototype.all = function () {
