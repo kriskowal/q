@@ -191,6 +191,17 @@ describe("always next tick", function () {
         return promise;
     });
 
+	it("allows overriding global nextTick", function () {
+		var spy = jasmine.createSpy();
+		spyOn(Q, 'nextTick').andCallFake(function immediateTick(task){
+			task();
+		});
+		
+		Q.when(Q(), spy);
+		
+		expect(spy).toHaveBeenCalled();
+		expect(Q.nextTick).toHaveBeenCalled();
+	});
 });
 
 describe("progress", function () {
@@ -1816,7 +1827,6 @@ describe("thenReject", function () {
     });
 });
 
-
 describe("thenables", function () {
 
     it("assimilates a thenable with fulfillment with resolve", function () {
@@ -2013,7 +2023,8 @@ describe("node support", function () {
         });
 
     });
-    describe("npost", function () {
+    
+	describe("npost", function () {
 
         it("fulfills with callback result", function () {
             return Q.npost(obj, "method", [1, 2, 3])
@@ -2164,7 +2175,7 @@ describe("node support", function () {
                 expect(ten).toBe(10);
             });
         });
-
+		
     });
 
 });

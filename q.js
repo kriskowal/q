@@ -505,7 +505,7 @@ function defer() {
                 progressListeners.push(operands[1]);
             }
         } else {
-            nextTick(function () {
+            Q.nextTick(function () {
                 resolvedPromise.promiseDispatch.apply(resolvedPromise, args);
             });
         }
@@ -553,7 +553,7 @@ function defer() {
         promise.source = newPromise;
 
         array_reduce(messages, function (undefined, message) {
-            nextTick(function () {
+            Q.nextTick(function () {
                 newPromise.promiseDispatch.apply(newPromise, message);
             });
         }, void 0);
@@ -591,7 +591,7 @@ function defer() {
         }
 
         array_reduce(progressListeners, function (undefined, progressListener) {
-            nextTick(function () {
+            Q.nextTick(function () {
                 progressListener(progress);
             });
         }, void 0);
@@ -806,7 +806,7 @@ Promise.prototype.then = function (fulfilled, rejected, progressed) {
         return typeof progressed === "function" ? progressed(value) : value;
     }
 
-    nextTick(function () {
+    Q.nextTick(function () {
         self.promiseDispatch(function (value) {
             if (done) {
                 return;
@@ -1092,7 +1092,7 @@ function fulfill(value) {
  */
 function coerce(promise) {
     var deferred = defer();
-    nextTick(function () {
+    Q.nextTick(function () {
         try {
             promise.then(deferred.resolve, deferred.reject, deferred.notify);
         } catch (exception) {
@@ -1300,7 +1300,7 @@ function dispatch(object, op, args) {
 Promise.prototype.dispatch = function (op, args) {
     var self = this;
     var deferred = defer();
-    nextTick(function () {
+    Q.nextTick(function () {
         self.promiseDispatch(deferred.resolve, op, args);
     });
     return deferred.promise;
@@ -1643,7 +1643,7 @@ Promise.prototype.done = function (fulfilled, rejected, progress) {
     var onUnhandledError = function (error) {
         // forward to a future turn so that ``when``
         // does not catch it and turn it into a rejection.
-        nextTick(function () {
+        Q.nextTick(function () {
             makeStackTraceLong(error, promise);
             if (Q.onerror) {
                 Q.onerror(error);
@@ -1887,11 +1887,11 @@ function nodeify(object, nodeback) {
 Promise.prototype.nodeify = function (nodeback) {
     if (nodeback) {
         this.then(function (value) {
-            nextTick(function () {
+            Q.nextTick(function () {
                 nodeback(null, value);
             });
         }, function (error) {
-            nextTick(function () {
+            Q.nextTick(function () {
                 nodeback(error);
             });
         });
