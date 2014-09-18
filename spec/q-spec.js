@@ -2504,3 +2504,33 @@ describe("unhandled rejection reporting", function () {
         expect(Q.getUnhandledReasons()).toEqual([]);
     });
 });
+describe("long stack trace support", function () {
+    beforeEach(function () {
+        Q.longStackSupport = true;
+    });
+    afterEach(function () {
+        Q.longStackSupport = false;
+    });
+    it("should throw a long stack trace");
+    it("should not break if stack is not settable", function () {
+        return Q(true).then(function(){
+            var error = new Error("ths is a demo error without a writable stack");
+            var s = error.stack;
+            delete error.stack;
+            //make stack trace read only
+            Object.defineProperty(error, "stack", {
+              configurable: true,
+              enumerable: false,
+              get: function () {
+                return s;
+              }
+            });
+            throw error;
+        }).then(function () {
+            expect(false).toEqual(true);
+
+        }).fail(function (err) {
+            expect(err.message).toEqual("ths is a demo error without a writable stack");
+        });
+    });
+});

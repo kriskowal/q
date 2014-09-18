@@ -347,7 +347,14 @@ function makeStackTraceLong(error, promise) {
         stacks.unshift(error.stack);
 
         var concatedStacks = stacks.join("\n" + STACK_JUMP_SEPARATOR + "\n");
-        error.stack = filterStackString(concatedStacks);
+        try {
+            error.stack = filterStackString(concatedStacks);
+        } catch (e) {
+            if (typeof console !== "undefined" &&
+                typeof console.warn === "function") {
+                console.warn("unable to create long stack trace for", error, "as stack is unwritable");
+            }
+        }
     }
 }
 
