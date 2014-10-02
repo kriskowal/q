@@ -1,5 +1,10 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=70 -->
 
+## 1.1.0
+
+ - Adds support for enabling long stack traces in node.js by setting
+   environment variable `Q_DEBUG=1`.
+
 ## 1.0.1
 
  - Adds support for `Q.Promise`, which implements common usage of the

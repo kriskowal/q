@@ -843,6 +843,15 @@ stack trace! This is very helpful for debugging, as otherwise you end up getting
 only the first line, plus a bunch of Q internals, with no sign of where the
 operation started.
 
+In node.js, this feature can also be enabled through the Q_DEBUG environment
+variable:
+
+```
+Q_DEBUG=1 node server.js
+```
+
+This will enable long stack support in every instance of Q.
+
 This feature does come with somewhat-serious performance and memory overhead,
 however. If you're working with lots of promises, or trying to scale a server
 to many users, you should probably keep it off. But in development, go for it!
