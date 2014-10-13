@@ -57,7 +57,7 @@
 
     // <script>
     } else {
-        Q = definition();
+        window.Q = Q = definition();
     }
 
 })(function () {
