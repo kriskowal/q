@@ -40,13 +40,13 @@ try {
 var qStartingLine = captureLine();
 var qFileName;
 
-require("collections/shim");
-var WeakMap = require("collections/weak-map");
-var Iterator = require("collections/iterator");
+var WeakMap = require("weak-map");
 var asap = require("asap");
+var iterate = require("./iterate");
 
+var typeOfObject = "object";
 function isObject(value) {
-    return value === Object(value);
+    return value !== null && typeof value === typeOfObject;
 }
 
 // long stack traces
@@ -64,7 +64,7 @@ function makeStackTraceLong(error, promise) {
         error.stack.indexOf(STACK_JUMP_SEPARATOR) === -1
     ) {
         var stacks = [];
-        for (var p = promise; !!p && handlers.get(p); p = handlers.get(p).became) {
+        for (var p = promise; p instanceof Promise && p._handler; p = p._handler.became) {
             if (p.stack) {
                 stacks.unshift(p.stack);
             }
@@ -179,32 +179,21 @@ function deprecate(callback, name, alternative) {
 
 // end of long stack traces
 
-var handlers = new WeakMap();
-
+// When a deferred promise is forwarded to another promise, the old handler
+// becomes the new handler and all messages past and present flow to the next
+// handler.
 function Q_getHandler(promise) {
-    var handler = handlers.get(promise);
-    if (!handler || !handler.became) {
-        return handler;
+    var handler = promise._handler;
+    while (handler && handler.became) {
+        handler = handler.became;
     }
-    handler = follow(handler);
-    handlers.set(promise, handler);
+    promise._handler = handler;
     return handler;
-}
-
-function follow(handler) {
-    if (!handler.became) {
-        return handler;
-    } else {
-        handler.became = follow(handler.became);
-        return handler.became;
-    }
 }
 
 var theViciousCycleError = new Error("Can't resolve a promise with itself");
 var theViciousCycleRejection = Q_reject(theViciousCycleError);
 var theViciousCycle = Q_getHandler(theViciousCycleRejection);
-
-var thenables = new WeakMap();
 
 /**
  * Coerces a value to a promise. If the value is a promise, pass it through
@@ -224,10 +213,7 @@ function Q(value) {
     if (Q_isPromise(value)) {
         return value;
     } else if (isThenable(value)) {
-        if (!thenables.has(value)) {
-            thenables.set(value, new Promise(new Thenable(value)));
-        }
-        return thenables.get(value);
+        return new Promise(new Thenable(value));
     } else {
         return new Promise(new Fulfilled(value));
     }
@@ -330,7 +316,7 @@ function Q_all(questions) {
         } else {
             ++countDown;
             promise = Q(promise);
-            promise.then(
+            promise.done(
                 function Q_all_eachFulfilled(value) {
                     answers[index] = value;
                     if (--countDown === 0) {
@@ -631,7 +617,7 @@ function Promise(handler) {
             deferred.reject(error);
         }
     }
-    handlers.set(this, handler);
+    this._handler = handler;
 }
 
 /**
@@ -678,7 +664,7 @@ Promise.reject = Q_reject;
  */
 Q.isPromise = Q_isPromise;
 function Q_isPromise(object) {
-    return isObject(object) && !!handlers.get(object);
+    return isObject(object) && object instanceof Promise;
 }
 
 /**
@@ -1276,7 +1262,7 @@ Fulfilled.prototype.keys = function Fulfilled_keys() {
 };
 
 Fulfilled.prototype.iterate = function Fulfilled_iterate() {
-    return new Iterator(this.value);
+    return iterate(this.value);
 };
 
 Fulfilled.prototype.pull = function Fulfilled_pull() {
@@ -1359,7 +1345,7 @@ Pending.prototype.become = function Pending_become(promise) {
     var handler = Q_getHandler(promise);
     this.became = handler;
 
-    handlers.set(promise, handler);
+    promise._handler = handler;
     this.promise = void 0;
 
     this.messages.forEach(function Pending_become_eachMessage(message) {

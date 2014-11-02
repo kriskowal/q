@@ -40,8 +40,8 @@
   },
   "main": "q.js",
   "dependencies": {
-    "asap": "^1.0.0",
-    "collections": ">=2.0.1 <3.0.0"
+    "asap": "^2.0.0",
+    "weak-map": "^1.0.5"
   },
   "devDependencies": {
     "jshint": "^2.4.4",

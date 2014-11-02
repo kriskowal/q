@@ -107,13 +107,13 @@ describe("estimate", function () {
             // The composite ETA of thenPromise should be now + 100ms (this) +
             // 200ms (then).
             setTimeout(function () {
-                expect(thenPromise.getEstimate()).toBeNear(now + 300, 10);
+                expect(thenPromise.getEstimate()).toBeNear(now + 300, 20);
             }, 0);
 
             // But the actual time of completion will be now + 200ms (this
             // actual) + 300ms (fulfilled actual)
             setTimeout(function () {
-                expect(thenPromise.getEstimate()).toBeNear(now + 500, 10);
+                expect(thenPromise.getEstimate()).toBeNear(now + 500, 20);
                 done();
             }, 600);
         });
