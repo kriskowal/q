@@ -595,6 +595,37 @@ describe("promises for objects", function () {
 
     });
 
+    describe("wrap", function() {
+
+        it("fulfills a promise", function () {
+            var wrapperObject = {};
+            var value = "promise value";
+            var deferred = Q.defer();
+            deferred.resolve(value);
+
+            return deferred.promise.wrap(wrapperObject, "key")
+            .then(function (result) {
+                expect(result).toBe(wrapperObject);
+                expect(result.key).toBe("promise value");
+            });
+        });
+
+        it("propagates a rejection", function () {
+            var exception = new Error("boo!");
+            var wrapperObject = {};
+            return Q.fcall(function () {
+                throw exception;
+            })
+            .wrap(wrapperObject, "key")
+            .then(function () {
+                expect(true).toBe(false);
+            }, function (_exception) {
+                expect(_exception).toBe(exception);
+            });
+        });
+
+    });
+
     describe("post", function () {
 
         it("fulfills a promise", function () {

@@ -1065,6 +1065,10 @@ function fulfill(value) {
         "delete": function (name) {
             delete value[name];
         },
+        "wrap": function (wrapperObject, key) {
+            wrapperObject[key] = value;
+            return wrapperObject;
+        },
         "post": function (name, args) {
             // Mark Miller proposes that post with no name should apply a
             // promised function.
@@ -1349,6 +1353,21 @@ Q["delete"] = function (object, key) {
 Promise.prototype.del = // XXX legacy
 Promise.prototype["delete"] = function (key) {
     return this.dispatch("delete", [key]);
+};
+
+/**
+ * Wraps the promise in a wrapper object at the given key.
+ * @param value             the value of the promise
+ * @param wrapperObject     the object that wraps the promise
+ * @param key               name the promise will be assigned
+ * @return promise for the wrapper object
+ */
+Q.wrap = function (value, wrapperObject, key) {
+    return Q(value).dispatch("wrap", [wrapperObject, key]);
+};
+
+Promise.prototype.wrap = function (wrapperObject, key) {
+    return this.dispatch("wrap", [wrapperObject, key]);
 };
 
 /**
