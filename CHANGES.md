@@ -1,5 +1,11 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=70 -->
 
+## 1.1.1
+
+ - Fix a pair of regressions in bootstrapping, one which precluded
+   WebWorker support, and another that precluded support in
+   ``<script>`` usage outright. #607
+
 ## 1.1.0
 
  - Adds support for enabling long stack traces in node.js by setting
