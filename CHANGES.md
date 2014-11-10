@@ -2,6 +2,8 @@
 
 ## 1.1.0
 
+ - Adds support for enabling long stack traces in node.js by setting
+   environment variable `Q_DEBUG=1`.
  - Introduces the `tap` method to promises, which will see a value
    pass through without alteration.
  - Use instanceof to recognize own promise instances as opposed to

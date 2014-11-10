@@ -474,6 +474,11 @@ Q.nextTick = nextTick;
  */
 Q.longStackSupport = false;
 
+// enable long stacks if Q_DEBUG is set
+if (typeof process === "object" && process && process.env && process.env.Q_DEBUG) {
+    Q.longStackSupport = true;
+}
+
 /**
  * Constructs a {promise, resolve, reject} object.
  *
