@@ -1,5 +1,16 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=70 -->
 
+## 1.0.2
+
+ - Use instanceof to recognize own promise instances as opposed to
+   thenables.
+ - Construct timeout errors with `code === ETIMEDOUT` (Kornel Lesiński)
+ - More descriminant CommonJS module environment detection.
+ - Dropped continuous integration for Node.js 0.6 and 0.8 because of
+   changes to npm that preclude the use of new `^` version predicate
+   operator in any transitive dependency.
+ - Users can now override `Q.nextTick`.
+
 ## 1.0.1
 
  - Adds support for `Q.Promise`, which implements common usage of the

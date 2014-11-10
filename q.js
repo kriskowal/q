@@ -912,9 +912,7 @@ function nearer(value) {
  */
 Q.isPromise = isPromise;
 function isPromise(object) {
-    return isObject(object) &&
-        typeof object.promiseDispatch === "function" &&
-        typeof object.inspect === "function";
+    return object instanceof Promise;
 }
 
 Q.isPromiseAlike = isPromiseAlike;
