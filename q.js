@@ -27,8 +27,7 @@
  */
 
 (function (definition) {
-    // Turn off strict mode for this function so we can assign to global.Q
-    /* jshint strict: false */
+    "use strict";
 
     // This file will function properly as a <script> tag, or a module
     // using CommonJS and NodeJS or RequireJS module formats.  In
@@ -56,8 +55,11 @@
         }
 
     // <script>
-    } else {
+    } else if (typeof window !== "undefined") {
         window.Q = Q = definition();
+
+    } else {
+        throw new Error("This environment was not anticiapted by Q. Please file a bug.");
     }
 
 })(function () {
