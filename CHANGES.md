@@ -1,7 +1,9 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=70 -->
 
-## 1.0.2
+## 1.1.0
 
+ - Introduces the `tap` method to promises, which will see a value
+   pass through without alteration.
  - Use instanceof to recognize own promise instances as opposed to
    thenables.
  - Construct timeout errors with `code === ETIMEDOUT` (Kornel Lesiński)
