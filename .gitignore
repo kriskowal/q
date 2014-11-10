@@ -8,3 +8,7 @@ q.min.js
 .coverage_data/
 .coverage_debug/
 cover_html/
+
+# IntelliJ IDEA project files
+.idea
+*.iml
