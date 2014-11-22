@@ -66,6 +66,11 @@
     "release": "grunt release",
     "benchmark": "matcha"
   },
+  "files": [
+    "LICENSE",
+    "q.js",
+    "queue.js"
+  ],
   "overlay": {
     "teleport": {
       "dependencies": {
