@@ -1,5 +1,11 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=70 -->
 
+## 1.1.2
+
+ - Removed extraneous files from the npm package by using the "files"
+   whitelist in package.json instead of the .npmignore blacklist.
+   (@anton-rudeshko)
+
 ## 1.1.1
 
  - Fix a pair of regressions in bootstrapping, one which precluded
