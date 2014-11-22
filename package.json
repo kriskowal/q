@@ -32,6 +32,11 @@
     "url": "http://github.com/kriskowal/q/raw/master/LICENSE"
   },
   "main": "q.js",
+  "files": [
+    "LICENSE",
+    "q.js",
+    "queue.js"
+  ],
   "repository": {
     "type": "git",
     "url": "git://github.com/kriskowal/q.git"
