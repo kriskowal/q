@@ -69,6 +69,31 @@ rest and spread arguments.
 
 [IOC]: http://www.slideshare.net/domenicdenicola/callbacks-promises-and-coroutines-oh-my-the-evolution-of-asynchronicity-in-javascript
 
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc/generate-toc again -->
+**Table of Contents**
+
+- [Resources](#resources)
+- [Tutorial](#tutorial)
+    - [Propagation](#propagation)
+    - [Chaining](#chaining)
+    - [Combination](#combination)
+    - [Sequences](#sequences)
+    - [Handling Errors](#handling-errors)
+    - [Progress Notification](#progress-notification)
+    - [The End](#the-end)
+    - [The Beginning](#the-beginning)
+        - [Using ``Q.fcall``](#using-qfcall)
+        - [Using Deferreds](#using-deferreds)
+        - [Using `Q.Promise`](#using-qpromise)
+        - [The Middle](#the-middle)
+        - [Over the Wire](#over-the-wire)
+        - [Adapting Node](#adapting-node)
+        - [Long Stack Traces](#long-stack-traces)
+    - [Tests](#tests)
+    - [License](#license)
+
+<!-- markdown-toc end -->
+
 
 ## Getting Started
 
@@ -866,4 +891,3 @@ You can view the results of the Q test suite [in your browser][tests]!
 
 Copyright 2009–2014 Kristopher Michael Kowal
 MIT License (enclosed)
-
