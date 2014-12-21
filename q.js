@@ -55,8 +55,8 @@
         }
 
     // <script>
-    } else if (typeof self !== "undefined") {
-        self.Q = definition();
+    } else if (typeof window !== "undefined") {
+        window.Q = definition();
 
     } else {
         throw new Error("This environment was not anticiapted by Q. Please file a bug.");
