@@ -1,0 +1,43 @@
+{
+  "name": "q",
+  "main": "q.js",
+  "version": "1.1.2",
+  "homepage": "https://github.com/kriskowal/q",
+  "authors": [
+    "Kris Kowal <kris@cixar.com> (https://github.com/kriskowal)"
+  ],
+  "description": "A library for promises (CommonJS/Promises/A,B,D)",
+  "moduleType": [
+    "amd",
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "q",
+    "promise",
+    "promises",
+    "promises-a",
+    "promises-aplus",
+    "deferred",
+    "future",
+    "async",
+    "flow",
+    "control",
+    "fluent",
+    "browser",
+    "node"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "*.md",
+    "Gruntfile.js",
+    "package.json",
+    "q.png",
+    "q.svg",
+    "benchmark",
+    "design",
+    "examples",
+    "spec"
+  ]
+}
