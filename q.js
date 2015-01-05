@@ -1752,6 +1752,9 @@ Q["finally"] = function (object, callback) {
 
 Promise.prototype.fin = // XXX legacy
 Promise.prototype["finally"] = function (callback) {
+    if (!callback || typeof callback.apply !== "function") {
+        throw new Error("Can't apply finally callback");
+    }
     callback = Q(callback);
     return this.then(function (value) {
         return callback.fcall().then(function () {
