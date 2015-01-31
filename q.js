@@ -40,9 +40,8 @@ try {
 var qStartingLine = captureLine();
 var qFileName;
 
-require("collections/shim");
-var WeakMap = require("collections/weak-map");
-var Iterator = require("collections/iterator");
+var WeakMap = require("weak-map");
+var iterate = require("pop-iterate");
 var asap = require("asap");
 
 function isObject(value) {
@@ -1276,7 +1275,7 @@ Fulfilled.prototype.keys = function Fulfilled_keys() {
 };
 
 Fulfilled.prototype.iterate = function Fulfilled_iterate() {
-    return new Iterator(this.value);
+    return iterate(this.value);
 };
 
 Fulfilled.prototype.pull = function Fulfilled_pull() {
