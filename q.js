@@ -91,7 +91,8 @@ var nextTick =(function () {
     var flushing = false;
     var requestTick = void 0;
     var isNodeJS = false;
-    var laterQueue = []; // queue for late tasks
+    // queue for late tasks, used by unhandled rejection tracking
+    var laterQueue = [];
 
     function flush() {
         /* jshint loopfunc: true */
@@ -211,6 +212,9 @@ var nextTick =(function () {
             setTimeout(flush, 0);
         };
     }
+    // runs a task after all other tasks have been run
+    // this is useful for unhandled rejection tracking that needs to happen
+    // after all `then`d tasks have been run.
     nextTick.runAfter = function(task){
         laterQueue.push(task);
         if (!flushing) {
@@ -1027,9 +1031,9 @@ function trackRejection(promise, reason) {
     if (!trackUnhandledRejections) {
         return;
     }
-    if(typeof process === "object" && typeof process.emit === "function"){
-        Q.nextTick.runAfter(function(){
-            if(array_indexOf(unhandledRejections, promise) !== -1){
+    if(typeof process === "object" && typeof process.emit === "function") {
+        Q.nextTick.runAfter(function() {
+            if(array_indexOf(unhandledRejections, promise) !== -1) {
                 process.emit("unhandledRejection", reason, promise);
                 reportedUnhandledRejections.push(promise);
             }
@@ -1051,14 +1055,13 @@ function untrackRejection(promise) {
 
     var at = array_indexOf(unhandledRejections, promise);
     if (at !== -1) {
-        if(typeof process === "object" && typeof process.emit === "function"){
-            Q.nextTick.runAfter(function(){
+        if(typeof process === "object" && typeof process.emit === "function") {
+            Q.nextTick.runAfter(function() {
                 var atReport = array_indexOf(reportedUnhandledRejections, promise);
                 if(atReport !== -1) {
                     process.emit("rejectionHandled", unhandledReasons[at], promise);
                     reportedUnhandledRejections.splice(atReport, 1);
                 }
-
             });
         }
         unhandledRejections.splice(at, 1);
