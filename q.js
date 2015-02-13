@@ -107,7 +107,7 @@ var nextTick =(function () {
                 head.domain = void 0;
                 domain.enter();
             }
-            runSingle(task);
+            runSingle(task, domain);
 
         }
         while(laterQueue.length){
@@ -116,8 +116,8 @@ var nextTick =(function () {
         }
         flushing = false;
     }
-
-    function runSingle(task){ // runs a single function in the async queue
+    // runs a single function in the async queue
+    function runSingle(task, domain){ 
         try {
             task();
 
