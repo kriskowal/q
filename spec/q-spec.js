@@ -196,9 +196,9 @@ describe("always next tick", function () {
 		spyOn(Q, 'nextTick').andCallFake(function immediateTick(task){
 			task();
 		});
-		
+
 		Q.when(Q(), spy);
-		
+
 		expect(spy).toHaveBeenCalled();
 		expect(Q.nextTick).toHaveBeenCalled();
 	});
@@ -1183,6 +1183,222 @@ describe("all", function () {
 
 });
 
+describe("firstResolved", function() {
+    it("fulfills when passed an empty array", function() {
+        return Q.firstResolved([]);
+    });
+
+    it("rejects after all promises are rejected", function() {
+        var deferreds = [Q.defer(), Q.defer()];
+        var promises = [deferreds[0].promise, deferreds[1].promise];
+
+        return testReject(promises, deferreds);
+    });
+
+    it("rejects after all promises in a sparse array are rejected", function() {
+        var deferreds = [Q.defer(), Q.defer()];
+        var promises = [];
+        promises[0] = deferreds[0].promise;
+        promises[3] = deferreds[1].promise;
+
+        return testReject(promises, deferreds);
+    });
+
+    function testReject(promises, deferreds) {
+        var promise = Q.firstResolved(promises);
+
+        for (var i = 0; i < deferreds.length; i++) {
+            var deferred = deferreds[i];
+            (function() {
+                deferred.reject(new Error('Rejected'));
+            })();
+        }
+
+        return Q.delay(250)
+          .then(function() {
+              expect(promise.isRejected()).toBe(true);
+              expect(promise.inspect().reason.length).toBe(deferreds.length);
+          })
+          .timeout(1000);
+    }
+
+    it("fulfills with the first resolved promise", function() {
+        var deferreds = [Q.defer(), Q.defer()];
+        var promises = [deferreds[0].promise, deferreds[1].promise];
+
+        testFulfill(promises, deferreds);
+    });
+
+    it("fulfills when passed a sparse array", function() {
+        var deferreds = [Q.defer(), Q.defer()];
+        var promises = [];
+        promises[0] = deferreds[0].promise;
+        promises[2] = deferreds[1].promise;
+
+        testFulfill(promises, deferreds);
+    });
+
+    function testFulfill(promises, deferreds) {
+        var promise = Q.firstResolved(promises);
+
+        var j = 1;
+        for (var i = 0; i < deferreds.length; i++) {
+            var toResolve = deferreds[i];
+            if (!toResolve || !Q.isPromiseAlike(toResolve.promise)) {
+                continue;
+            }
+
+            (function(i, toResolve) {
+                var time = i * 50;
+                Q.delay(time).then(function() {
+                    toResolve.resolve('Fulfilled' + i);
+                });
+            })(j, toResolve);
+
+            j++;
+        }
+
+        return Q.delay(400)
+          .then(function() {
+              expect(promise.isFulfilled()).toBe(true);
+              expect(promise.inspect().value).toBe('Fulfilled1');
+          })
+          .timeout(1000);
+    }
+
+    it("fulfills with the first value", function() {
+        var toResolve1 = Q.defer();
+        var toResolve2 = Q.defer();
+        var toResolve3 = Q.defer();
+        var promises = [toResolve1.promise, toResolve2.promise, 4, 5,
+            toResolve3.promise
+        ];
+
+        var promise = Q.firstResolved(promises);
+
+        Q.delay(150).then(function() {
+            toResolve1.resolve(1);
+        });
+        Q.delay(50).then(function() {
+            toResolve2.resolve(2);
+        });
+        Q.delay(100).then(function() {
+            toResolve3.resolve(3);
+        });
+
+        return Q.delay(250)
+          .then(function() {
+              expect(promise.isFulfilled()).toBe(true);
+              expect(promise.inspect().value).toBe(4);
+          })
+          .timeout(1000);
+    });
+
+    it("fulfills after rejections", function() {
+        var toReject = [Q.defer(), Q.defer()];
+        var toResolve = Q.defer();
+        var promises = [toReject[0].promise, toReject[1].promise,
+            toResolve
+            .promise
+        ];
+
+        var promise = Q.firstResolved(promises);
+
+        testFulfillAfterRejections(promises, toReject, toResolve);
+    });
+
+    it("fulfills after rejections in sparse array", function() {
+        var toReject = [Q.defer(), Q.defer()];
+        var toResolve = Q.defer();
+        var promises = [];
+        promises[2] = toReject[0].promise;
+        promises[5] = toReject[1].promise;
+        promises[9] = toResolve.promise;
+
+        testFulfillAfterRejections(promises, toReject, toResolve);
+    });
+
+    function testFulfillAfterRejections(promises, rejectDeferreds,
+      fulfillDeferred) {
+        var promise = Q.firstResolved(promises);
+
+        for (var i = 0; i < rejectDeferreds.length; i++) {
+            var toReject = rejectDeferreds[i];
+            (function(i, toReject) {
+                var time = (i + 1) * 50;
+                Q.delay(time).then(function() {
+                    toReject.reject(new Error('Rejected'));
+                });
+            })(i, toReject);
+
+            i++;
+        }
+        Q.delay(i * 50).then(function() {
+            fulfillDeferred.resolve('Fulfilled');
+        });
+
+        return Q.delay(400)
+          .then(function() {
+              expect(promise.isFulfilled()).toBe(true);
+              expect(promise.inspect().value).toBe('Fulfilled');
+          })
+          .timeout(1000);
+    }
+
+    it("resolves foreign thenables", function() {
+        var normal = Q.delay(150)
+            .then(function() {})
+            .thenResolve(1);
+        var foreign = {
+            then: function(f) {
+                return f(2);
+            }
+        };
+
+        return Q.firstResolved([normal, foreign])
+          .then(function(result) {
+              expect(result).toEqual(2);
+          });
+    });
+
+    it("sends { index, value } progress updates", function() {
+        var deferred1 = Q.defer();
+        var deferred2 = Q.defer();
+
+        var progressValues = [];
+
+        Q.delay(50).then(function() {
+            deferred1.notify("a");
+        });
+        Q.delay(100).then(function() {
+            deferred2.notify("b");
+            deferred2.resolve();
+        });
+        Q.delay(150).then(function() {
+            deferred1.notify("c"); // Is lost, deferred2 already resolved.
+            deferred1.resolve();
+        });
+
+        return Q.firstResolved([deferred1.promise, deferred2.promise])
+          .delay(250)
+          .then(function() {
+              expect(progressValues).toEqual([{
+                  index: 0,
+                  value: "a"
+              }, {
+                  index: 1,
+                  value: "b"
+              }]);
+            },
+            undefined,
+            function(progressValue) {
+                progressValues.push(progressValue);
+            }
+          );
+    });
+
+});
+
 describe("allSettled", function () {
     it("works on an empty array", function () {
         return Q.allSettled([])
@@ -2117,7 +2333,7 @@ describe("node support", function () {
         });
 
     });
-    
+
 	describe("npost", function () {
 
         it("fulfills with callback result", function () {
@@ -2269,7 +2485,7 @@ describe("node support", function () {
                 expect(ten).toBe(10);
             });
         });
-		
+
     });
 
 });

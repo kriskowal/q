@@ -1540,6 +1540,82 @@ Promise.prototype.all = function () {
 };
 
 /**
+ * Returns the first resolved promise of an array. Prior rejected promises are
+ * ignored.  Rejects only if all promises are rejected with an array
+ * containing the reasons of all rejected promises.
+ * @param {Array*} an array containing values or promises for values
+ * @returns a promise fulfilled with the value of the first resolved promise,
+ * or a promise rejected with an array with the reasons of all rejected
+ * promises.
+ */
+Q.firstResolved = firstResolved;
+
+function firstResolved(promises) {
+    var deferred = Q.defer();
+    if (promises.length === 0) {
+        deferred.resolve();
+    }
+
+    for (var i = 0; i < promises.length; i++) {
+        var promise = promises[i];
+        /* Let's define that false could be a value to resolve with, so let's not
+         * if(!promise)
+         */
+        if (promise === undefined || promise === null) {
+            continue;
+        }
+
+        if (!isPromiseAlike(promise)) {
+            // It's a value, not a promise
+            var value = promise;
+            deferred.resolve(value);
+            return deferred.promise;
+        }
+
+        (function(promise, i) {
+            promise.then(function(result) {
+                deferred.resolve(result);
+            }, function() {
+                // Ignore. Later, with allSettled, we take care of rejecting.
+            }, function(progress) {
+                deferred.notify({
+                    index: i,
+                    value: progress
+                });
+            });
+        })(promise, i);
+    }
+
+    var allRejected = [];
+
+    Q.allSettled(promises)
+      .then(function(allSettled) {
+        for (var i = 0; i < allSettled.length; i++) {
+            var snapshot = allSettled[i];
+            if (!snapshot || !snapshot.state) {
+              continue;
+            }
+            if (snapshot.state === 'fulfilled') {
+              return Q.reject();
+            } else if (snapshot.state === 'rejected') {
+              allRejected.push(Q.reject(snapshot.reason));
+            }
+        }
+
+        return Q.resolve(allRejected);
+      })
+      .then(function(result) {
+          deferred.reject(allRejected);
+      });
+
+    return deferred.promise;
+}
+
+Promise.prototype.firstResolved = function() {
+  return firstResolved(this);
+};
+
+/**
  * Waits for all promises to be settled, either fulfilled or
  * rejected.  This is distinct from `all` since that would stop
  * waiting at the first rejection.  The promise returned by
