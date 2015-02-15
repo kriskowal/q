@@ -1502,7 +1502,7 @@ Promise.prototype.keys = function () {
 Q.all = all;
 function all(promises) {
     return when(promises, function (promises) {
-        var countDown = 0;
+        var pendingCount = 0;
         var deferred = defer();
         array_reduce(promises, function (undefined, promise, index) {
             var snapshot;
@@ -1512,12 +1512,12 @@ function all(promises) {
             ) {
                 promises[index] = snapshot.value;
             } else {
-                ++countDown;
+                ++pendingCount;
                 when(
                     promise,
                     function (value) {
                         promises[index] = value;
-                        if (--countDown === 0) {
+                        if (--pendingCount === 0) {
                             deferred.resolve(promises);
                         }
                     },
@@ -1528,7 +1528,7 @@ function all(promises) {
                 );
             }
         }, void 0);
-        if (countDown === 0) {
+        if (pendingCount === 0) {
             deferred.resolve(promises);
         }
         return deferred.promise;
@@ -1537,6 +1537,52 @@ function all(promises) {
 
 Promise.prototype.all = function () {
     return all(this);
+};
+
+/**
+ * Returns the first resolved promise of an array. Prior rejected promises are
+ * ignored.  Rejects only if all promises are rejected.
+ * @param {Array*} an array containing values or promises for values
+ * @returns a promise fulfilled with the value of the first resolved promise,
+ * or a rejected promise if all promises are rejected.
+ */
+Q.any = any;
+
+function any(promises) {
+    if (promises.length === 0) {
+        return Q.resolve();
+    }
+
+    var deferred = Q.defer();
+    var pendingCount = 0;
+    array_reduce(promises, function(prev, current, index) {
+        var promise = promises[index];
+
+        pendingCount++;
+
+        when(promise, fulfilled, rejected, progress);
+        function fulfilled(result) {
+            deferred.resolve(result);
+        };
+        function rejected(reason) {
+            pendingCount--;
+            if (pendingCount === 0) {
+                deferred.reject(new Error("Can't get fulfillment value from any promise, all promises were rejected."));
+            }
+        };
+        function progress(progress) {
+            deferred.notify({
+                index: index,
+                value: progress
+            });
+        };
+    }, undefined);
+
+    return deferred.promise;
+}
+
+Promise.prototype.any = function() {
+    return any(this);
 };
 
 /**

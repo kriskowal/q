@@ -1,5 +1,12 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=70 -->
 
+## 1.2.0
+
+ - Added Q.any(promisesArray) method.
+   Returns a promise fulfilled with the value of the first resolved promise in
+   promisesArray. If all promises in promisesArray are rejected, it returns
+   a rejected promise.
+
 ## 1.1.2
 
  - Removed extraneous files from the npm package by using the "files"
@@ -109,7 +116,7 @@ have been distributed far and wide and demand long term support.
 
 ## 0.9.4
 
- - `isPromise` and `isPromiseAlike` now always returns a boolean 
+ - `isPromise` and `isPromiseAlike` now always returns a boolean
    (even for falsy values). #284 @lfac-pt
  - Support for ES6 Generators in `async` #288 @andywingo
  - Clear duplicate promise rejections from dispatch methods #238 @SLaks
@@ -759,4 +766,3 @@ Their replacements are listed here:
 ## 0.0.1
 
  - initial version
-
