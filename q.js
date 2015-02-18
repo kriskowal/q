@@ -1579,8 +1579,8 @@ Q.thenResolve = deprecate(function (promise, value) {
 }, "thenResolve", "Q(value).thenResolve");
 
 Q.thenReject = deprecate(function (promise, reason) {
-    return Q(promise).thenResolve(reason);
-}, "thenResolve", "Q(value).thenResolve");
+    return Q(promise).thenReject(reason);
+}, "thenReject", "Q(value).thenReject");
 
 Q.isPending = deprecate(function (value) {
     return Q(value).isPending();
