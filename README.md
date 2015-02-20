@@ -7,7 +7,7 @@
 
 *:warning: This is Q version 2 and is experimental at this time. If you install
 the latest Q from `npm`, you will get the latest from the [version 1][v1]
-release train. You will get the lastet of version 2 if you use `npm install
+release train. You will get the latest of version 2 if you use `npm install
 q@~2`. Consult [CHANGES.md][] for details on what has changed*
 
 *Among the significant differences in version 2, the source is CommonJS only and
