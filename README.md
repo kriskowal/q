@@ -864,6 +864,6 @@ You can view the results of the Q test suite [in your browser][tests]!
 
 ## License
 
-Copyright 2009–2014 Kristopher Michael Kowal
+Copyright 2009–2015 Kristopher Michael Kowal and contributors
 MIT License (enclosed)
 
