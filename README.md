@@ -335,6 +335,18 @@ Q.allSettled(promises)
 });
 ```
 
+The ``any`` function accepts an array of promises and returns a promise that is
+fulfilled by the first given promise to be fulfilled, or rejected if all of the
+given promises are rejected.
+
+```javascript
+Q.any(promises)
+.then(function (first) {
+    // Any of the promises was fulfilled.
+}, function (error) {
+    // All of the promises were rejected.
+});
+```
 
 ### Sequences
 

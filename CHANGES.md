@@ -2,7 +2,7 @@
 
 ## 1.2.0
 
- - Added Q.any(promisesArray) method.
+ - Added Q.any(promisesArray) method (@vergara).
    Returns a promise fulfilled with the value of the first resolved promise in
    promisesArray. If all promises in promisesArray are rejected, it returns
    a rejected promise.
