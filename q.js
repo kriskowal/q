@@ -1560,22 +1560,25 @@ function any(promises) {
 
         pendingCount++;
 
-        when(promise, fulfilled, rejected, progress);
-        function fulfilled(result) {
+        when(promise, onFulfilled, onRejected, onProgress);
+        function onFulfilled(result) {
             deferred.resolve(result);
-        };
-        function rejected(reason) {
+        }
+        function onRejected() {
             pendingCount--;
             if (pendingCount === 0) {
-                deferred.reject(new Error("Can't get fulfillment value from any promise, all promises were rejected."));
+                deferred.reject(new Error(
+                    "Can't get fulfillment value from any promise, all " +
+                    "promises were rejected."
+                ));
             }
-        };
-        function progress(progress) {
+        }
+        function onProgress(progress) {
             deferred.notify({
                 index: index,
                 value: progress
             });
-        };
+        }
     }, undefined);
 
     return deferred.promise;
