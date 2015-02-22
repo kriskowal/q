@@ -1285,13 +1285,13 @@ describe("delay", function () {
     });
 
     it("should delay after resolution", function (done) {
-        var promise1 = Q.delay("what", 30);
-        var promise2 = promise1.delay(30);
+        var promise1 = Q.delay("what", 50);
+        var promise2 = promise1.delay(150);
 
         setTimeout(function () {
             expect(promise1.isPending()).toBe(false);
             expect(promise2.isPending()).toBe(true);
-        }, 40);
+        }, 100);
 
         promise2.then(function (value) {
             expect(value).toBe("what");

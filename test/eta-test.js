@@ -107,13 +107,13 @@ describe("estimate", function () {
             // The composite ETA of thenPromise should be now + 100ms (this) +
             // 200ms (then).
             setTimeout(function () {
-                expect(thenPromise.getEstimate()).toBeNear(now + 300, 10);
+                expect(thenPromise.getEstimate()).toBeNear(now + 300, 50);
             }, 0);
 
             // But the actual time of completion will be now + 200ms (this
             // actual) + 300ms (fulfilled actual)
             setTimeout(function () {
-                expect(thenPromise.getEstimate()).toBeNear(now + 500, 10);
+                expect(thenPromise.getEstimate()).toBeNear(now + 500, 50);
                 done();
             }, 600);
         });
@@ -125,7 +125,7 @@ describe("estimate", function () {
         it("composes initial estimate for all fulfilled values", function () {
             var now = Date.now();
             var allPromise = Q.all([Q(), Q(), Q()]);
-            expect(allPromise.getEstimate()).toBeNear(now, 10);
+            expect(allPromise.getEstimate()).toBeNear(now, 50);
         });
 
         it("composes initial estimate for forever pending values", function () {
@@ -142,14 +142,14 @@ describe("estimate", function () {
             var expected = [Infinity, now + 10];
             var updates = 0;
             allPromise.observeEstimate(function (estimate) {
-                expect(estimate).toBeNear(expected.shift(), 10);
+                expect(estimate).toBeNear(expected.shift(), 100);
                 if (++updates === 2) {
                     done();
                 }
             });
             setTimeout(function () {
                 oneDeferred.resolve();
-            }, 10);
+            }, 50);
         });
 
         it("composes estimates", function (done) {
@@ -305,7 +305,7 @@ describe("estimate", function () {
             var delayedPromise = Q().delay(100);
             var updates = 0;
             delayedPromise.observeEstimate(function (estimate) {
-                expect(estimate).toBeNear(now + 100, 10);
+                expect(estimate).toBeNear(now + 100, 50);
                 if (++updates === 2) {
                     done();
                 }
@@ -335,7 +335,7 @@ describe("estimate", function () {
             var thenResolvedPromise = Q().delay(200).thenResolve(Q().delay(200));
             var updates = 0;
             thenResolvedPromise.observeEstimate(function (estimate) {
-                expect(estimate).toBeNear(now + 200, 10);
+                expect(estimate).toBeNear(now + 200, 50);
                 if (++updates === 4) {
                     done();
                 }
