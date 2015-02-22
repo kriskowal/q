@@ -899,6 +899,27 @@ function when(value, fulfilled, rejected, progressed) {
     return Q(value).then(fulfilled, rejected, progressed);
 }
 
+/**
+ * Uses Q.when's observer behavior to pause a promise chain until a precedent
+ * promise [from outside the current chain] has been resolved.
+ *
+ * @param precedent promise or immediate reference to monitor for resolution
+ * @param progressed function to be called on any progress notifications(from
+ * the precedent)
+ * @return promise for the on which 'after' was called or a promise for the return
+ * value of the invoked callback
+ */
+
+Promise.prototype.after = function (precedent, progressed) {
+    var proceed = function () { return this; }.bind(this);
+
+    return when(precedent, proceed, reject, progressed);
+};
+
+Q.after = function (precedent, consequent, progressed) {
+    return Q(consequent).after(precedent, progressed);
+};
+
 Promise.prototype.thenResolve = function (value) {
     return this.then(function () { return value; });
 };
