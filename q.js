@@ -1502,6 +1502,10 @@ Promise.prototype.keys = function () {
 Q.all = all;
 function all(promises) {
     return when(promises, function (promises) {
+        if (!Array.isArray(arguments[0]) || arguments.length !== 1) {
+            throw Error("All must be passed an array of promises.");
+        }
+        
         var pendingCount = 0;
         var deferred = defer();
         array_reduce(promises, function (undefined, promise, index) {
