@@ -1308,7 +1308,7 @@ function _return(value) {
 Q.promised = promised;
 function promised(callback) {
     return function () {
-        return spread([this, all(Array.prototype.slice.call(arguments, 0))], function (self, args) {
+        return spread([this, all(array_slice(arguments))], function (self, args) {
             return callback.apply(self, args);
         });
     };
