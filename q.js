@@ -305,6 +305,10 @@ function isObject(value) {
     return value === Object(value);
 }
 
+function isArray(value) {
+    return object_toString(value) === "[object Array]";
+}
+
 // generator related shims
 
 // FIXME: Remove this function once ES6 generators are in SpiderMonkey.
@@ -1502,7 +1506,7 @@ Promise.prototype.keys = function () {
 Q.all = all;
 function all(promises) {
     return when(promises, function (promises) {
-        if (!Array.isArray(arguments[0]) || arguments.length !== 1) {
+        if (!isArray(arguments[0]) || arguments.length !== 1) {
             throw Error("All must be passed an array of promises.");
         }
 
