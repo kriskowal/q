@@ -1308,7 +1308,7 @@ function _return(value) {
 Q.promised = promised;
 function promised(callback) {
     return function () {
-        return spread([this, all(arguments)], function (self, args) {
+        return spread([this, all(Array.prototype.slice.call(arguments, 0))], function (self, args) {
             return callback.apply(self, args);
         });
     };
@@ -1505,7 +1505,7 @@ function all(promises) {
         if (!Array.isArray(arguments[0]) || arguments.length !== 1) {
             throw Error("All must be passed an array of promises.");
         }
-        
+
         var pendingCount = 0;
         var deferred = defer();
         array_reduce(promises, function (undefined, promise, index) {
