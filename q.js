@@ -305,10 +305,6 @@ function isObject(value) {
     return value === Object(value);
 }
 
-function isArray(value) {
-    return object_toString(value) === "[object Array]";
-}
-
 // generator related shims
 
 // FIXME: Remove this function once ES6 generators are in SpiderMonkey.
@@ -1312,7 +1308,7 @@ function _return(value) {
 Q.promised = promised;
 function promised(callback) {
     return function () {
-        return spread([this, all(array_slice(arguments))], function (self, args) {
+        return spread([this, all(arguments)], function (self, args) {
             return callback.apply(self, args);
         });
     };
@@ -1506,8 +1502,8 @@ Promise.prototype.keys = function () {
 Q.all = all;
 function all(promises) {
     return when(promises, function (promises) {
-        if (!isArray(arguments[0]) || arguments.length !== 1) {
-            throw Error("All must be passed an array of promises.");
+        if (typeof arguments[0].length === "undefined") {
+            throw TypeError("all() must be passed an array of promises.");
         }
 
         var pendingCount = 0;
