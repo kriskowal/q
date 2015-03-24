@@ -1100,9 +1100,14 @@ describe("all", function () {
         var promise = Q.defer(),
             willBeRejected = Q.all(promise);
 
-        willBeRejected.then(function() {
-            expect(willBeRejected.isRejected()).toBe(true);
-        });
+        return willBeRejected.then(
+          function () {
+            expect(true).toBe(false);
+          },
+          function (err) {
+            expect(err.constructor).toBe(TypeError);
+          }
+        );
     });
 
     it("fulfills when passed an empty array", function () {
