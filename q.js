@@ -155,8 +155,8 @@ var nextTick =(function () {
         }
     };
 
-    if (typeof process === "object" && (process + '') === '[object process]' &&
-        process.nextTick) {
+    if (typeof process === "object" &&
+        process.toString() === '[object process]' && process.nextTick) {
         // Node.js before 0.9. Note that some fake-Node environments, like the
         // Mocha test runner, introduce a `process` global without a `nextTick`.
         // In addition, some fake-Node environments like browserify expose a
