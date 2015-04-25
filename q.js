@@ -157,11 +157,11 @@ var nextTick =(function () {
 
     if (typeof process === "object" &&
         process.toString() === '[object process]' && process.nextTick) {
-        // Ensure we are in a real Node environment, with a `process.nextTick`.
+        // Ensure Q is in a real Node environment, with a `process.nextTick`.
         // To see through fake Node environments:
         // * Mocha test runner - exposes a `process` global without a `nextTick`
         // * Browserify - exposes a `process.nexTick` function that uses
-        //   `setTimeout`. In this case we'd rather use `setImmediate` because
+        //   `setTimeout`. In this case `setImmediate` is preferred because
         //    it is faster. Browserify's `process.toString()` yields
         //   '[object Object]', while in a real Node environment
         //   `process.nextTick()` yields '[object process]'.
