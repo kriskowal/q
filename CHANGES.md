@@ -1,5 +1,9 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=70 -->
 
+## 1.2.1
+
+ - Fix Node.js environment detection for modern Browserify (@kahnjw).
+
 ## 1.2.0
 
  - Added Q.any(promisesArray) method (@vergara).
