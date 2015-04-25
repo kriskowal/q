@@ -158,15 +158,15 @@ var nextTick =(function () {
     };
 
     if (typeof process === "object" &&
-        process.toString() === '[object process]' && process.nextTick) {
+        process.toString() === "[object process]" && process.nextTick) {
         // Ensure Q is in a real Node environment, with a `process.nextTick`.
         // To see through fake Node environments:
         // * Mocha test runner - exposes a `process` global without a `nextTick`
         // * Browserify - exposes a `process.nexTick` function that uses
         //   `setTimeout`. In this case `setImmediate` is preferred because
         //    it is faster. Browserify's `process.toString()` yields
-        //   '[object Object]', while in a real Node environment
-        //   `process.nextTick()` yields '[object process]'.
+        //   "[object Object]", while in a real Node environment
+        //   `process.nextTick()` yields "[object process]".
         isNodeJS = true;
 
         requestTick = function () {
