@@ -62,7 +62,7 @@
     "test-browser": "opener spec/q-spec.html",
     "benchmark": "matcha",
     "lint": "jshint q.js",
-    "cover": "cover run node_modules/jasmine-node/bin/jasmine-node spec && cover report html && opener cover_html/index.html",
+    "cover": "cover run jasmine-node spec && cover report html && opener cover_html/index.html",
     "minify": "grunt",
     "prepublish": "grunt"
   },
