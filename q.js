@@ -157,13 +157,14 @@ var nextTick =(function () {
 
     if (typeof process === "object" &&
         process.toString() === '[object process]' && process.nextTick) {
-        // Node.js before 0.9. Note that some fake-Node environments, like the
-        // Mocha test runner, introduce a `process` global without a `nextTick`.
-        // In addition, some fake-Node environments like browserify expose a
-        // `process.nexTick` function that uses `setTimeout`. In this case we'd
-        // much rather use `setImmediate` because it is faster. To ensure we are
-        // in a real Node environment, doing process + '' should be
-        // '[object process]'.
+        // Ensure we are in a real Node environment, with a `process.nextTick`.
+        // To see through fake Node environments:
+        // * Mocha test runner - exposes a `process` global without a `nextTick`
+        // * Browserify - exposes a `process.nexTick` function that uses
+        //   `setTimeout`. In this case we'd rather use `setImmediate` because
+        //    it is faster. Browserify's `process.toString()` yields
+        //   '[object Object]', while in a real Node environment
+        //   `process.nextTick()` yields '[object process]'.
         isNodeJS = true;
 
         requestTick = function () {
