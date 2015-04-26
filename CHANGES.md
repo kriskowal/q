@@ -1,5 +1,9 @@
 <!-- vim:ts=4:sts=4:sw=4:et:tw=70 -->
 
+## 1.3.0
+
+ - Add tracking for unhandled and handled rejections in Node.js (@benjamingr).
+
 ## 1.2.1
 
  - Fix Node.js environment detection for modern Browserify (@kahnjw).
