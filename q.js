@@ -96,12 +96,13 @@ var nextTick =(function () {
 
     function flush() {
         /* jshint loopfunc: true */
+        var task, domain;
 
         while (head.next) {
             head = head.next;
-            var task = head.task;
+            task = head.task;
             head.task = void 0;
-            var domain = head.domain;
+            domain = head.domain;
 
             if (domain) {
                 head.domain = void 0;
@@ -110,14 +111,14 @@ var nextTick =(function () {
             runSingle(task, domain);
 
         }
-        while(laterQueue.length){
-            var fn = laterQueue.pop();
-            runSingle(fn);
+        while (laterQueue.length) {
+            task = laterQueue.pop();
+            runSingle(task);
         }
         flushing = false;
     }
     // runs a single function in the async queue
-    function runSingle(task, domain){ 
+    function runSingle(task, domain) {
         try {
             task();
 
@@ -142,7 +143,7 @@ var nextTick =(function () {
             } else {
                 // In browsers, uncaught exceptions are not fatal.
                 // Re-throw them asynchronously to avoid slow-downs.
-                setTimeout(function() {
+                setTimeout(function () {
                     throw e;
                 }, 0);
             }
@@ -222,7 +223,7 @@ var nextTick =(function () {
     // runs a task after all other tasks have been run
     // this is useful for unhandled rejection tracking that needs to happen
     // after all `then`d tasks have been run.
-    nextTick.runAfter = function(task){
+    nextTick.runAfter = function (task) {
         laterQueue.push(task);
         if (!flushing) {
             flushing = true;
@@ -722,9 +723,9 @@ Promise.prototype.join = function (that) {
  */
 Q.race = race;
 function race(answerPs) {
-    return promise(function(resolve, reject) {
+    return promise(function (resolve, reject) {
         // Switch to this once we can assume at least ES5
-        // answerPs.forEach(function(answerP) {
+        // answerPs.forEach(function (answerP) {
         //     Q(answerP).then(resolve, reject);
         // });
         // Use this in the meantime
@@ -1038,9 +1039,9 @@ function trackRejection(promise, reason) {
     if (!trackUnhandledRejections) {
         return;
     }
-    if(typeof process === "object" && typeof process.emit === "function") {
-        Q.nextTick.runAfter(function() {
-            if(array_indexOf(unhandledRejections, promise) !== -1) {
+    if (typeof process === "object" && typeof process.emit === "function") {
+        Q.nextTick.runAfter(function () {
+            if (array_indexOf(unhandledRejections, promise) !== -1) {
                 process.emit("unhandledRejection", reason, promise);
                 reportedUnhandledRejections.push(promise);
             }
@@ -1062,10 +1063,10 @@ function untrackRejection(promise) {
 
     var at = array_indexOf(unhandledRejections, promise);
     if (at !== -1) {
-        if(typeof process === "object" && typeof process.emit === "function") {
-            Q.nextTick.runAfter(function() {
+        if (typeof process === "object" && typeof process.emit === "function") {
+            Q.nextTick.runAfter(function () {
                 var atReport = array_indexOf(reportedUnhandledRejections, promise);
-                if(atReport !== -1) {
+                if (atReport !== -1) {
                     process.emit("rejectionHandled", unhandledReasons[at], promise);
                     reportedUnhandledRejections.splice(atReport, 1);
                 }
@@ -1598,7 +1599,7 @@ function any(promises) {
 
     var deferred = Q.defer();
     var pendingCount = 0;
-    array_reduce(promises, function(prev, current, index) {
+    array_reduce(promises, function (prev, current, index) {
         var promise = promises[index];
 
         pendingCount++;
@@ -1627,7 +1628,7 @@ function any(promises) {
     return deferred.promise;
 }
 
-Promise.prototype.any = function() {
+Promise.prototype.any = function () {
     return any(this);
 };
 
