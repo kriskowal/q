@@ -57,7 +57,18 @@
 
     // <script>
     } else {
-        Q = definition();
+        // Get the `window` object, save the previous Q global
+        // and initialize Q as a global.
+        var root = this;
+        var previousQ = root.Q;
+        root.Q = definition();
+
+        // Add a noConflict object so Q can be removed from the
+        // global namespace.
+        root.Q.noConflict = function() {
+            root.Q = previousQ;
+            return this;
+        };
     }
 
 })(function () {
@@ -1898,6 +1909,10 @@ Promise.prototype.nodeify = function (nodeback) {
     } else {
         return this;
     }
+};
+
+Q.noConflict = function() {
+    console.log('Q.noConflict only works when Q is used as a global');
 };
 
 // All code before this point will be filtered from stack traces.

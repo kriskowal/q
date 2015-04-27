@@ -2169,6 +2169,27 @@ describe("node support", function () {
 
 });
 
+describe("browser support", function () {
+    var _Q;
+
+    beforeEach(function() {
+        _Q = Q;
+    });
+
+    afterEach(function() {
+        Q = _Q;
+    });
+
+    it("sets the global Q object to its original value", function() {
+        Q.noConflict();
+
+        // In this context the original value of Q is undefined.
+        if(typeof window === 'object') {
+            expect(Q).toEqual(undefined);
+        }
+    });
+});
+
 describe("isPromise", function () {
     it("returns true if passed a promise", function () {
         expect(Q.isPromise(Q(10))).toBe(true);
