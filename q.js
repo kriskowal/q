@@ -2033,7 +2033,7 @@ Promise.prototype.nodeify = function (nodeback) {
 };
 
 Q.noConflict = function() {
-    console.log('Q.noConflict only works when Q is used as a global');
+    throw new Error('Q.noConflict only works when Q is used as a global');
 };
 
 // All code before this point will be filtered from stack traces.

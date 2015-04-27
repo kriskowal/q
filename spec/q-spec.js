@@ -2503,11 +2503,16 @@ describe("browser support", function () {
     });
 
     it("sets the global Q object to its original value", function() {
-        Q.noConflict();
-
-        // In this context the original value of Q is undefined.
-        if(typeof window !== 'undefined') {
+        if (typeof window !== 'undefined') {
+            // If window is not undefined, the tests are running in the browser
+            // assert that Q.noConflict returns window.Q to it's initial value
+            // In this context the original value of Q is undefined
+            Q.noConflict();
             expect(Q).toEqual(undefined);
+        } else {
+            // If window is undefined the tests are being run in node, and
+            // Q.noConflict should throw an error
+            expect(Q.noConflict).toThrow();
         }
     });
 });
