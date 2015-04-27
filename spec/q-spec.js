@@ -2506,7 +2506,7 @@ describe("browser support", function () {
         Q.noConflict();
 
         // In this context the original value of Q is undefined.
-        if(typeof window === 'object') {
+        if(typeof window !== 'undefined') {
             expect(Q).toEqual(undefined);
         }
     });
