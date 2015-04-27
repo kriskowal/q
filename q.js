@@ -61,7 +61,7 @@
         var previousQ = self.Q;
         self.Q = definition();
 
-        // Add a noConflict object so Q can be removed from the
+        // Add a noConflict function so Q can be removed from the
         // global namespace.
         self.Q.noConflict = function () {
             self.Q = previousQ;
