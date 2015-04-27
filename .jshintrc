@@ -15,6 +15,7 @@
     "unused": true,
 
     "globals": {
+        "self": false,
         "bootstrap": false,
         "cajaVM": false,
         "define": false,
