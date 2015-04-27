@@ -2509,7 +2509,11 @@ describe("browser support", function () {
             // In this context the original value of Q is undefined
             Q.noConflict();
             expect(Q).toEqual(undefined);
-        } else {
+        }
+    });
+
+    it("throws an error if Q.noConflict is called in node", function () {
+        if (typeof window === 'undefined') {
             // If window is undefined the tests are being run in node, and
             // Q.noConflict should throw an error
             expect(Q.noConflict).toThrow();
