@@ -2491,6 +2491,36 @@ describe("node support", function () {
 
 });
 
+describe("browser support", function () {
+    var _Q;
+
+    beforeEach(function() {
+        _Q = Q;
+    });
+
+    afterEach(function() {
+        Q = _Q;
+    });
+
+    it("sets the global Q object to its original value", function() {
+        if (typeof window !== 'undefined') {
+            // If window is not undefined, the tests are running in the browser
+            // assert that Q.noConflict returns window.Q to it's initial value
+            // In this context the original value of Q is undefined
+            Q.noConflict();
+            expect(Q).toEqual(undefined);
+        }
+    });
+
+    it("throws an error if Q.noConflict is called in node", function () {
+        if (typeof window === 'undefined') {
+            // If window is undefined the tests are being run in node, and
+            // Q.noConflict should throw an error
+            expect(Q.noConflict).toThrow();
+        }
+    });
+});
+
 describe("isPromise", function () {
     it("returns true if passed a promise", function () {
         expect(Q.isPromise(Q(10))).toBe(true);

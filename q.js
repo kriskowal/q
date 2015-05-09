@@ -56,7 +56,17 @@
 
     // <script>
     } else if (typeof self !== "undefined") {
+        // Get the `window` object, save the previous Q global
+        // and initialize Q as a global.
+        var previousQ = self.Q;
         self.Q = definition();
+
+        // Add a noConflict function so Q can be removed from the
+        // global namespace.
+        self.Q.noConflict = function () {
+            self.Q = previousQ;
+            return this;
+        };
 
     } else {
         throw new Error("This environment was not anticipated by Q. Please file a bug.");
@@ -2020,6 +2030,10 @@ Promise.prototype.nodeify = function (nodeback) {
     } else {
         return this;
     }
+};
+
+Q.noConflict = function() {
+    throw new Error("Q.noConflict only works when Q is used as a global");
 };
 
 // All code before this point will be filtered from stack traces.
