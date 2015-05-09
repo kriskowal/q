@@ -1,4 +1,7 @@
-<!-- vim:ts=4:sts=4:sw=4:et:tw=70 -->
+
+## 1.4.0
+
+ - Add `noConflict` support for use in `<script>` (@jahnjw).
 
 ## 1.3.0
 
