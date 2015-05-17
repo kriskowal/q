@@ -1,4 +1,11 @@
 
+## 1.4.1
+
+ - Address an issue that prevented Q from being used as a `<script>` for
+   Firefox add-ons. Q can now be used in any environment that provides `window`
+   or `self` globals, favoring `window` since add-ons have an an immutable
+   `self` that is distinct from `window`.
+
 ## 1.4.0
 
  - Add `noConflict` support for use in `<script>` (@jahnjw).
