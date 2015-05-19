@@ -27,10 +27,7 @@
     "mail": "kris@cixar.com",
     "url": "http://github.com/kriskowal/q/issues"
   },
-  "license": {
-    "type": "MIT",
-    "url": "http://github.com/kriskowal/q/raw/master/LICENSE"
-  },
+  "license": "MIT",
   "main": "q.js",
   "files": [
     "LICENSE",
