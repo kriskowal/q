@@ -1671,6 +1671,38 @@ describe("fin", function () {
 
     });
 
+    describe("when the callback is invalid", function () {
+        describe("undefined", function () {
+            it("should have a useful error", function () {
+                var foo = {},
+                    threw = false;
+
+                try {
+                    Q().fin(foo.bar);
+                } catch (err) {
+                    expect(err.message).toBe("Can't apply finally callback");
+                    threw = true;
+                }
+
+                expect(threw).toBe(true);
+            });
+        });
+
+        describe("not a function", function () {
+            it("should have a useful error", function () {
+                var threw = false;
+
+                try {
+                    Q().fin(123);
+                } catch (err) {
+                    expect(err.message).toBe("Can't apply finally callback");
+                    threw = true;
+                }
+
+                expect(threw).toBe(true);
+            });
+        });
+    });
 });
 
 // Almost like "fin"
