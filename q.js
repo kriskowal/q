@@ -1272,7 +1272,7 @@ function async(makeGenerator) {
             // we also support Python-style generators.  At some point we can remove
             // this block.
 
-            if (typeof StopIteration === "undefined") {
+            if (true) {
                 // ES6 Generators
                 try {
                     result = generator[verb](arg);
