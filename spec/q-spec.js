@@ -1183,6 +1183,28 @@ describe("all", function () {
 
 });
 
+describe("sequence", function() {
+    it("square all values in order", function () {
+		var source = [1, 2, 3, 4, 5];
+		var result = source.map(function (x) {
+			return x*x;
+		});
+		var products = [];
+		Q.sequence(source, function (x) {
+			var defered = Q.defer();
+			setTimeout(defered.resolve, 50, x*x);
+			products.push(x*x);
+			return defered.promise;
+		}).done(function (product) {
+			// Check result
+			expect(product).toEqual(result);
+			
+			// Check order
+			expect(product).toEqual(products);
+		});
+    });
+});
+
 describe("any", function() {
     it("fulfills when passed an empty array", function() {
         return Q.any([]);

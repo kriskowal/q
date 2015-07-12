@@ -1598,6 +1598,44 @@ Promise.prototype.all = function () {
 };
 
 /**
+ * Execute fn in sequence each with an item from arrData.
+ * @param {Array*} an array of functions which will return a promise.
+ * @param {Function} the callback function.
+ * @param {Class} optional, the context for the function.
+ * @returns a promise for an array of the corresponding values
+ */
+function sequence(arrData, fn, ctx) {
+	var vals = array_slice(arrData);
+	var deferred = defer();
+
+	var _index = 0;
+	var _len = arrData.length;
+
+	proc_next();
+	return deferred.promise;
+
+	// Process next item in array
+	function proc_next () {
+		var index = _index++;
+
+		// Complete queue
+		if (index >= _len) {
+			deferred.resolve(vals);
+			return ;
+		}
+
+		when(fn.call(ctx, vals[index]), function (val) {
+			vals[index] = val;
+			proc_next();
+		}, deferred.reject, function (progress) {
+			deferred.notify({ index: index, value: progress });
+		});
+	}
+};
+Q.sequence = sequence;
+
+
+/**
  * Returns the first resolved promise of an array. Prior rejected promises are
  * ignored.  Rejects only if all promises are rejected.
  * @param {Array*} an array containing values or promises for values
