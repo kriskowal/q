@@ -2170,6 +2170,93 @@ describe("thenReject", function () {
     });
 });
 
+describe("catchResolve", function () {
+    describe("Resolving with a non-thenable value", function () {
+        it("returns a promise for that object once the promise is rejected", function () {
+            var waited = false;
+            return Q.delay(20)
+                .then(function () {
+                    waited = true;
+                    throw new Error();
+                })
+                .catchResolve("foo")
+                .then(function (val) {
+                    expect(waited).toBe(true);
+                    expect(val).toBe("foo");
+                });
+        });
+
+        describe("based off a rejected promise", function () {
+            it("does nothing, letting the resolution flow through", function () {
+                return Q.resolve("boo")
+                    .catchResolve("foo")
+                    .then(
+                        function (val) {
+                            expect(val).toBe("boo")
+                        },
+                        function (reason) {
+                            expect(true).toBe(false);
+                        }
+                    );
+            });
+        });
+    });
+
+    describe("Resolving with an promise", function () {
+        it("returns a promise for the result of that promise once the promise is resolved", function () {
+            var waited = false;
+            return Q.delay(20)
+                .then(function () {
+                    waited = true;
+                })
+                .thenResolve(Q("foo"))
+                .then(function (val) {
+                    expect(waited).toBe(true);
+                    expect(val).toBe("foo");
+                });
+        });
+    });
+});
+
+describe("catchReject", function () {
+    describe("Rejecting with a reason", function () {
+        it("returns a promise rejected with that object once the original promise is rejected", function () {
+            var waited = false;
+            return Q.delay(20)
+                .then(function () {
+                    waited = true;
+                    throw new Error();
+                })
+                .catchReject("foo")
+                .then(
+                    function () {
+                        expect(true).toBe(false);
+                    },
+                    function (reason) {
+                        expect(waited).toBe(true);
+                        expect(reason).toBe("foo");
+                    }
+                );
+        });
+
+        describe("based off a rejected promise", function () {
+            it("does nothing, letting the resolution flow through", function () {
+                return Q.resolve("boo")
+                    .catchResolve("foo")
+                    .then(
+                        function (val) {
+                            expect(val).toBe("boo");
+                        },
+                        function () {
+                            expect(true).toBe(false);
+                        }
+                    );
+            });
+        });
+    });
+});
+
+
 describe("thenables", function () {
 
     it("assimilates a thenable with fulfillment with resolve", function () {
