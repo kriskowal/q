@@ -48,6 +48,13 @@ function isObject(value) {
     return value === Object(value);
 }
 
+// Validate callback
+function checkCallbackForWrap(callback) {
+    if (typeof callback !== "function") {
+        throw new Error("Q can't wrap an undefined function");
+    }
+}
+
 // long stack traces
 
 var STACK_JUMP_SEPARATOR = "From previous event:";
@@ -1477,6 +1484,7 @@ Promise.prototype.ninvoke = function Promise_ninvoke(name /*...args*/) {
  * .done()
  */
 Q.denodeify = function Q_denodeify(callback, pattern) {
+    checkCallbackForWrap(callback);
     return function denodeified() {
         var args = new Array(arguments.length + 1);
         var index = 0;
