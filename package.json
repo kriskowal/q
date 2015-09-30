@@ -55,7 +55,7 @@
     "promises-aplus-tests": "1.x"
   },
   "scripts": {
-    "test": "jasmine-node spec && promises-aplus-tests spec/aplus-adapter",
+    "test": "npm ls -s && jasmine-node spec && promises-aplus-tests spec/aplus-adapter && npm run -s lint",
     "test-browser": "opener spec/q-spec.html",
     "benchmark": "matcha",
     "lint": "jshint q.js",

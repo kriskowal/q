@@ -1218,7 +1218,7 @@ describe("any", function() {
           .then(function() {
               expect(promise.isRejected()).toBe(true);
               expect(promise.inspect().reason.message)
-              .toBe("Can't get fulfillment value from any promise, all promises were rejected.");
+              .toBe("Q can't get fulfillment value from any promise, all promises were rejected.");
           })
           .timeout(1000);
     }
@@ -1680,7 +1680,7 @@ describe("fin", function () {
                 try {
                     Q().fin(foo.bar);
                 } catch (err) {
-                    expect(err.message).toBe("Can't apply finally callback");
+                    expect(err.message).toBe("Q can't apply finally callback");
                     threw = true;
                 }
 
@@ -1695,7 +1695,7 @@ describe("fin", function () {
                 try {
                     Q().fin(123);
                 } catch (err) {
-                    expect(err.message).toBe("Can't apply finally callback");
+                    expect(err.message).toBe("Q can't apply finally callback");
                     threw = true;
                 }
 
