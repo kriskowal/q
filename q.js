@@ -725,7 +725,7 @@ Promise.prototype.join = function (that) {
             // TODO: "===" should be Object.is or equiv
             return x;
         } else {
-            throw new Error("Can't join: not the same: " + x + " " + y);
+            throw new Error("Q can't join: not the same: " + x + " " + y);
         }
     });
 };
@@ -1626,7 +1626,7 @@ function any(promises) {
             pendingCount--;
             if (pendingCount === 0) {
                 deferred.reject(new Error(
-                    "Can't get fulfillment value from any promise, all " +
+                    "Q can't get fulfillment value from any promise, all " +
                     "promises were rejected."
                 ));
             }
@@ -1753,7 +1753,7 @@ Q["finally"] = function (object, callback) {
 Promise.prototype.fin = // XXX legacy
 Promise.prototype["finally"] = function (callback) {
     if (!callback || typeof callback.apply !== "function") {
-        throw new Error("Can't apply finally callback");
+        throw new Error("Q can't apply finally callback");
     }
     callback = Q(callback);
     return this.then(function (value) {
@@ -1919,7 +1919,7 @@ Promise.prototype.nfcall = function (/*...args*/) {
 Q.nfbind =
 Q.denodeify = function (callback /*...args*/) {
     if (callback === undefined) {
-        throw new Error('Q Cannot wrap an undefined function');
+        throw new Error("Q can't wrap an undefined function");
     }
     var baseArgs = array_slice(arguments, 1);
     return function () {
