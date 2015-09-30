@@ -366,6 +366,13 @@ if (typeof ReturnValue !== "undefined") {
     };
 }
 
+// Validate callback
+function checkCallbackForWrap(callback) {
+    if (typeof callback !== "function") {
+        throw new Error("Q can't wrap an undefined function");
+    }
+}
+
 // long stack traces
 
 var STACK_JUMP_SEPARATOR = "From previous event:";
@@ -1896,6 +1903,8 @@ Promise.prototype.nfapply = function (args) {
  *
  */
 Q.nfcall = function (callback /*...args*/) {
+    checkCallbackForWrap(callback);
+
     var args = array_slice(arguments, 1);
     return Q(callback).nfapply(args);
 };
@@ -1918,9 +1927,8 @@ Promise.prototype.nfcall = function (/*...args*/) {
  */
 Q.nfbind =
 Q.denodeify = function (callback /*...args*/) {
-    if (callback === undefined) {
-        throw new Error("Q can't wrap an undefined function");
-    }
+    checkCallbackForWrap(callback);
+
     var baseArgs = array_slice(arguments, 1);
     return function () {
         var nodeArgs = baseArgs.concat(array_slice(arguments));
@@ -1939,6 +1947,8 @@ Promise.prototype.denodeify = function (/*...args*/) {
 };
 
 Q.nbind = function (callback, thisp /*...args*/) {
+    checkCallbackForWrap(callback);
+
     var baseArgs = array_slice(arguments, 2);
     return function () {
         var nodeArgs = baseArgs.concat(array_slice(arguments));
