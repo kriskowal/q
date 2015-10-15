@@ -81,7 +81,7 @@ maybeOneOneSecondLater().then(callback);
 /*
 This design has two weaknesses: 
 
-- The first caller of the then method determines the callback that is used.
+- The last caller of the then method determines the callback that is used.
   It would be more useful if every registered callback were notified of
   the resolution.
 - If the callback is registered more than a second after the promise was
