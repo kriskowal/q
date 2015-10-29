@@ -1622,12 +1622,12 @@ function any(promises) {
         function onFulfilled(result) {
             deferred.resolve(result);
         }
-        function onRejected() {
+        function onRejected(err) {
             pendingCount--;
             if (pendingCount === 0) {
                 deferred.reject(new Error(
                     "Q can't get fulfillment value from any promise, all " +
-                    "promises were rejected."
+                    "promises were rejected. Last error: " + err
                 ));
             }
         }

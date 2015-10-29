@@ -1218,7 +1218,7 @@ describe("any", function() {
           .then(function() {
               expect(promise.isRejected()).toBe(true);
               expect(promise.inspect().reason.message)
-              .toBe("Q can't get fulfillment value from any promise, all promises were rejected.");
+              .toBe("Q can't get fulfillment value from any promise, all promises were rejected. Last error: Error: Rejected");
           })
           .timeout(1000);
     }
