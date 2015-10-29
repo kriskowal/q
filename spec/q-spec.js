@@ -1206,19 +1206,21 @@ describe("any", function() {
 
     function testReject(promises, deferreds) {
         var promise = Q.any(promises);
+        var expectedError = new Error('Rejected');
 
         for (var index = 0; index < deferreds.length; index++) {
             var deferred = deferreds[index];
             (function() {
-                deferred.reject(new Error('Rejected'));
+                deferred.reject(expectedError);
             })();
         }
 
         return Q.delay(250)
           .then(function() {
               expect(promise.isRejected()).toBe(true);
+              expect(promise.inspect().reason).toBe(expectedError);
               expect(promise.inspect().reason.message)
-              .toBe("Q can't get fulfillment value from any promise, all promises were rejected. Last error: Error: Rejected");
+              .toBe("Q can't get fulfillment value from any promise, all promises were rejected. Last error message: Rejected");
           })
           .timeout(1000);
     }
