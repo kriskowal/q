@@ -1,3 +1,4 @@
+ - Q.any gives an error message from the last rejected promise
  - Throw if callback supplied to "finally" is invalid (@grahamrhay)
 
 ## 1.4.1
