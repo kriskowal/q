@@ -1,4 +1,4 @@
-[![Build Status](https://secure.travis-ci.org/kriskowal/q.png?branch=master)](http://travis-ci.org/kriskowal/q)
+[![Build Status](https://secure.travis-ci.org/kriskowal/q.svg?branch=master)](http://travis-ci.org/kriskowal/q)
 
 <a href="http://promises-aplus.github.com/promises-spec">
     <img src="http://kriskowal.github.io/q/q.png"
