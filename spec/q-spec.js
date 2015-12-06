@@ -1801,6 +1801,238 @@ describe("tap", function () {
 });
 
 
+describe("qWhile", function() {
+    describe("when conditional is met on first run", function() {
+        it("does not call body", function() {
+            var bodySpy = jasmine.createSpy("body").andReturn(Q.resolve());
+
+            Q.qWhile(
+                function() { return true; },
+                bodySpy
+            );
+
+            expect(bodySpy).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("when body is resolved", function() {
+        it("calls the conditional check with prev reason", function() {
+            var expectedReason = "resolved",
+                firstRun = true;;
+
+            Q.qWhile(
+                function(prevReason) {
+                    if(firstRun) return false;
+                    else {
+                        expect(prevReason).toBe(expectedReason);
+                        return true;
+                    }
+                },
+                function() {
+                    firstRun = false;
+                    return Q.resolve(expectedReason);
+                }
+            );
+        });
+
+        describe("and conditional is met", function() {
+            it("does not call the loop body again", function() {
+                var firstRun = true,
+                    bodySpy = jasmine.createSpy("body").andCallFake(function() {
+                        if(firstRun) firstRun = false;
+                        return Q.resolve();
+                    });
+
+                Q.qWhile(
+                    function() { return !firstRun; },
+                    bodySpy
+                )
+                    .fin(function() {
+                        expect(bodySpy.callCount).toBe(1);
+                    });
+            });
+
+            it("resolves promise and passes the final resolve reason", function() {
+                var firstRun = true,
+                    expectedReason = "resolved";
+
+                Q.qWhile(
+                    function() { return !firstRun; },
+                    function() {
+                        firstRun = false;
+                        return Q.resolve(expectedReason);
+                    }
+                ).then(function(r) {
+                    expect(r).toBe(expectedReason);
+                });
+            });
+        });
+
+        describe("and condition is not met", function() {
+            it("calls the loop body again with prev reason", function() {
+                var expectedReason = "resolved",
+                    firstRun = true;
+
+                Q.qWhile(
+                    function() { return !firstRun; },
+                    function(prevReason) {
+                        if(firstRun) firstRun = false;
+                        else expect(prevReason).toBe(expectedReason);
+
+                        return Q.resolve(expectedReason);
+                    }
+                );
+            });
+
+            it("does not resolve or reject promise", function() {
+                var firstRun = true,
+                    rejected = false,
+                    resolved = false;
+
+                Q.qWhile(
+                    function() { return !firstRun; },
+                    function() {
+                        firstRun = false;
+                        return Q.resolve(expectedReason);
+                    }
+                )
+                    .then(function() { resolved = true; })
+                    .catch(function(){ rejected = true; });
+
+                expect(resolved).toBe(false);
+                expect(rejected).toBe(false);
+            });
+        });
+    });
+
+    describe("when the body is rejected", function() {
+        it("rejects with the reject reason even if condition passes", function() {
+            var expectedReason = "resolved",
+                firstRun = true;
+
+            Q.qWhile(
+                function() { return !firstRun; },
+                function() {
+                    firstRun = false;
+                    return Q.reject(expectedReason);
+                }
+            )
+                .catch(function(r) {
+                    expect(r).toBe(expectedReason);
+                });
+        });
+
+        it("does not call the conditional check", function() {
+            var firstRun = true;
+            var conditionalSpy = jasmine.createSpy("conditional").andCallFake(function() {
+                return !firstRun;
+            });
+
+            Q.qWhile(
+                conditionalSpy,
+                function() {
+                    if(firstRun) firstRun = false;
+                    return Q.reject();
+                }
+            )
+                .fin(function() {
+                    expect(conditionalSpy.callCount).toBe(1);
+                });
+        });
+
+        it("does not call the loop body again even if condition passes", function() {
+            var firstRun = true,
+                bodySpy = jasmine.createSpy("body").andCallFake(function() {
+                    if(firstRun) firstRun = false;
+                    return Q.reject();
+                });
+
+            Q.qWhile(
+                function() { return !firstRun; },
+                bodySpy
+            )
+                .fin(function() {
+                    expect(bodySpy.callCount).toBe(1);
+                });
+        });
+    });
+});
+
+
+describe("qFor", function() {
+    describe("when body is rejected", function() {
+        it("rejects the promise and passes reason on if reason is not 'break'", function() {
+            var expectedReason = "reason";
+
+            Q.qFor(0, 1, function() {
+                return Q.reject(expectedReason);
+            })
+                .catch(function(r) {
+                    expect(r).toBe(expectedReason);
+                });
+        });
+
+        it("resolves the promise if reason is 'break'", function() {
+            var resolved = false;
+
+            Q.qFor(0, 1, function() {
+                return Q.reject("break");
+            })
+                .then(function() { resolved = true; })
+                .fin(function() {
+                    expect(resolved).toBe(true);
+                });
+        });
+
+        it("does not call the loop body again even if there are more iterations", function() {
+            var bodySpy = jasmine.createSpy("body").andReturn(Q.reject());
+
+            Q.qFor(0, 5, bodySpy)
+                .catch(function() {
+                    expect(bodySpy.callCount).toBe(1);
+                });
+        });
+    });
+
+    describe("when body is resolved", function() {
+        it("passes the reason to the next iter", function() {
+            var expectedReason = "reason";
+
+            Q.qFor(0, 2, function(i, prevResult) {
+                if(i > 0) expect(prevResult).toBe(expectedReason);
+                return Q.resolve(expectedReason);
+            });
+        });
+
+        it("passes incremented i to next iter", function() {
+            var expectedI = 0;
+            Q.qFor(0, 5, function(i) {
+                expect(i).toBe(expectedI);
+                expectedI++;
+            });
+        });
+
+        it("calls iter again if i <= lt", function() {
+            var bodySpy = jasmine.createSpy("body").andReturn(Q.resolve());
+
+            Q.qFor(0, 5, bodySpy)
+                .then(function() {
+                    expect(bodySpy.callCount).toBe(5);
+                });
+        });
+
+        it("does not call iter again if i > end", function() {
+            var bodySpy = jasmine.createSpy("body").andReturn(Q.resolve());
+
+            Q.qFor(0, 1, bodySpy)
+                .fin(function(){
+                    expect(bodySpy.callCount).toBe(1);
+                });
+        });
+    })
+});
+
+
 describe("done", function () {
     describe("when the promise is fulfilled", function () {
         describe("and the callback does not throw", function () {
