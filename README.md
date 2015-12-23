@@ -1,8 +1,7 @@
 [![Build Status](https://secure.travis-ci.org/kriskowal/q.svg?branch=master)](http://travis-ci.org/kriskowal/q)
 
 <a href="http://promises-aplus.github.com/promises-spec">
-    <img src="http://kriskowal.github.io/q/q.png"
-         align="right" alt="Q logo" />
+    <img src="http://kriskowal.github.io/q/q.png" align="right" alt="Q logo" />
 </a>
 
 *This is Q version 1, from the `v1` branch in Git. This documentation applies to
