@@ -1,5 +1,6 @@
  - Q.any gives an error message from the last rejected promise
  - Throw if callback supplied to "finally" is invalid (@grahamrhay)
+ - Allow the function created with nfbind to handle missing arguments
 
 ## 1.4.1
 

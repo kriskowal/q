@@ -268,6 +268,7 @@ function uncurryThis(f) {
 // http://jsperf.com/uncurrythis
 
 var array_slice = uncurryThis(Array.prototype.slice);
+var array_concat = uncurryThis(Array.prototype.concat);
 
 var array_reduce = uncurryThis(
     Array.prototype.reduce || function (callback, basis) {
@@ -343,6 +344,14 @@ var object_toString = uncurryThis(Object.prototype.toString);
 
 function isObject(value) {
     return value === Object(value);
+}
+
+// Pad an array value with nulls to the specified length.  Longer arrays are left alone.
+function padArrayTo(arry,len) {
+    if ( arry.length < len ) {
+        arry = array_concat(arry, new Array(len - arry.length));
+    }
+    return arry;
 }
 
 // generator related shims
@@ -1921,8 +1930,9 @@ Q.denodeify = function (callback /*...args*/) {
         throw new Error("Q can't wrap an undefined function");
     }
     var baseArgs = array_slice(arguments, 1);
+    var expectArgs = callback.length-baseArgs.length-1;
     return function () {
-        var nodeArgs = baseArgs.concat(array_slice(arguments));
+        var nodeArgs = baseArgs.concat(padArrayTo(array_slice(arguments),expectArgs));
         var deferred = defer();
         nodeArgs.push(deferred.makeNodeResolver());
         Q(callback).fapply(nodeArgs).fail(deferred.reject);
