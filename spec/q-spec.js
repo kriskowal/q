@@ -2343,11 +2343,11 @@ describe("node support", function () {
             });
         });
 
-        it("allows bound function to support missing arguments", function() {
+        it("allows bound function to support missing arguments", function () {
             return Q.nfbind(function (a, b, c, d, callback) {
                 callback(null, !d);
-            }).call({},1,2,3)
-            .then(function(nod) {
+            }).call({}, 1, 2, 3)
+            .then(function (nod) {
                 expect(nod).toBe(true);
             });
         });

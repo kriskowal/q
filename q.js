@@ -347,11 +347,11 @@ function isObject(value) {
 }
 
 // Pad an array value with nulls to the specified length.  Longer arrays are left alone.
-function padArrayTo(arry,len) {
-    if ( arry.length < len ) {
-        arry = array_concat(arry, new Array(len - arry.length));
+function padArrayTo(array, length) {
+    if (array.length < length) {
+        array.length = length;
     }
-    return arry;
+    return array;
 }
 
 // generator related shims
@@ -1930,9 +1930,9 @@ Q.denodeify = function (callback /*...args*/) {
         throw new Error("Q can't wrap an undefined function");
     }
     var baseArgs = array_slice(arguments, 1);
-    var expectArgs = callback.length-baseArgs.length-1;
+    var expectLength = callback.length - baseArgs.length - 1;
     return function () {
-        var nodeArgs = baseArgs.concat(padArrayTo(array_slice(arguments),expectArgs));
+        var nodeArgs = baseArgs.concat(padArrayTo(array_slice(arguments), expectLength));
         var deferred = defer();
         nodeArgs.push(deferred.makeNodeResolver());
         Q(callback).fapply(nodeArgs).fail(deferred.reject);
