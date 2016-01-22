@@ -48,14 +48,14 @@
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.9",
     "grunt-contrib-uglify": "~0.9.1",
-    "jasmine-node": "1.11.0",
+    "jasmine-node": "1.14.5",
     "jshint": "~2.1.9",
     "matcha": "~0.2.0",
     "opener": "*",
     "promises-aplus-tests": "1.x"
   },
   "scripts": {
-    "test": "npm ls -s && jasmine-node spec && promises-aplus-tests spec/aplus-adapter && npm run -s lint",
+    "test": "npm ls -s && jasmine-node --captureExceptions spec && promises-aplus-tests spec/aplus-adapter && npm run -s lint",
     "test-browser": "opener spec/q-spec.html",
     "benchmark": "matcha",
     "lint": "jshint q.js",

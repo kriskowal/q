@@ -1,5 +1,6 @@
  - Q.any gives an error message from the last rejected promise
  - Throw if callback supplied to "finally" is invalid (@grahamrhay)
+ - Make npm test fail if jasmine-node throws (@bruun)
 
 ## 1.4.1
 
