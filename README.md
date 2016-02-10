@@ -385,7 +385,7 @@ return funcs.reduce(Q.when, Q(initialVal));
 
 ### Handling Errors
 
-One sometimes-unintuive aspect of promises is that if you throw an
+One sometimes-unintuitive aspect of promises is that if you throw an
 exception in the fulfillment handler, it will not be caught by the error
 handler.
 
