@@ -12,7 +12,7 @@ Suppose that you're writing a function that can't return a value immediately.
 The most obvious API is to forward the eventual value to a callback as an
 argument instead of returning the value.
 
-```javascript```javascript
+```javascript
 var oneOneSecondLater = function (callback) {
     setTimeout(function () {
         callback(1);
