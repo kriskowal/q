@@ -1,4 +1,4 @@
-/*
+
 This document is intended to explain how promises work and why this
 implementation works its particular way by building a promise library
 incrementally and reviewing all of its major design decisions.  This is
@@ -11,15 +11,15 @@ any important details.
 Suppose that you're writing a function that can't return a value immediately.
 The most obvious API is to forward the eventual value to a callback as an
 argument instead of returning the value.
-*/
 
+```javascript
 var oneOneSecondLater = function (callback) {
     setTimeout(function () {
         callback(1);
     }, 1000);
 };
+```
 
-/*
 This is a very simple solution to a trival problem, but there is a lot of room
 for improvement.
 
@@ -27,8 +27,8 @@ A more general solution would provide analogous tools for both return values
 and thrown exceptions.  There are several obvious ways to extend the callback
 pattern to handle exceptions.  One is to provide both a callback and an
 errback.
-*/
 
+```javascript
 var maybeOneOneSecondLater = function (callback, errback) {
     setTimeout(function () {
         if (Math.random() < .5) {
@@ -38,8 +38,8 @@ var maybeOneOneSecondLater = function (callback, errback) {
         }
     }, 1000);
 };
+```
 
-/*
 There are other approaches, variations on providing the error as an argument
 to the callback, either by position or a distinguished sentinel value.
 However, none of these approaches actually model thrown exceptions.  The
@@ -47,7 +47,6 @@ purpose of exceptions and try/catch blocks is to postpone the explicit
 handling of exceptions until the program has returned to a point where it
 makes sense to attempt to recover.  There needs to be some mechanism for
 implicitly propagating exceptions if they are not handled.
-
 
 Promises
 ========
@@ -62,8 +61,8 @@ promises will be implicitly rejected for the same reason.
 
 In this particular iteration of the design, we'll model a promise as an object
 with a "then" function that registers the callback.
-*/
 
+```javascript
 var maybeOneOneSecondLater = function () {
     var callback;
     setTimeout(function () {
@@ -77,8 +76,8 @@ var maybeOneOneSecondLater = function () {
 };
 
 maybeOneOneSecondLater().then(callback);
+```
 
-/*
 This design has two weaknesses: 
 
 - The last caller of the then method determines the callback that is used.
@@ -96,8 +95,8 @@ pending observers.  When the promise is resolved, all of the observers are
 notified.  After the promise has been resolved, new callbacks are called
 immediately.  We distinguish the state change by whether the array of pending
 callbacks still exists, and we throw them away after resolution.
-*/
 
+```javascript
 var maybeOneOneSecondLater = function () {
     var pending = [], value;
     setTimeout(function () {
@@ -118,14 +117,14 @@ var maybeOneOneSecondLater = function () {
         }
     };
 };
+```
 
-/*
 This is already doing enough that it would be useful to break it into a
 utility function.  A deferred is an object with two parts: one for registering
 observers and another for notifying observers of resolution.
 (see design/q0.js)
-*/
 
+```javascript
 var defer = function () {
     var pending = [], value;
     return {
@@ -156,15 +155,15 @@ var oneOneSecondLater = function () {
 };
 
 oneOneSecondLater().then(callback);
+```
 
-/*
 The resolve function now has a flaw: it can be called multiple times, changing
 the value of the promised result.  This fails to model the fact that a
 function only either returns one value or throws one error.  We can protect
 against accidental or malicious resets by only allowing only the first call to
 resolve to set the resolution.
-*/
 
+```javascript
 var defer = function () {
     var pending = [], value;
     return {
@@ -189,8 +188,8 @@ var defer = function () {
         }
     }
 };
+```
 
-/*
 You can make an argument either for throwing an error or for ignoring all
 subsequent resolutions.  One use-case is to give the resolver to a bunch of
 workers and have a race to resolve the promise, where subsequent resolutions
@@ -225,8 +224,8 @@ garbage collector to quickly dispose of used promise objects.
 Also, there are a variety of ways to distinguish a promise from other values.
 The most obvious and strongest distinction is to use prototypical inheritance.
 (design/q2.js)
-*/
 
+```javascript
 var Promise = function () {
 };
 
@@ -258,9 +257,9 @@ var defer = function () {
         promise: promise
     };
 };
+```
 
 
-/*
 Using prototypical inheritance has the disadvantage that only one instance of
 a promise library can be used in a single program.  This can be difficult to
 enforce, leading to dependency enforcement woes.
@@ -272,8 +271,8 @@ promises from other values.  This has the disadvantage of failing to
 distinguish other objects that just happen to have a "then" method.  In
 practice, this is not a problem, and the minor variations in "thenable"
 implementations in the wild are manageable.
-*/
 
+```javascript
 var isPromise = function (value) {
     return value && typeof value.then === "function";
 };
@@ -302,15 +301,15 @@ var defer = function () {
         }
     };
 };
+```
 
-/*
 The next big step is making it easy to compose promises, to make new promises
 using values obtained from old promises.  Supposing that you have received
 promises for two numbers from a couple function calls, we would like to be
 able to create a promise for their sum.  Consider how this is achieved with
 callbacks.
-*/
 
+```javascript
 var twoOneSecondLater = function (callback) {
     var a, b;
     var consider = function () {
@@ -331,8 +330,8 @@ var twoOneSecondLater = function (callback) {
 twoOneSecondLater(function (c) {
     // c === 2
 });
+```
 
-/*
 This approach is fragile for a number of reasons, particularly that there
 needs to be code to explicitly notice, in this case by a sentinel value,
 whether a callback has been called.  One must also take care to account for cases
@@ -341,8 +340,8 @@ function must appear before it is used.
 
 In a few more steps, we will be able to accomplish this using promises in less
 code and handling error propagation implicitly.
-*/
 
+```javascript
 var a = oneOneSecondLater();
 var b = oneOneSecondLater();
 var c = a.then(function (a) {
@@ -350,8 +349,8 @@ var c = a.then(function (a) {
         return a + b;
     });
 });
+```
 
-/*
 For this to work, several things have to fall into place:
 
  - The "then" method must return a promise.
@@ -363,8 +362,8 @@ For this to work, several things have to fall into place:
 Converting values into promises that have already been fulfilled
 is straightforward.  This is a promise that immediately informs
 any observers that the value has already been fulfilled.
-*/
 
+```javascript
 var ref = function (value) {
     return {
         then: function (callback) {
@@ -372,12 +371,12 @@ var ref = function (value) {
         }
     };
 };
+```
 
-/*
 This method can be altered to coerce the argument into a promise
 regardless of whether it is a value or a promise already.
-*/
 
+```javascript
 var ref = function (value) {
     if (value && typeof value.then === "function")
         return value;
@@ -387,14 +386,14 @@ var ref = function (value) {
         }
     };
 };
+```
 
-/*
 Now, we need to start altering our "then" methods so that they
 return promises for the return value of their given callback.
 The "ref" case is simple.  We'll coerce the return value of the
 callback to a promise and return that immediately.
-*/
 
+```javascript
 var ref = function (value) {
     if (value && typeof value.then === "function")
         return value;
@@ -404,8 +403,8 @@ var ref = function (value) {
         }
     };
 };
+```
 
-/*
 This is more complicated for the deferred since the callback
 will be called in a future turn.  In this case, we recur on "defer"
 and wrap the callback.  The value returned by the callback will
@@ -421,8 +420,8 @@ promise, the callback is passed forward to the next promise by calling
 "then(callback)".  Thus, your callback is now observing a new promise for a
 more fully resolved value.  Callbacks can be forwarded many times, making
 "progress" toward an eventual resolution with each forwarding.
-*/
 
+```javascript
 var defer = function () {
     var pending = [], value;
     return {
@@ -455,12 +454,11 @@ var defer = function () {
         }
     };
 };
+```
 
-/*
 The implementation at this point uses "thenable" promises and separates the
 "promise" and "resolve" components of a "deferred".
 (see design/q4.js)
-
 
 Error Propagation
 =================
@@ -469,8 +467,8 @@ To achieve error propagation, we need to reintroduce errbacks.  We use a new
 type of promise, analogous to a "ref" promise, that instead of informing a
 callback of the promise's fulfillment, it will inform the errback of its
 rejection and the reason why.
-*/
 
+```javascript
 var reject = function (reason) {
     return {
         then: function (callback, errback) {
@@ -478,23 +476,23 @@ var reject = function (reason) {
         }
     };
 };
+```
 
-/*
 The simplest way to see this in action is to observe the resolution of
 an immediate rejection.
-*/
 
+```javascript
 reject("Meh.").then(function (value) {
     // we never get here
 }, function (reason) {
     // reason === "Meh."
 });
+```
 
-/*
 We can now revise our original errback use-case to use the promise
 API.
-*/
 
+```javascript
 var maybeOneOneSecondLater = function (callback, errback) {
     var result = defer();
     setTimeout(function () {
@@ -506,13 +504,13 @@ var maybeOneOneSecondLater = function (callback, errback) {
     }, 1000);
     return result.promise;
 };
+```
 
-/*
 To make this example work, the defer system needs new plumbing so that it can
 forward both the callback and errback components.  So, the array of pending
 callbacks will be replaced with an array of arguments for "then" calls.
-*/
 
+```javascript
 var defer = function () {
     var pending = [], value;
     return {
@@ -545,8 +543,8 @@ var defer = function () {
         }
     };
 };
+```
 
-/*
 There is, however, a subtle problem with this version of "defer".  It mandates
 that an errback must be provided on all "then" calls, or an exception will be
 thrown when trying to call a non-existant function.  The simplest solution to
@@ -554,8 +552,8 @@ this problem is to provide a default errback that forwards the rejection.  It
 is also reasonable for the callback to be omitted if you're only interested in
 observing rejections, so we provide a default callback that forwards the
 fulfilled value.
-*/
 
+```javascript
 var defer = function () {
     var pending = [], value;
     return {
@@ -596,14 +594,14 @@ var defer = function () {
         }
     };
 };
+```
 
-/*
 At this point, we've achieved composition and implicit error propagation.  We
 can now very easily create promises from other promises either in serial or in
 parallel (see design/q6.js).  This example creates a promise for the eventual
 sum of promised values.
-*/
 
+```javascript
 promises.reduce(function (accumulating, promise) {
     return accumulating.then(function (accumulated) {
         return promise.then(function (value) {
@@ -615,9 +613,7 @@ promises.reduce(function (accumulating, promise) {
 .then(function (sum) {
     // the sum is here
 });
-
-/*
-
+```
 
 Safety and Invariants
 =====================
@@ -626,8 +622,8 @@ Another incremental improvement is to make sure that callbacks and errbacks
 are called in future turns of the event loop, in the same order that they
 were registered.  This greatly reduces the number of control-flow hazards
 inherent to asynchronous programming.  Consider a brief and contrived example:
-*/
 
+```javascript
 var blah = function () {
     var result = foob().then(function () {
         return barf();
@@ -637,16 +633,16 @@ var blah = function () {
     };
     return result;
 };
+```
 
-/*
 This function will either throw an exception or return a promise that will
 quickly be fulfilled with the value of 10.  It depends on whether foob()
 resolves in the same turn of the event loop (issuing its callback on the same
 stack immediately) or in a future turn.  If the callback is delayed to a
 future turn, it will allways succeed.
 (see design/q7.js)
-*/
 
+```javascript
 var enqueue = function (callback) {
     //process.nextTick(callback); // NodeJS
     setTimeout(callback, 1); // Naïve browser solution
@@ -723,8 +719,8 @@ var reject = function (reason) {
         }
     };
 };
+```
 
-/*
 There remains one safty issue, though.  Given that any object that implements
 "then" is treated as a promise, anyone who calls "then" directly is at risk
 of surprise.
@@ -737,8 +733,8 @@ A "when" method wraps a promise and prevents these surprises.
 
 We can also take the opportunity to wrap the callback and errback
 so that any exceptions thrown get transformed into rejections.
-*/
 
+```javascript
 var when = function (value, _callback, _errback) {
     var result = defer();
     var done;
@@ -781,8 +777,8 @@ var when = function (value, _callback, _errback) {
 
     return result.promise;
 };
+```
 
-/*
 At this point, we have the means to protect ourselves against several
 surprises including unnecessary non-deterministic control-flow in the course
 of an event and broken callback and errback control-flow invariants.
@@ -823,24 +819,24 @@ arbitrary messages to a promise.  "promiseSend" is defined by
 CommonJS/Promises/D.  Sending a "when" message is equivalent to calling the
 "then" method.
 
-*/
 
+```javascript
 promise.then(callback, errback);
 promise.promiseSend("when", callback, errback);
+```
 
-/*
 We must revisit all of our methods, building them on "promiseSend" instead of
 "then".  However, we do not abandon "then" entirely; we still produce and
 consume "thenable" promises, routing their message through "promiseSend"
 internally.
-*/
 
+```javascript
 function Promise() {}
 Promise.prototype.then = function (callback, errback) {
     return when(this, callback, errback);
 };
+```
 
-/*
 If a promise does not recognize a message type (an "operator" like "when"),
 it must return a promise that will be eventually rejected.
 
@@ -853,8 +849,8 @@ Between the use-case for proxies and rejecting unrecognized messages, it
 is useful to create a promise abstraction that routes recognized messages to
 a handler object, and unrecognized messages to a fallback method.
 
-*/
 
+```javascript
 var makePromise = function (handler, fallback) {
     var promise = new Promise();
     handler = handler || {};
@@ -874,21 +870,19 @@ var makePromise = function (handler, fallback) {
     };
     return promise;
 };
+```
 
-/*
 Each of the handler methods and the fallback method are all expected to return
 a value which will be forwarded to the callback.  The handlers do not receive
 their own name, but the fallback does receive the operator name so it can
 route it.  Otherwise, arguments are passed through.
-*/
 
-/*
 For the "ref" method, we still only coerce values that are not already
 promises.  We also coerce "thenables" into "promiseSend" promises.
 We provide methods for basic interaction with a fulfilled value, including
 property manipulation and method calls.
-*/
 
+```javascript
 var ref = function (object) {
     if (object && typeof object.promiseSend !== "undefined") {
         return object;
@@ -921,11 +915,11 @@ var ref = function (object) {
         }
     }); 
 };
+```
 
-/*
 Rejected promises simply forward their rejection to any message.
-*/
 
+```javascript
 var reject = function (reason) {
     var forward = function (reason) {
         return reject(reason);
@@ -937,14 +931,14 @@ var reject = function (reason) {
         }
     }, forward);
 };
+```
 
-/*
 Defer sustains very little damage.  Instead of having an array of arguments to
 forward to "then", we have an array of arguments to forward to "promiseSend".
 "makePromise" and "when" absorb the responsibility for handling the callback
 and errback argument defaults and wrappers.
-*/
 
+```javascript
 var defer = function () {
     var pending = [], value;
     return {
@@ -974,14 +968,14 @@ var defer = function () {
         }
     };
 };
+```
 
-/*
 The last step is to make it syntactically convenient to send messages to
 promises.  We create "get", "put", "post" and "del" functions that send
 the corresponding messages and return promises for the results.  They
 all look very similar.
-*/
 
+```javascript
 var get = function (object, name) {
     var result = defer();
     ref(object).promiseSend("get", result.resolve, name);
@@ -991,8 +985,7 @@ var get = function (object, name) {
 get({"a": 10}, "a").then(function (ten) {
     // ten === ten
 });
-
-/*
+```
 
 The last improvment to get promises up to the state-of-the-art is to rename
 all of the callbacks to "win" and all of the errbacks to "fail".  I've left
@@ -1022,5 +1015,3 @@ of which return promises.  For those cases, it is a common pattern to create
 a local object that proxies for the remote object by forwarding all of its
 method calls to the remote object using "post".  The construction of such
 proxies could be automated.  Lazy-Arrays are certainly one use-case.
-
-*/
