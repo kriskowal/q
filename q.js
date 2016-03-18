@@ -2050,6 +2050,33 @@ Q.noConflict = function() {
     throw new Error("Q.noConflict only works when Q is used as a global");
 };
 
+/**
+ * Constructs a promise chain similar to compose(fnN, ... , fn2, fn1) but works
+ * with functions that return promises or non-promises. The functions are chained
+ * with 'then' or with 'spread' depending on the arguments length of the callback.
+ * Chains can also be started with a promise in which case the arguments passed
+ * to the composition are ignored
+*/
+Q.compose = compose;
+function compose() {
+    var args = array_slice(arguments);
+    return function() {
+        return args.reduceRight(function(ret, arg, index) {
+            var v;
+            if (index === args.length-1) {
+                if (typeof arg === "function") {
+                    v = arg.apply(this, ret);
+                } else {
+                    v = arg;
+                }
+            } else {
+                v = (arg.length < 2)? ret.then(arg) : ret.spread(arg);
+            }
+            return Q(v);
+        }, arguments);
+    };
+}
+
 // All code before this point will be filtered from stack traces.
 var qEndingLine = captureLine();
 

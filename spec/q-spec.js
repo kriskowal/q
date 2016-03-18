@@ -2890,3 +2890,45 @@ describe("unhandled rejection reporting", function () {
         expect(Q.getUnhandledReasons()).toEqual([]);
     });
 });
+
+describe("compositions", function() {
+    var inc = function(v) {
+        return v+1;
+    };
+
+    var incP = function(v) {
+        return Q(inc(v));
+    };
+
+    var add = function(a, b) {
+        return a + b;
+    };
+
+    it("handles function returning promises", function() {
+        return Q.compose(incP, incP)(1).
+        then(function(v) {
+            expect(v).toEqual(3);
+        });
+    });
+
+    it("handles functions returning non-promises", function() {
+        return Q.compose(inc, inc)(1).
+        then(function(v) {
+            expect(v).toEqual(3);
+        });
+    });
+
+    it("handles mix of functions returning promises and non-promises", function() {
+        return Q.compose(incP, inc)(1).
+        then(function(v) {
+            expect(v).toEqual(3);
+        });
+    });
+
+    it("handles chain that starts with promise", function() {
+        return Q.compose(add, Q.all([1,2]))().
+        then(function(v) {
+            expect(v).toEqual(3);
+        });
+    });
+});
