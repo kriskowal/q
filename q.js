@@ -26,7 +26,7 @@
  *
  */
 
-(function (definition) {
+;(function (definition) {
     "use strict";
 
     // This file will function properly as a <script> tag, or a module
