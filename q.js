@@ -1582,6 +1582,8 @@ function all(promises) {
                         promises[index] = value;
                         if (--pendingCount === 0) {
                             deferred.resolve(promises);
+                        } else {
+                            deferred.notify({ resolved: promises.length-pendingCount, pending: pendingCount, total: promises.length });
                         }
                     },
                     deferred.reject,
