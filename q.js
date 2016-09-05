@@ -327,6 +327,11 @@ var object_create = Object.create || function (prototype) {
     return new Type();
 };
 
+var object_defineProperty = Object.defineProperty || function (obj, prop, descriptor) {
+    obj[prop] = descriptor.value;
+    return obj;
+};
+
 var object_hasOwnProperty = uncurryThis(Object.prototype.hasOwnProperty);
 
 var object_keys = Object.keys || function (object) {
@@ -377,12 +382,12 @@ function makeStackTraceLong(error, promise) {
         promise.stack &&
         typeof error === "object" &&
         error !== null &&
-        error.stack &&
-        error.stack.indexOf(STACK_JUMP_SEPARATOR) === -1
+        error.stack
     ) {
         var stacks = [];
         for (var p = promise; !!p; p = p.source) {
-            if (p.stack) {
+            if (p.stack && (!error.__minimumStackCounter__ || error.__minimumStackCounter__ > p.stackCounter)) {
+                object_defineProperty(error, "__minimumStackCounter__", {value: p.stackCounter, configurable: true});
                 stacks.unshift(p.stack);
             }
         }
@@ -516,6 +521,8 @@ Q.nextTick = nextTick;
  */
 Q.longStackSupport = false;
 
+var longStackCounter = 1;
+
 // enable long stacks if Q_DEBUG is set
 if (typeof process === "object" && process && process.env && process.env.Q_DEBUG) {
     Q.longStackSupport = true;
@@ -588,6 +595,7 @@ function defer() {
             // At the same time, cut off the first line; it's always just
             // "[object Promise]\n", as per the `toString`.
             promise.stack = e.stack.substring(e.stack.indexOf("\n") + 1);
+            promise.stackCounter = longStackCounter++;
         }
     }
 
