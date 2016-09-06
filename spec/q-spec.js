@@ -2769,8 +2769,7 @@ describe("long stack traces", function () {
 
     it("include all the calling functions", function () {
         function func1() {
-            return Q().then(function () { return func2(); })
-                .catch(function rethrow (err) {throw err;});
+            return Q().then(function () { return func2(); });
         }
         function func2() {
             return new Q.Promise(function (resolve, reject) {
@@ -2787,7 +2786,6 @@ describe("long stack traces", function () {
 
         return func1()
         .catch(function (err) {
-            expect(err.stack).toMatch(/^Error: this is not an error/);
             expect(err.stack).toMatch(/func3(.|\n)*func2(.|\n)*func1/);
         });
     });
@@ -2809,11 +2807,8 @@ describe("long stack traces", function () {
 
         return func1()
         .catch(function (err) {
-            expect(err.stack).toMatch(/^Error: this is not an error/);
             expect(err.stack).toMatch(/func3(.|\n)*func2(.|\n)*func1/);
             expect(err.stack.match(/func1/g).length).toBe(1);
-            expect(err.stack.match(/func2/g).length).toBe(1);
-            expect(err.stack.match(/func3/g).length).toBe(1);
         });
     });
 
