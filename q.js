@@ -522,6 +522,12 @@ Q.nextTick = nextTick;
  */
 Q.longStackSupport = false;
 
+/**
+ * The counter is used to determine the stopping point for building
+ * long stack traces. In makeStackTraceLong we walk backwards through
+ * the linked list of promises, only stacks which were created before
+ * the rejection are concatenated.
+ */
 var longStackCounter = 1;
 
 // enable long stacks if Q_DEBUG is set
