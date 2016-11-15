@@ -1,5 +1,7 @@
  - Q.any gives an error message from the last rejected promise
  - Throw if callback supplied to "finally" is invalid (@grahamrhay)
+ - Long stack trace improvements, can now construct long stack traces
+   across rethrows.
 
 ## 1.4.1
 
