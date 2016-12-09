@@ -83,7 +83,9 @@ var hasStacks = false;
 try {
     throw new Error();
 } catch (e) {
-    hasStacks = !!e.stack;
+    try {
+        hasStacks = !!e.stack;
+    } catch (ex) {}
 }
 
 // All code after this point will be filtered from stack traces reported
