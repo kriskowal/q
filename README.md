@@ -1,4 +1,5 @@
 [![Build Status](https://secure.travis-ci.org/kriskowal/q.svg?branch=master)](http://travis-ci.org/kriskowal/q)
+[![CDNJS](https://img.shields.io/cdnjs/v/q.js.svg)](https://cdnjs.com/libraries/q.js)
 
 <a href="http://promises-aplus.github.com/promises-spec">
     <img src="http://kriskowal.github.io/q/q.png" align="right" alt="Q logo" />
