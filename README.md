@@ -80,7 +80,7 @@ The Q module can be loaded as:
     the [q](https://npmjs.org/package/q) package
 -   An AMD module
 -   A [component](https://github.com/component/component) as ``microjs/q``
--   Using [bower](http://bower.io/) as `q#1.0.1`
+-   Using [bower](http://bower.io/) as `q#^1.4.1`
 -   Using [NuGet](http://nuget.org/) as [Q](https://nuget.org/packages/q)
 
 Q can exchange promises with jQuery, Dojo, When.js, WinJS, and more.
