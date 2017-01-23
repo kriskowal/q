@@ -1,7 +1,7 @@
 // vim:ts=4:sts=4:sw=4:
 /*!
  *
- * Copyright 2009-2016 Kris Kowal under the terms of the MIT
+ * Copyright 2009-2017 Kris Kowal under the terms of the MIT
  * license found at https://github.com/kriskowal/q/blob/v1/LICENSE
  *
  * With parts by Tyler Close
