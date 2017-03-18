@@ -2068,6 +2068,114 @@ Q.noConflict = function() {
 // All code before this point will be filtered from stack traces.
 var qEndingLine = captureLine();
 
+/**
+ * Multithreaded queue (process)
+ * 
+ * Example:
+ * 
+ *  //Create your queue
+    var process = Q.process();
+    
+    //Set quantity of threads
+    process.setThreadsQuantity(2);
+
+    //Push tasks(array of functions, returning promises)
+    process.push([task1,task2,task3,task4]);
+ * 
+ * @returns {Process} instance of newprocess
+ */
+Q.process = function(){
+    /**
+     * Process constructor
+     * 
+     * @constructor
+     * @returns {Process}
+     */
+    var Process = function(){
+        /**
+         * Array of promises
+         * 
+         * @type {Promise[]}
+         */
+        this.tasks = [];
+        
+        /**
+         * Number of threads
+         * 
+         * @type {Number}
+         */
+        this.threadsQuantity = 1;
+        
+        /**
+         * Array of threads
+         * 
+         * @type {Promise[]}
+         */
+        this.threads = [Q.when()];
+    };
+    
+    Process.prototype = {
+        /**
+         * Set number of threads
+         * 
+         * @param {Number} quantity
+         */
+        setThreadsQuantity: function(quantity){
+            this.threadsQuantity = quantity;
+            this.run();
+        },
+        
+        /**
+         * Add tasks
+         * 
+         * @param {Promise[]} promises
+         */
+        push: function(promises){
+            this.tasks = this.tasks.concat(promises);
+            this.run();
+        },
+        
+        /**
+         * Check if there are free threads and waiting tasks,
+         * then start first waiting task.
+         */
+        run: function(){
+            var self = this;
+            var tasks = this.tasks;
+            
+            this.threads = this.threads.concat((function(){
+                var threads = [];
+                
+                // If threads quantity parameter has been increased then add more threads
+                for(var i = self.threads.length; i < self.threadsQuantity; ++i){
+                    threads.push(Q.when());
+                }
+                
+                return threads;
+            })());
+            this.threads.forEach(function(thread, index){
+                if(!thread.isWorking){
+                    if(self.threadsQuantity < self.threads.length){
+                        // If threads quantity parameter has been decreased
+                        // and this thread is free, then remove it
+                        self.threads.splice(index,1);
+                    }
+                    else if(tasks.length) {
+                        // If thread is free and there is waiting task, then start task
+                        thread.then(tasks.shift()).then(function(){
+                            thread.isWorking = false;
+                            self.run();
+                        });
+                        thread.isWorking = true;
+                    }
+                }
+            });
+        }
+    };
+    
+    return new Process();
+};
+
 return Q;
 
 });
