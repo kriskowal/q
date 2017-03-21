@@ -853,6 +853,7 @@ Promise.prototype.then = function (fulfilled, rejected, progressed) {
         try {
             return typeof fulfilled === "function" ? fulfilled(value) : value;
         } catch (exception) {
+            console.error(exception);
             return reject(exception);
         }
     }
