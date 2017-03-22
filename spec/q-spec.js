@@ -1461,6 +1461,55 @@ describe("allSettled", function () {
 
 });
 
+describe("consume", function () {
+
+    var args = [100, 180, 200, 120, 120, 140, 160, 100, 180, 160];
+    var total = args.reduce(function(total, ms) { return total + ms }, 0);
+    var expectedResults = args.map(function(ms) { return ms + ' done' });
+
+    it("takes the longest time by 1 consumer", function (done) {
+        var start = Date.now();
+        Q.consume(delayBy, args, 1)
+        .then(function(results) {
+            expect(results).toEqual(expectedResults);
+            var spent = Date.now() - start;
+            expect(spent).toBeGreaterThan(total);
+            done();
+        });
+    });
+
+    it("takes faster by 2 consumers", function (done) {
+        var start = Date.now();
+        Q.consume(delayBy, args, 2)
+        .then(function(results) {
+            expect(results).toEqual(expectedResults);
+            var spent = Date.now() - start;
+            expect(spent).toBeLessThan(total);
+            expect(spent).toBeGreaterThan(total / 2);
+            done();
+        });
+    });
+
+    it("takes much faster by 4 consumers", function (done) {
+        var start = Date.now();
+        Q.consume(delayBy, args, 4)
+        .then(function(results) {
+            expect(results).toEqual(expectedResults);
+            var spent = Date.now() - start;
+            expect(spent).toBeLessThan(total / 2);
+            expect(spent).toBeGreaterThan(total / 4);
+            done();
+        });
+    });
+
+    function delayBy(arg) {
+        return Q.delay(arg).then(function() {
+          return arg + ' done';
+        });
+    }
+
+});
+
 describe("spread", function () {
 
     it("spreads values across arguments", function () {

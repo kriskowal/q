@@ -1718,6 +1718,37 @@ Promise.prototype.allSettled = function () {
 };
 
 /**
+ * Consumes tasks with passed arguments respectively by number of concurrent.
+ * It is similar to Q.all, but useful when you want to control number of
+ * concurrency.
+ * @param {Function} task A function called with a piece of arguments pool
+ * @param {Array[Any*]} pool An argument array for a task
+ * @param {number} concurrent Number of consumers working concurrently
+ * @returns a promise for an array of the corresponding values
+ */
+Q.consume = consume;
+function consume(task, pool, concurrent) {
+    var consumers = new Array(concurrent);
+    var results = new Array(pool.length);
+    var needle = 0;
+    for (var i = 0; i < concurrent; i++) {
+        consumers[i] = workIfAny();
+    }
+    return all(consumers).then(function() {
+        return results;
+    });
+    function workIfAny() {
+        if (needle < pool.length) {
+            var index = needle++;
+            return when(Q.fcall(task, pool[index]), function(value) {
+                results[index] = value;
+                return workIfAny();
+            });
+        }
+    }
+}
+
+/**
  * Captures the failure of a promise, giving an oportunity to recover
  * with a callback.  If the given promise is fulfilled, the returned
  * promise is fulfilled.
