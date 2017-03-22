@@ -701,6 +701,9 @@ function promise(resolver) {
     try {
         resolver(deferred.resolve, deferred.reject, deferred.notify);
     } catch (reason) {
+        if (window.DEBUG) {
+            console.error(reason);
+        }
         deferred.reject(reason);
     }
     return deferred.promise;
