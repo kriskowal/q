@@ -63,6 +63,11 @@ rest and spread arguments.
 [IOC]: http://www.slideshare.net/domenicdenicola/callbacks-promises-and-coroutines-oh-my-the-evolution-of-asynchronicity-in-javascript
 
 
+## Installation
+```bash
+npm install q --save
+```
+
 ## Getting Started
 
 The Q module can be loaded as:
