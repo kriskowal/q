@@ -1,3 +1,8 @@
+
+ - Added Q.compose(fnN, .., fn2, fn1) method to chain functions returning promises
+   or non-promises via then or spread depending on the arguments length of the
+   function
+
  - Q.any gives an error message from the last rejected promise
  - Throw if callback supplied to "finally" is invalid (@grahamrhay)
  - Long stack trace improvements, can now construct long stack traces
