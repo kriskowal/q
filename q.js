@@ -2061,6 +2061,71 @@ Promise.prototype.nodeify = function (nodeback) {
     }
 };
 
+/**
+ * Creates an async while loop using promises.  The promise is resolved when the
+ * promise returned by the body is resolved and the condition is true.  The condition
+ * is re-evaluated every time the body is resolved.  The promise is rejected if any
+ * of the iterations are rejected.  You can either use closures to share state between
+ * the condition and the body or you can return the current state as the result of the
+ * body.  See examples/loops.js for more information.
+ * @param {Function} condition a function which returns true when the loop is complete.
+ * Equiv of the "true" in sync while(true) { ... }.  Takes previousIterationResult
+ * parameter.
+ * @param {Function} body the body of the while loop.  Takes previousIterationResult
+ * parameter. Must return a promise that is resolved when the body completes.
+ * @returns a promise which resolves when the loop completes or rejects if any of the
+ * iterations reject
+ */
+Q.qWhile = Q.while = qWhile;
+function qWhile(condition, body) {
+    var whileDeferred = Q.defer();
+
+    function runLoopIteration(previousIterationResult) {
+        var conditionSatisfied = condition(previousIterationResult);
+        if(conditionSatisfied) {
+            whileDeferred.resolve();
+        } else {
+            Q.fcall(body(previousIterationResult))
+                .then(function(iterationResult) { runLoopIteration(iterationResult); } )
+                .catch(function(error) { whileDeferred.reject(error); });
+        }
+    }
+    Q.nextTick(runLoopIteration);
+
+    return whileDeferred.promise;
+}
+
+/**
+ * Creates an async for loop using promises.  The promise is resolved when the
+ * promise returned by the body is resolved the number of times specified by the
+ * iteration values.  The promise is rejected if any of the iterations are rejected.
+ *
+ * You can reject the body with the special "break" keyword to stop the loop and
+ * resolve the promise.
+ * @param start the index (i) to start the loop at
+ * @param lt the index (i) will finish when it is less than this (not lte)
+ * @param {Function} body the body of the for loop.  Takes i (current loop index) and
+ * previousIterationResult parameters.  Must return a promise that is resolved when
+ * the body completes.
+ * @returns a promise which resolves when the loop completes or rejects if any of the
+ * iterations reject
+ */
+Q.qFor = Q.for = qFor;
+function qFor(start, lt, body) {
+    var i=start;
+
+    return Q.qWhile(
+        function() { return i >= lt; },
+        function(previousIterationResult) {
+            return body(i++, previousIterationResult);
+        }
+    )
+        .catch(function(err) {
+            if(err === "break") { return Q.resolve(); }
+            else { return Q.reject(err); }
+        });
+}
+
 Q.noConflict = function() {
     throw new Error("Q.noConflict only works when Q is used as a global");
 };
