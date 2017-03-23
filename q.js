@@ -1300,7 +1300,7 @@ function async(makeGenerator) {
                     return reject(exception);
                 }
                 if (result.done) {
-                    return Q(result.value);
+                    return fulfill(result.value);
                 } else {
                     return when(result.value, callback, errback);
                 }
@@ -1311,7 +1311,7 @@ function async(makeGenerator) {
                     result = generator[verb](arg);
                 } catch (exception) {
                     if (isStopIteration(exception)) {
-                        return Q(exception.value);
+                        return fulfill(exception.value);
                     } else {
                         return reject(exception);
                     }
