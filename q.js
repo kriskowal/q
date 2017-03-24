@@ -975,6 +975,22 @@ Q.thenReject = function (promise, reason) {
     return Q(promise).thenReject(reason);
 };
 
+Promise.prototype.catchResolve = function (value) {
+    return this.then(void 0, function () { return value; });
+};
+
+Q.catchResolve = function (promise, value) {
+    return Q(promise).catchResolve(value);
+};
+
+Promise.prototype.catchReject = function (reason) {
+    return this.then(void 0, function () { throw reason; });
+};
+
+Q.catchReject = function (promise, reason) {
+    return Q(promise).catchReject(reason);
+};
+
 /**
  * If an object is not a promise, it is as "near" as possible.
  * If a promise is rejected, it is as "near" as possible too.
