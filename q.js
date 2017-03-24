@@ -1580,12 +1580,21 @@ Promise.prototype.keys = function () {
 Q.all = all;
 function all(promises) {
     return when(promises, function (promises) {
+        var validate = function(argument) {
+            if(!((argument instanceof Array) && (argument.every(isPromise)))) {
+                throw new TypeError (
+                    "argument of Q.all must me a promise array."
+                );
+            };
+        };
+
         var pendingCount = 0;
         var deferred = defer();
+
+        validate(promises);
         array_reduce(promises, function (undefined, promise, index) {
             var snapshot;
             if (
-                isPromise(promise) &&
                 (snapshot = promise.inspect()).state === "fulfilled"
             ) {
                 promises[index] = snapshot.value;
