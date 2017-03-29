@@ -557,9 +557,19 @@ describe("promises for objects", function () {
             return Q(object)
             .set("a", 1)
             .then(function (result) {
-                expect(result).toBe(undefined);
+                expect(result).not.toBe(undefined);
+                expect(result).toBe(object);
                 expect(object.a).toBe(1);
             });
+        });
+
+        it("propagates the modified object", function () {
+            return Q({ foo: "bar" })
+                .set("foo", "baz")
+                .get("foo")
+                .then(function(value) {
+                    expect(value).toBe("baz");
+                });
         });
 
         it("propagates a rejection", function () {
@@ -585,10 +595,20 @@ describe("promises for objects", function () {
             .del("a")
             .then(function (result) {
                 expect("a" in object).toBe(false);
-                expect(result).toBe(void 0);
+                expect(result).not.toBe(undefined);
+                expect(result).toBe(object);
             }, function () {
                 expect("up").toBe("down");
             });
+        });
+
+        it("propagates the modified object", function () {
+            return Q({ foo: "bar" })
+                .delete("foo")
+                .get("foo")
+                .then(function(value) {
+                    expect(value).toBe(undefined);
+                });
         });
 
         it("propagates a rejection", function () {
