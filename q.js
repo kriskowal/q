@@ -1610,6 +1610,8 @@ function all(promises) {
         }, void 0);
         if (pendingCount === 0) {
             deferred.resolve(promises);
+        } else {
+            deferred.notify({ resolved: promises.length-pendingCount, pending: pendingCount, total: promises.length });
         }
         return deferred.promise;
     });
