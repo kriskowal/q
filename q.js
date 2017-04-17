@@ -1601,10 +1601,7 @@ function all(promises) {
                             deferred.notify({ resolved: promises.length-pendingCount, pending: pendingCount, total: promises.length });
                         }
                     },
-                    deferred.reject,
-                    function (progress) {
-                        deferred.notify({ index: index, value: progress });
-                    }
+                    deferred.reject
                 );
             }
         }, void 0);
