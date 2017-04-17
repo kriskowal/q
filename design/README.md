@@ -6,7 +6,7 @@ intended to leave the reader at liberty to experiment with variations
 of this implementation that suit their own requirements, without missing
 any important details.
 
--
+---
 
 Suppose that you're writing a function that can't return a value immediately.
 The most obvious API is to forward the eventual value to a callback as an

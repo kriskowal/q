@@ -2758,6 +2758,72 @@ describe("stack trace formatting", function () {
     });
 });
 
+describe("long stack traces", function () {
+    beforeEach(function () {
+        Q.longStackSupport = true;
+    });
+
+    afterEach(function () {
+        Q.longStackSupport = false;
+    });
+
+    it("include all the calling functions", function () {
+        function func1() {
+            return Q().then(function () { return func2(); });
+        }
+        function func2() {
+            return new Q.Promise(function (resolve, reject) {
+                func3().then(resolve, reject);
+            });
+        }
+        function func3() {
+            return new Q.Promise(function (resolve, reject) {
+                setTimeout(function () {
+                    reject(new Error(REASON));
+                }, 0);
+            });
+        }
+
+        return func1()
+        .catch(function (err) {
+            expect(err.stack).toMatch(/func3(.|\n)*func2(.|\n)*func1/);
+        });
+    });
+
+    it("does not duplicate lines when rethrowing an error", function () {
+        function func1() {
+            return func2()
+                .catch(function rethrow (err) {throw err;})
+                .catch(function rethrow (err) {throw err;});
+        }
+        function func2() {
+            return Q().then(function () {
+                return func3();
+            });
+        }
+        function func3() {
+            return Q.reject(new Error(REASON));
+        }
+
+        return func1()
+        .catch(function (err) {
+            expect(err.stack).toMatch(/func3(.|\n)*func2(.|\n)*func1/);
+            expect(err.stack.match(/func1/g).length).toBe(1);
+        });
+    });
+
+    it("does not add visible properties to thrown errors", function () {
+        return Q().then(function () { throw new Error(REASON); })
+        .catch(function (err) {
+            var keys = [];
+            for (var key in err) {
+                keys.push(key);
+            }
+            expect(keys.length).toBe(0);
+        });
+    });
+});
+
 describe("possible regressions", function () {
 
     describe("gh-9", function () {

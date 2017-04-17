@@ -1,15 +1,9 @@
 [![Build Status](https://secure.travis-ci.org/kriskowal/q.svg?branch=master)](http://travis-ci.org/kriskowal/q)
+[![CDNJS](https://img.shields.io/cdnjs/v/q.js.svg)](https://cdnjs.com/libraries/q.js)
 
 <a href="http://promises-aplus.github.com/promises-spec">
     <img src="http://kriskowal.github.io/q/q.png" align="right" alt="Q logo" />
 </a>
-
-*This is Q version 1, from the `v1` branch in Git. This documentation applies to
-the latest of both the version 1 and version 0.9 release trains. These releases
-are stable. There will be no further releases of 0.9 after 0.9.7 which is nearly
-equivalent to version 1.0.0. All further releases of `q@~1.0` will be backward
-compatible. The version 2 release train introduces significant and
-backward-incompatible changes and is experimental at this time.*
 
 If a function cannot return a value or throw an exception without
 blocking, it can return a promise instead.  A promise is an object
@@ -79,7 +73,7 @@ The Q module can be loaded as:
     the [q](https://npmjs.org/package/q) package
 -   An AMD module
 -   A [component](https://github.com/component/component) as ``microjs/q``
--   Using [bower](http://bower.io/) as `q#1.0.1`
+-   Using [bower](http://bower.io/) as `q#^1.4.1`
 -   Using [NuGet](http://nuget.org/) as [Q](https://nuget.org/packages/q)
 
 Q can exchange promises with jQuery, Dojo, When.js, WinJS, and more.
@@ -875,6 +869,6 @@ You can view the results of the Q test suite [in your browser][tests]!
 
 ## License
 
-Copyright 2009–2016 Kristopher Michael Kowal and contributors
+Copyright 2009–2017 Kristopher Michael Kowal and contributors
 MIT License (enclosed)
 

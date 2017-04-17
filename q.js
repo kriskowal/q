@@ -1,7 +1,7 @@
 // vim:ts=4:sts=4:sw=4:
 /*!
  *
- * Copyright 2009-2016 Kris Kowal under the terms of the MIT
+ * Copyright 2009-2017 Kris Kowal under the terms of the MIT
  * license found at https://github.com/kriskowal/q/blob/v1/LICENSE
  *
  * With parts by Tyler Close
@@ -190,7 +190,7 @@ var nextTick =(function () {
         //   `setTimeout`. In this case `setImmediate` is preferred because
         //    it is faster. Browserify's `process.toString()` yields
         //   "[object Object]", while in a real Node environment
-        //   `process.nextTick()` yields "[object process]".
+        //   `process.toString()` yields "[object process]".
         isNodeJS = true;
 
         requestTick = function () {
@@ -327,6 +327,11 @@ var object_create = Object.create || function (prototype) {
     return new Type();
 };
 
+var object_defineProperty = Object.defineProperty || function (obj, prop, descriptor) {
+    obj[prop] = descriptor.value;
+    return obj;
+};
+
 var object_hasOwnProperty = uncurryThis(Object.prototype.hasOwnProperty);
 
 var object_keys = Object.keys || function (object) {
@@ -377,19 +382,20 @@ function makeStackTraceLong(error, promise) {
         promise.stack &&
         typeof error === "object" &&
         error !== null &&
-        error.stack &&
-        error.stack.indexOf(STACK_JUMP_SEPARATOR) === -1
+        error.stack
     ) {
         var stacks = [];
         for (var p = promise; !!p; p = p.source) {
-            if (p.stack) {
+            if (p.stack && (!error.__minimumStackCounter__ || error.__minimumStackCounter__ > p.stackCounter)) {
+                object_defineProperty(error, "__minimumStackCounter__", {value: p.stackCounter, configurable: true});
                 stacks.unshift(p.stack);
             }
         }
         stacks.unshift(error.stack);
 
         var concatedStacks = stacks.join("\n" + STACK_JUMP_SEPARATOR + "\n");
-        error.stack = filterStackString(concatedStacks);
+        var stack = filterStackString(concatedStacks);
+        object_defineProperty(error, "stack", {value: stack, configurable: true});
     }
 }
 
@@ -516,6 +522,14 @@ Q.nextTick = nextTick;
  */
 Q.longStackSupport = false;
 
+/**
+ * The counter is used to determine the stopping point for building
+ * long stack traces. In makeStackTraceLong we walk backwards through
+ * the linked list of promises, only stacks which were created before
+ * the rejection are concatenated.
+ */
+var longStackCounter = 1;
+
 // enable long stacks if Q_DEBUG is set
 if (typeof process === "object" && process && process.env && process.env.Q_DEBUG) {
     Q.longStackSupport = true;
@@ -588,6 +602,7 @@ function defer() {
             // At the same time, cut off the first line; it's always just
             // "[object Promise]\n", as per the `toString`.
             promise.stack = e.stack.substring(e.stack.indexOf("\n") + 1);
+            promise.stackCounter = longStackCounter++;
         }
     }
 
