@@ -1278,51 +1278,64 @@ Promise.prototype.spread = function (fulfilled, rejected) {
  */
 Q.async = async;
 function async(makeGenerator) {
-    return function () {
-        // when verb is "send", arg is a value
-        // when verb is "throw", arg is an exception
-        function continuer(verb, arg) {
-            var result;
+    // if the result looks like a generator, do the async thing
+    // otherwise return a promise for the result
+    function maybeGenerate(generator) {
+        if (typeof generator !== 'undefined' && generator !== null && typeof generator.next == 'function' && typeof generator.throw == 'function') {
+            // when verb is "send", arg is a value
+            // when verb is "throw", arg is an exception
+            function continuer(verb, arg) {
+                var result;
+                // if the generator func yielded another generator func, we'll need to do the async thing to that too
+                // (means the programmer doesn't need to remember to do yield*)
+                arg = maybeGenerate(arg);
 
-            // Until V8 3.19 / Chromium 29 is released, SpiderMonkey is the only
-            // engine that has a deployed base of browsers that support generators.
-            // However, SM's generators use the Python-inspired semantics of
-            // outdated ES6 drafts.  We would like to support ES6, but we'd also
-            // like to make it possible to use generators in deployed browsers, so
-            // we also support Python-style generators.  At some point we can remove
-            // this block.
+                // Until V8 3.19 / Chromium 29 is released, SpiderMonkey is the only
+                // engine that has a deployed base of browsers that support generators.
+                // However, SM's generators use the Python-inspired semantics of
+                // outdated ES6 drafts.  We would like to support ES6, but we'd also
+                // like to make it possible to use generators in deployed browsers, so
+                // we also support Python-style generators.  At some point we can remove
+                // this block.
 
-            if (typeof StopIteration === "undefined") {
-                // ES6 Generators
-                try {
-                    result = generator[verb](arg);
-                } catch (exception) {
-                    return reject(exception);
-                }
-                if (result.done) {
-                    return Q(result.value);
-                } else {
-                    return when(result.value, callback, errback);
-                }
-            } else {
-                // SpiderMonkey Generators
-                // FIXME: Remove this case when SM does ES6 generators.
-                try {
-                    result = generator[verb](arg);
-                } catch (exception) {
-                    if (isStopIteration(exception)) {
-                        return Q(exception.value);
-                    } else {
+                if (typeof StopIteration === "undefined") {
+                    // ES6 Generators
+                    try {
+                        result = generator[verb](arg);
+                    } catch (exception) {
                         return reject(exception);
                     }
+                    if (result.done) {
+                        return Q(result.value);
+                    } else {
+                        return when(result.value, callback, errback);
+                    }
+                } else {
+                    // SpiderMonkey Generators
+                    // FIXME: Remove this case when SM does ES6 generators.
+                    try {
+                        result = generator[verb](arg);
+                    } catch (exception) {
+                        if (isStopIteration(exception)) {
+                            return Q(exception.value);
+                        } else {
+                            return reject(exception);
+                        }
+                    }
+                    return when(result, callback, errback);
                 }
-                return when(result, callback, errback);
             }
+            var callback = continuer.bind(continuer, "next");
+            var errback = continuer.bind(continuer, "throw");
+            return callback();
+        } else {
+            return Q(generator);
         }
+    }
+    
+    return function () {
         var generator = makeGenerator.apply(this, arguments);
-        var callback = continuer.bind(continuer, "next");
-        var errback = continuer.bind(continuer, "throw");
-        return callback();
+        return maybeGenerate(generator);
     };
 }
 
