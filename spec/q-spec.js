@@ -1461,6 +1461,63 @@ describe("allSettled", function () {
 
 });
 
+describe("auto", function () {
+
+    var asyncFoo = function () {
+        var defer = Q.defer();
+
+        process.nextTick(function () {
+            defer.resolve(1);
+        });
+
+        return defer.promise;
+    };
+
+    var asyncBar = function () {
+        var defer = Q.defer();
+
+        process.nextTick(function () {
+            defer.resolve(2);
+        });
+
+        return defer.promise;
+    };
+
+    var asyncBaz = function (a, b) {
+        var defer = Q.defer();
+
+        process.nextTick(function () {
+            defer.resolve(a + b);
+        });
+
+        return defer.promise;
+    };
+
+    it("should automatic resolve dependencies", function (done) {
+        Q.auto({
+            foo: asyncFoo,
+            bar: asyncBar(),
+            baz: ["foo", "bar", asyncBaz]
+        }).then(function (result) {
+            expect(result.foo).toBe(1);
+            expect(result.bar).toBe(2);
+            expect(result.baz).toBe(3);
+            done();
+        }).done();
+    });
+
+    it("should throw exception when circular dependencies were found", function (done) {
+        Q.auto({
+            foo: ["baz", asyncFoo],
+            bar: asyncBar(),
+            baz: ["foo", "bar", asyncBaz]
+        }).catch(function (err) {
+            expect(err).match(/foo->baz->foo/);
+            done();
+        }).done();
+    });
+});
+
 describe("spread", function () {
 
     it("spreads values across arguments", function () {
