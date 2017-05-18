@@ -1204,9 +1204,21 @@ describe("any", function() {
         return testReject(promises, deferreds);
     });
 
-    function testReject(promises, deferreds) {
+
+    it("rejects after all promises are rejected with no values", function() {
+        var deferreds = [Q.defer(), Q.defer()];
+        var promises = [deferreds[0].promise, deferreds[1].promise];
+
+        return testReject(promises, deferreds, true);
+    });
+
+    function testReject(promises, deferreds, expectNull) {
         var promise = Q.any(promises);
         var expectedError = new Error('Rejected');
+
+        if (expectNull) {
+          var expectedError = null;
+        }
 
         for (var index = 0; index < deferreds.length; index++) {
             var deferred = deferreds[index];
@@ -1219,8 +1231,11 @@ describe("any", function() {
           .then(function() {
               expect(promise.isRejected()).toBe(true);
               expect(promise.inspect().reason).toBe(expectedError);
-              expect(promise.inspect().reason.message)
-              .toBe("Q can't get fulfillment value from any promise, all promises were rejected. Last error message: Rejected");
+
+              if (!expectNull) {
+                expect(promise.inspect().reason.message)
+                .toBe("Q can't get fulfillment value from any promise, all promises were rejected. Last error message: Rejected");
+              }
           })
           .timeout(1000);
     }
