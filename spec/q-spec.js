@@ -2523,6 +2523,70 @@ describe("node support", function () {
 
     });
 
+    describe("dedomrequest", function () {
+
+        it("resolves with a successful request's 'result'", function () {
+            var spy = jasmine.createSpy();
+            Q.dedomrequest(function(original) {
+                var request = {};
+                setTimeout(function() {
+                    request.result = original + 1;
+                    request.onsuccess();
+                }, 0);
+                return request;
+            }).call(null, 9).then(spy);
+
+            waitsFor(function () {
+                return spy.argsForCall.length;
+            });
+
+            runs(function() {
+                expect(spy.argsForCall).toEqual([[10]]);
+            });
+        });
+
+        it("rejects with a failed request's 'error'", function () {
+            var spy = jasmine.createSpy();
+            Q.dedomrequest(function(original) {
+                var request = {};
+                setTimeout(function() {
+                    request.error = original + 1;
+                    request.onerror();
+                }, 0);
+                return request;
+            }).call(null, 9).then(null, spy);
+
+            waitsFor(function () {
+                return spy.argsForCall.length;
+            });
+
+            runs(function() {
+                expect(spy.argsForCall).toEqual([[10]]);
+            });
+        });
+
+        it("binds arguments specified at creation time", function () {
+            var spy = jasmine.createSpy();
+            Q.dedomrequest(function(first, second, third) {
+                var request = {};
+                setTimeout(function() {
+                    request.result = first + second + third;
+                    request.onsuccess();
+                }, 0);
+                return request;
+            }, 1).call(null, 2, 3).then(spy);
+
+            waitsFor(function () {
+                return spy.argsForCall.length;
+            });
+
+            runs(function() {
+                expect(spy.argsForCall).toEqual([[6]]);
+            });
+        });
+
+    });
+
 });
 
 describe("browser support", function () {
