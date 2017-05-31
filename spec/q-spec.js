@@ -1192,7 +1192,7 @@ describe("any", function() {
         var deferreds = [Q.defer(), Q.defer()];
         var promises = [deferreds[0].promise, deferreds[1].promise];
 
-        return testReject(promises, deferreds, new Error('Rejected'));
+        return testReject(promises, deferreds, new Error("Rejected"));
     });
 
     it("rejects after all promises in a sparse array are rejected", function() {
@@ -1223,15 +1223,10 @@ describe("any", function() {
         var promise = Q.any(promises);
         var expectedError;
 
-        switch (rejectionValue) {
-          case null:
-            expectedError = new Error("Rejection value was: null");
-            break;
-          case undefined:
-            expectedError = new Error("Rejection value was: undefined");
-            break;
-          default:
-            expectedError = new Error(rejectionValue.message);
+        if (rejectionValue) {
+          expectedError = new Error(rejectionValue.message);
+        } else {
+          expectedError = new Error("" + rejectionValue);
         }
 
         for (var index = 0; index < deferreds.length; index++) {
