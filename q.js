@@ -1645,12 +1645,12 @@ function any(promises) {
         function onRejected(err) {
             pendingCount--;
             if (pendingCount === 0) {
-                if (err) {
-                  err.message = ("Q can't get fulfillment value from any promise, all " +
-                      "promises were rejected. Last error message: " + err.message);
-                }
+                var rejection = err || new Error("Rejection was null/undefined");
 
-                deferred.reject(err);
+                rejection.message = ("Q can't get fulfillment value from any promise, all " +
+                    "promises were rejected. Last error message: " + err.message);
+
+                deferred.reject(rejection);
             }
         }
         function onProgress(progress) {

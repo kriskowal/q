@@ -1217,7 +1217,7 @@ describe("any", function() {
         var expectedError = new Error('Rejected');
 
         if (expectNull) {
-          var expectedError = null;
+          var expectedError = new Error("Rejection was null/undefined");
         }
 
         for (var index = 0; index < deferreds.length; index++) {
@@ -1232,9 +1232,12 @@ describe("any", function() {
               expect(promise.isRejected()).toBe(true);
               expect(promise.inspect().reason).toBe(expectedError);
 
-              if (!expectNull) {
+              if (expectNull) {
                 expect(promise.inspect().reason.message)
-                .toBe("Q can't get fulfillment value from any promise, all promises were rejected. Last error message: Rejected");
+                  .toBe("Q can't get fulfillment value from any promise, all promises were rejected. Last error message: Rejection was null/undefined");
+              } else {
+                expect(promise.inspect().reason.message)
+                  .toBe("Q can't get fulfillment value from any promise, all promises were rejected. Last error message: Rejected");
               }
           })
           .timeout(1000);
