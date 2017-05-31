@@ -1645,10 +1645,10 @@ function any(promises) {
         function onRejected(err) {
             pendingCount--;
             if (pendingCount === 0) {
-                var rejection = err || new Error("Rejection was null/undefined");
+                var rejection = err || new Error("Rejection value was: " + err);
 
                 rejection.message = ("Q can't get fulfillment value from any promise, all " +
-                    "promises were rejected. Last error message: " + err.message);
+                    "promises were rejected. Last error message: " + rejection.message);
 
                 deferred.reject(rejection);
             }

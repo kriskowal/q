@@ -1192,7 +1192,7 @@ describe("any", function() {
         var deferreds = [Q.defer(), Q.defer()];
         var promises = [deferreds[0].promise, deferreds[1].promise];
 
-        return testReject(promises, deferreds);
+        return testReject(promises, deferreds, new Error('Rejected'));
     });
 
     it("rejects after all promises in a sparse array are rejected", function() {
@@ -1201,44 +1201,52 @@ describe("any", function() {
         promises[0] = deferreds[0].promise;
         promises[3] = deferreds[1].promise;
 
-        return testReject(promises, deferreds);
+        return testReject(promises, deferreds, new Error("Rejected"));
     });
 
 
-    it("rejects after all promises are rejected with no values", function() {
+    it("rejects after all promises are rejected with null", function() {
         var deferreds = [Q.defer(), Q.defer()];
         var promises = [deferreds[0].promise, deferreds[1].promise];
 
-        return testReject(promises, deferreds, true);
+        return testReject(promises, deferreds, null);
     });
 
-    function testReject(promises, deferreds, expectNull) {
-        var promise = Q.any(promises);
-        var expectedError = new Error('Rejected');
+    it("rejects after all promises are rejected with undefined", function() {
+        var deferreds = [Q.defer(), Q.defer()];
+        var promises = [deferreds[0].promise, deferreds[1].promise];
 
-        if (expectNull) {
-          var expectedError = new Error("Rejection was null/undefined");
+        return testReject(promises, deferreds, undefined);
+    });
+
+    function testReject(promises, deferreds, rejectionValue) {
+        var promise = Q.any(promises);
+        var expectedError;
+
+        switch (rejectionValue) {
+          case null:
+            expectedError = new Error("Rejection value was: null");
+            break;
+          case undefined:
+            expectedError = new Error("Rejection value was: undefined");
+            break;
+          default:
+            expectedError = new Error(rejectionValue.message);
         }
 
         for (var index = 0; index < deferreds.length; index++) {
             var deferred = deferreds[index];
             (function() {
-                deferred.reject(expectedError);
+              deferred.reject(rejectionValue);
             })();
         }
 
         return Q.delay(250)
           .then(function() {
               expect(promise.isRejected()).toBe(true);
-              expect(promise.inspect().reason).toBe(expectedError);
-
-              if (expectNull) {
-                expect(promise.inspect().reason.message)
-                  .toBe("Q can't get fulfillment value from any promise, all promises were rejected. Last error message: Rejection was null/undefined");
-              } else {
-                expect(promise.inspect().reason.message)
-                  .toBe("Q can't get fulfillment value from any promise, all promises were rejected. Last error message: Rejected");
-              }
+              expect(promise.inspect().reason).toEqual(expectedError);
+              expect(promise.inspect().reason.message)
+                .toBe("Q can't get fulfillment value from any promise, all promises were rejected. Last error message: " + expectedError.message);
           })
           .timeout(1000);
     }
