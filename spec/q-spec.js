@@ -1192,7 +1192,7 @@ describe("any", function() {
         var deferreds = [Q.defer(), Q.defer()];
         var promises = [deferreds[0].promise, deferreds[1].promise];
 
-        return testReject(promises, deferreds);
+        return testReject(promises, deferreds, new Error("Rejected"));
     });
 
     it("rejects after all promises in a sparse array are rejected", function() {
@@ -1201,26 +1201,47 @@ describe("any", function() {
         promises[0] = deferreds[0].promise;
         promises[3] = deferreds[1].promise;
 
-        return testReject(promises, deferreds);
+        return testReject(promises, deferreds, new Error("Rejected"));
     });
 
-    function testReject(promises, deferreds) {
+
+    it("rejects after all promises are rejected with null", function() {
+        var deferreds = [Q.defer(), Q.defer()];
+        var promises = [deferreds[0].promise, deferreds[1].promise];
+
+        return testReject(promises, deferreds, null);
+    });
+
+    it("rejects after all promises are rejected with undefined", function() {
+        var deferreds = [Q.defer(), Q.defer()];
+        var promises = [deferreds[0].promise, deferreds[1].promise];
+
+        return testReject(promises, deferreds, undefined);
+    });
+
+    function testReject(promises, deferreds, rejectionValue) {
         var promise = Q.any(promises);
-        var expectedError = new Error('Rejected');
+        var expectedError;
+
+        if (rejectionValue) {
+          expectedError = new Error(rejectionValue.message);
+        } else {
+          expectedError = new Error("" + rejectionValue);
+        }
 
         for (var index = 0; index < deferreds.length; index++) {
             var deferred = deferreds[index];
             (function() {
-                deferred.reject(expectedError);
+              deferred.reject(rejectionValue);
             })();
         }
 
         return Q.delay(250)
           .then(function() {
               expect(promise.isRejected()).toBe(true);
-              expect(promise.inspect().reason).toBe(expectedError);
+              expect(promise.inspect().reason).toEqual(expectedError);
               expect(promise.inspect().reason.message)
-              .toBe("Q can't get fulfillment value from any promise, all promises were rejected. Last error message: Rejected");
+                .toBe("Q can't get fulfillment value from any promise, all promises were rejected. Last error message: " + expectedError.message);
           })
           .timeout(1000);
     }
