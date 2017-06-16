@@ -1118,6 +1118,12 @@ Q.getUnhandledReasons = function () {
     return unhandledReasons.slice();
 };
 
+Q.getUnhandledRejectionValues = function () {
+    return unhandledRejections.map(function(rejectedPromise) {
+      return rejectedPromise.exception;
+    });
+};
+
 Q.stopUnhandledRejectionTracking = function () {
     resetUnhandledRejections();
     trackUnhandledRejections = false;
