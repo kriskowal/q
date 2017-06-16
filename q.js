@@ -1083,10 +1083,19 @@ function trackRejection(promise, reason) {
     }
 
     unhandledRejections.push(promise);
+    var rejectionString = reason + "";
+
     if (reason && typeof reason.stack !== "undefined") {
-        unhandledReasons.push(reason.stack);
+        // If the error's stack string already includes the error type and message, don't double it up
+        // (since only a few browsers do that, e.g. Chrome vs Firefox). Otherwise, manually append
+        // the error type and message to the stack string
+        if (reason.stack.slice && reason.stack.slice(0, rejectionString.length) === rejectionString) {
+            unhandledReasons.push(reason.stack);
+        } else {
+            unhandledReasons.push(rejectionString + "\n" + reason.stack);
+        }
     } else {
-        unhandledReasons.push("(no stack) " + reason);
+        unhandledReasons.push("(no stack) " + rejectionString);
     }
 }
 
