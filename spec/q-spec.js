@@ -2948,9 +2948,18 @@ describe("unhandled rejection reporting", function () {
 
     it("reports a stack trace", function () {
         var error = new Error("a reason");
+        var firstLineOfStack = error.stack ? error.stack.split('\n')[0] : undefined;
+        var expectedStack;
+
         Q.reject(error);
 
-        expect(Q.getUnhandledReasons()).toEqual([error.stack]);
+        if (firstLineOfStack && firstLineOfStack.indexOf('a reason') >= 0) {
+            expectedStack = error.stack;
+        } else {
+            // For browsers like firefox that don't include the error type/message in the stack
+            expectedStack = "Error: a reason\n" + error.stack;
+        }
+        expect(Q.getUnhandledReasons()).toEqual([expectedStack]);
     });
 
     it("doesn't let you mutate the internal array", function () {
