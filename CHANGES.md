@@ -1,3 +1,7 @@
+Next minor change:
+  - Ensure that unhandled rejection strings created from actual `Error`s in all modern browsers include the error type and message (in addition to the stack).
+  - Add a hook, `Q.customizeRejectionString` which can be used for developers to customize how rejection values are string-ified.
+
 ## 1.5.0
 
  - Q.any gives an error message from the last rejected promise
