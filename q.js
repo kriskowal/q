@@ -1085,6 +1085,12 @@ function trackRejection(promise, reason) {
     unhandledRejections.push(promise);
     var rejectionString = reason + "";
 
+    // Public hook to allow for custom tweaking of unhandled rejection string (note, stack
+    // will be appended afterwards by code below)
+    if (Q.customizeRejectionString) {
+        rejectionString = Q.customizeRejectionString(reason);
+    }
+
     if (reason && typeof reason.stack !== "undefined") {
         // If the error's stack string already includes the error type and message, don't double it up
         // (since only a few browsers do that, e.g. Chrome vs Firefox). Otherwise, manually append
