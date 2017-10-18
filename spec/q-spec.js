@@ -2633,9 +2633,6 @@ if (typeof require === "function") {
             beforeEach(function () {
                 d = domain.create();
             });
-            afterEach(function() {
-                d.dispose();
-            });
 
             it("should work for non-promise async inside a promise handler",
                function (done) {
