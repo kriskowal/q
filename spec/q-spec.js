@@ -2945,9 +2945,18 @@ describe("unhandled rejection reporting", function () {
 
     it("reports a stack trace", function () {
         var error = new Error("a reason");
+        var firstLineOfStack = error.stack ? error.stack.split('\n')[0] : undefined;
+        var expectedStack;
+
         Q.reject(error);
 
-        expect(Q.getUnhandledReasons()).toEqual([error.stack]);
+        if (firstLineOfStack && firstLineOfStack.indexOf('a reason') >= 0) {
+            expectedStack = error.stack;
+        } else {
+            // For browsers like firefox that don't include the error type/message in the stack
+            expectedStack = "Error: a reason\n" + error.stack;
+        }
+        expect(Q.getUnhandledReasons()).toEqual([expectedStack]);
     });
 
     it("doesn't let you mutate the internal array", function () {
@@ -2972,5 +2981,39 @@ describe("unhandled rejection reporting", function () {
         Q.reject("another reason");
 
         expect(Q.getUnhandledReasons()).toEqual([]);
+    });
+
+    describe("Q.customizeRejectionString", function() {
+        beforeEach(function() {
+            var spy = jasmine.createSpy();
+            Q.customizeRejectionString = spy;
+        })
+
+        afterEach(function() {
+            delete Q.customizeRejectionString;
+        })
+
+        it("is called if it exists", function () {
+            Q.reject('no reason');
+            expect(Q.customizeRejectionString).toHaveBeenCalled();
+         });
+
+        it("is called with the rejection reason", function () {
+            Q.reject('no reason 2');
+            expect(Q.customizeRejectionString).toHaveBeenCalledWith('no reason 2');
+        });
+
+        it("its result changes what is stored in the unhandled reasons array", function () {
+            Q.customizeRejectionString.andReturn('changed reason');
+            Q.reject('no reason 3');
+            expect(Q.getUnhandledReasons()).toEqual(['(no stack) changed reason']);
+        });
+
+        it("its does't remove the stack when an error is rejected", function () {
+            var fakeError = new Error('fake errror');
+            Q.customizeRejectionString.andReturn('Even fancier fake error message');
+            Q.reject(fakeError);
+            expect(Q.getUnhandledReasons()[0]).toEqual('Even fancier fake error message' + '\n' + fakeError.stack);
+        });
     });
 });
