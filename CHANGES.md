@@ -1,3 +1,11 @@
+
+## 1.5.1
+
+ - Q.any now annotates its error message to clarify that Q.any was involved and
+   includes only the last error emitted. (Ivan Etchart)
+ - Avoid domain.dispose during tests in preparation for Node.js 9. (Anna
+   Henningsen)
+
 ## 1.5.0
 
  - Q.any gives an error message from the last rejected promise
