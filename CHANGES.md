@@ -1,3 +1,5 @@
+## 1.5.x
+ - Make npm test fail if jasmine-node throws (@bruun)
 
 ## 1.5.1
 
