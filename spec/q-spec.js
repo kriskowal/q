@@ -1421,6 +1421,13 @@ describe("any", function() {
           );
     });
 
+    it("fulfills when called from the prototype", function() {
+        return Q(["a", "b"])
+          .any()
+          .then(function(result) {
+              expect(result).toEqual("a")
+          })
+    })
 });
 
 describe("allSettled", function () {
