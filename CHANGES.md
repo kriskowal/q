@@ -1,3 +1,6 @@
+## 1.5.2
+- Introduces the `tapCatch` method to promises, which peeks error
+   passing through without actually catching it.
 
 ## 1.5.1
 

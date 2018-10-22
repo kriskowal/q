@@ -939,6 +939,26 @@ Promise.prototype.tap = function (callback) {
 };
 
 /**
+ * Works almost like "finally", but ONLY called for rejections.
+ * Convenience method for reacting to errors without handling them with promises.
+ * Useful for logging errors.
+ * Callback may return a promise that will be awaited for.
+ * @param {Function} callback
+ * @returns {Q.Promise}
+ * @example
+ * doSomething()
+ *   .tapCatch(console.error)
+ *   .catch(...);
+ */
+Promise.prototype.tapCatch = function (callback) {
+    callback = Q(callback);
+
+    return this["catch"](function (exception) {
+        return callback.fcall(exception).thenReject(exception);
+    });
+};
+
+/**
  * Registers an observer on a promise.
  *
  * Guarantees:

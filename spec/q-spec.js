@@ -1821,6 +1821,98 @@ describe("tap", function () {
     });
 });
 
+// Like tap but only for rejection
+describe("tapCatch", function () {
+    var exception1 = new Error("boo!");
+
+    describe("when the promise is fulfilled", function () {
+        it("should not call the callback", function () {
+            var called = false;
+            return Q("foo")
+                .tapCatch(function () {
+                    called = true;
+                })
+                .then(function () {
+                    expect(called).toBe(false);
+                });
+        });
+
+        it("should reject with the original error", function () {
+            return Q.reject("foo")
+                .tapCatch(function () {
+                    return "bar";
+                })
+                .catch(function (error) {
+                    expect(error).toBe("foo");
+                });
+        });
+
+        describe("when the callback returns a promise", function () {
+            describe("that is fulfilled", function () {
+                it("should reject with the original error after that promise resolves", function () {
+                    var promise = Q.delay(250);
+
+                    return Q.reject("foo")
+                        .tapCatch(function () {
+                            return promise;
+                        })
+                        .catch(function (error) {
+                            expect(Q.isPending(promise)).toBe(false);
+                            expect(error).toBe("foo");
+                        });
+                });
+            });
+
+            describe("that is rejected", function () {
+                it("should reject with this new rejection reason", function () {
+                    return Q.reject("foo")
+                        .tapCatch(function () {
+                            return Q.reject(exception1);
+                        })
+                        .then(function () {
+                            expect(false).toBe(true);
+                        },
+                        function (exception) {
+                            expect(exception).toBe(exception1);
+                        });
+                });
+            });
+
+        });
+
+        describe("when the callback throws an exception", function () {
+            it("should reject with this new exception", function () {
+                return Q.reject("foo")
+                    .tapCatch(function () {
+                        throw exception1;
+                    })
+                    .then(function () {
+                        expect(false).toBe(true);
+                    },
+                    function (exception) {
+                        expect(exception).toBe(exception1);
+                    });
+            });
+        });
+
+    });
+
+    describe("when the promise is resolved", function () {
+        it("should not call the callback", function () {
+            var called = false;
+
+            return Q("foo")
+                .tapCatch(function () {
+                    called = true;
+                })
+                .then(function () {
+                    expect(called).toBe(false);
+                }, function () {
+                    expect(called).toBe(false);
+                });
+        });
+    });
+});
 
 describe("done", function () {
     describe("when the promise is fulfilled", function () {
