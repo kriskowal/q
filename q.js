@@ -1595,6 +1595,7 @@ function all(promises) {
                     promise,
                     function (value) {
                         promises[index] = value;
+                        deferred.notify( { index: index, pending: pendingCount - 1 } );
                         if (--pendingCount === 0) {
                             deferred.resolve(promises);
                         }
