@@ -1151,27 +1151,26 @@ describe("all", function () {
     it("sends { index, value } progress updates", function () {
         var deferred1 = Q.defer();
         var deferred2 = Q.defer();
+        var deferred3 = Q.defer();
 
         var progressValues = [];
 
         Q.delay(50).then(function () {
-            deferred1.notify("a");
+            deferred1.resolve();
         });
         Q.delay(100).then(function () {
-            deferred2.notify("b");
             deferred2.resolve();
         });
         Q.delay(150).then(function () {
-            deferred1.notify("c");
-            deferred1.resolve();
+            deferred3.resolve();
         });
 
-        return Q.all([deferred1.promise, deferred2.promise]).then(
+        return Q.all([deferred1.promise, deferred2.promise, deferred3.promise]).then(
             function () {
                 expect(progressValues).toEqual([
-                    { index: 0, value: "a" },
-                    { index: 1, value: "b" },
-                    { index: 0, value: "c" }
+                    { resolved: 1, pending: 2, total: 3 },
+                    { resolved: 2, pending: 1, total: 3 },
+                    { resolved: 3, pending: 0, total: 3 }
                 ]);
             },
             undefined,

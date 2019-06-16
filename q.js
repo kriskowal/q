@@ -1596,13 +1596,13 @@ function all(promises) {
                     function (value) {
                         promises[index] = value;
                         if (--pendingCount === 0) {
+                            deferred.notify({ resolved: promises.length, pending: 0, total: promises.length });
                             deferred.resolve(promises);
+                        } else {
+                            deferred.notify({ resolved: promises.length-pendingCount, pending: pendingCount, total: promises.length });
                         }
                     },
-                    deferred.reject,
-                    function (progress) {
-                        deferred.notify({ index: index, value: progress });
-                    }
+                    deferred.reject
                 );
             }
         }, void 0);
