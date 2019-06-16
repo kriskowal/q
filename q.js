@@ -1086,7 +1086,7 @@ function trackRejection(promise, reason) {
     if (reason && typeof reason.stack !== "undefined") {
         unhandledReasons.push(reason.stack);
     } else {
-        unhandledReasons.push("(no stack) " + reason);
+        unhandledReasons.push(reason);
     }
 }
 
