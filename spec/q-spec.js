@@ -1096,6 +1096,20 @@ describe("propagation", function () {
 });
 
 describe("all", function () {
+    it("rejects if not passed an array", function() {
+        var promise = Q.defer(),
+            willBeRejected = Q.all(promise);
+
+        return willBeRejected.then(
+          function () {
+            expect(true).toBe(false);
+          },
+          function (err) {
+            expect(err.constructor).toBe(TypeError);
+          }
+        );
+    });
+
     it("fulfills when passed an empty array", function () {
         return Q.all([]);
     });
