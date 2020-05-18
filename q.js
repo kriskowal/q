@@ -781,7 +781,7 @@ Promise.prototype.race = function () {
  * accepts the operation name, a resolver, and any further arguments that would
  * have been forwarded to the appropriate method above had a method been
  * provided with the proper name.  The API makes no guarantees about the nature
- * of the returned object, apart from that it is usable whereever promises are
+ * of the returned object, apart from that it is usable wherever promises are
  * bought and sold.
  */
 Q.makePromise = Promise;
