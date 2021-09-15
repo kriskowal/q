@@ -1,3 +1,14 @@
+
+## Note
+
+Please consider using native promises instead of Q. Native promises are faster, have better tooling support and are the future.
+
+When Q was started, promises were very rare and seldom-used in JavaScript. Callbacks dominated the landscape. Q aimed to show an alternative way to write asynchronous code in JavaScript. That ended up being a good idea and promises are now part of the language itself. Every modern browser contains a built in and performant `Promise` implementation. Being able to influcence the internet and working on a library used by millions of codebases was an exciting and humbling experience.
+
+Q isn't going anywhere - the code is still here and bugs will probably be fixed but development has stalled for a few years now. You are encouraged to read the code and the explainers to glimpse into the history of the internet.
+
+### Old README
+
 [![Build Status](https://secure.travis-ci.org/kriskowal/q.svg?branch=master)](http://travis-ci.org/kriskowal/q)
 [![CDNJS](https://img.shields.io/cdnjs/v/q.js.svg)](https://cdnjs.com/libraries/q.js)
 
