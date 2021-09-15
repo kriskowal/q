@@ -2973,4 +2973,21 @@ describe("unhandled rejection reporting", function () {
 
         expect(Q.getUnhandledReasons()).toEqual([]);
     });
+
+    describe("getUnhandledRejectionValues", function () {
+      it("contains a reference to the rejection value", function () {
+          var rejectionRef = { some: "reason" };
+          Q.reject(rejectionRef);
+
+          expect(Q.getUnhandledRejectionValues()).toEqual([rejectionRef]);
+      });
+
+      it("resets after calling `Q.resetUnhandledRejections`", function () {
+          Q.reject("a reason");
+
+          Q.resetUnhandledRejections();
+          expect(Q.getUnhandledRejectionValues()).toEqual([]);
+      });
+    });
+
 });
