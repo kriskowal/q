@@ -3,7 +3,7 @@
 
 Please consider using [JavaScript promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) instead of Q. Native promises are faster, have better tooling support and are the future.
 
-When Q was started, promises were very rare and seldom-used in JavaScript. Callbacks dominated the landscape. Q aimed to show an alternative way to write asynchronous code in JavaScript. That ended up being a good idea and promises are now part of the language itself. Every modern browser contains a built in and performant `Promise` implementation. Being able to influcence the internet and working on a library used by millions of codebases was an exciting and humbling experience.
+When work on Q began, promises were an academic novelty in JavaScript, unlikely to be adopted much less popular, though obviously full of…promise. Callbacks dominated the landscape. Q aimed to introduce a technology to JavaScript that had been proven and vetted in languages like E and C♯. With four years of incubation, evangelism, education, and feedback, promises became part of the language. Every modern browser contains a built-in `Promise` implementation. Being able to influence the internet and working on a library used by millions of codebases was an exciting and humbling experience.
 
 Q isn't going anywhere - the code is still here and bugs will probably be fixed but development has stalled for a few years now. You are encouraged to read the code and the explainers to glimpse into the history of the internet.
 
