@@ -7,7 +7,7 @@ When Q was started, promises were very rare and seldom-used in JavaScript. Callb
 
 Q isn't going anywhere - the code is still here and bugs will probably be fixed but development has stalled for a few years now. You are encouraged to read the code and the explainers to glimpse into the history of the internet.
 
-### Old README
+# Q
 
 [![Build Status](https://secure.travis-ci.org/kriskowal/q.svg?branch=master)](http://travis-ci.org/kriskowal/q)
 [![CDNJS](https://img.shields.io/cdnjs/v/q.js.svg)](https://cdnjs.com/libraries/q.js)
