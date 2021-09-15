@@ -5,7 +5,7 @@ Please consider using [JavaScript promises](https://developer.mozilla.org/en-US/
 
 When work on Q began, promises were an academic novelty in JavaScript, unlikely to be adopted much less popular, though obviously full of…promise. Callbacks dominated the landscape. Q aimed to introduce a technology to JavaScript that had been proven and vetted in languages like E and C♯. With four years of incubation, evangelism, education, and feedback, promises became part of the language. Every modern browser contains a built-in `Promise` implementation. Being able to influence the internet and working on a library used by millions of codebases was an exciting and humbling experience.
 
-Q isn't going anywhere - the code is still here and bugs will probably be fixed but development has stalled for a few years now. You are encouraged to read the code and the explainers to glimpse into the history of the internet.
+Q isn't going anywhere. The code is still here and bugs will be fixed but further development has been unnecessary for many years. We encourage you to read the code and the explainers to glimpse into the history of the internet.
 
 # Q
 
