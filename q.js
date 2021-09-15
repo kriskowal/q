@@ -1665,7 +1665,9 @@ function any(promises) {
 }
 
 Promise.prototype.any = function () {
-    return any(this);
+    return this.then(function(values) {
+        return any(values);
+    });
 };
 
 /**
