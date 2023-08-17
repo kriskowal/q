@@ -1,6 +1,6 @@
 
-var Q = require("../q");
-var Queue = require("../queue");
+let Q = require("../q");
+let Queue = require("../queue");
 
 global.Q = Q;
 require("./lib/jasmine-promise");
@@ -8,7 +8,7 @@ require("./lib/jasmine-promise");
 describe("queue", function () {
 
     it("should enqueue then dequeue", function () {
-        var queue = Queue();
+        let queue = Queue();
         queue.put(1);
         return queue.get().then(function (value) {
             expect(value).toBe(1);
@@ -16,8 +16,8 @@ describe("queue", function () {
     });
 
     it("should dequeue then enqueue", function () {
-        var queue = Queue();
-        var promise = queue.get().then(function (value) {
+        let queue = Queue();
+        let promise = queue.get().then(function (value) {
             expect(value).toBe(1);
         });
         queue.put(1);
@@ -25,7 +25,7 @@ describe("queue", function () {
     });
 
     it("should stream", function () {
-        var queue = Queue();
+        let queue = Queue();
 
         Q.try(function () {
             return Q.delay(20).then(function () {
@@ -66,7 +66,7 @@ describe("queue", function () {
     });
 
     it("should be order agnostic", function () {
-        var queue = Queue();
+        let queue = Queue();
 
         Q.try(function () {
             return Q.delay(20).then(function () {
@@ -103,7 +103,7 @@ describe("queue", function () {
 
     it("should close", function () {
 
-        var queue = Queue();
+        let queue = Queue();
 
         Q.try(function () {
             return Q.delay(20).then(function () {
@@ -155,7 +155,7 @@ describe("queue", function () {
 
     it("should close with alternate error", function () {
 
-        var queue = Queue();
+        let queue = Queue();
         queue.close(new Error("Alternate reason"));
 
         return Q.try(function () {
