@@ -1,20 +1,20 @@
 
-var enqueue = function (callback) {
+let enqueue = function (callback) {
     //process.nextTick(callback); // NodeJS
     setTimeout(callback, 1); // Naïve browser solution
 };
 
-var isPromise = function (value) {
+let isPromise = function (value) {
     return value && typeof value.then === "function";
 };
 
-var defer = function () {
-    var pending = [], value;
+let defer = function () {
+    let pending = [], value;
     return {
         resolve: function (_value) {
             if (pending) {
                 value = ref(_value);
-                for (var i = 0, ii = pending.length; i < ii; i++) {
+                for (let i = 0, ii = pending.length; i < ii; i++) {
                     // XXX
                     enqueue(function () {
                         value.then.apply(value, pending[i]);
@@ -25,17 +25,17 @@ var defer = function () {
         },
         promise: {
             then: function (_callback, _errback) {
-                var result = defer();
+                let result = defer();
                 _callback = _callback || function (value) {
                     return value;
                 };
                 _errback = _errback || function (reason) {
                     return reject(reason);
                 };
-                var callback = function (value) {
+                let callback = function (value) {
                     result.resolve(_callback(value));
                 };
-                var errback = function (reason) {
+                let errback = function (reason) {
                     result.resolve(_errback(reason));
                 };
                 if (pending) {
@@ -52,12 +52,12 @@ var defer = function () {
     };
 };
 
-var ref = function (value) {
+let ref = function (value) {
     if (value && value.then)
         return value;
     return {
         then: function (callback) {
-            var result = defer();
+            let result = defer();
             // XXX
             enqueue(function () {
                 result.resolve(callback(value));
@@ -67,10 +67,10 @@ var ref = function (value) {
     };
 };
 
-var reject = function (reason) {
+let reject = function (reason) {
     return {
         then: function (callback, errback) {
-            var result = defer();
+            let result = defer();
             // XXX
             enqueue(function () {
                 result.resolve(errback(reason));
@@ -80,9 +80,9 @@ var reject = function (reason) {
     };
 };
 
-var when = function (value, _callback, _errback) {
-    var result = defer();
-    var done;
+let when = function (value, _callback, _errback) {
+    let result = defer();
+    let done;
 
     _callback = _callback || function (value) {
         return value;
@@ -92,14 +92,14 @@ var when = function (value, _callback, _errback) {
     };
 
     // XXX
-    var callback = function (value) {
+    let callback = function (value) {
         try {
             return _callback(value);
         } catch (reason) {
             return reject(reason);
         }
     };
-    var errback = function (reason) {
+    let errback = function (reason) {
         try {
             return _errback(reason);
         } catch (reason) {
